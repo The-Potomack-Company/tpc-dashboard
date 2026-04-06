@@ -127,17 +127,70 @@
 
 ## Traceability
 
-(Updated during roadmap creation)
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| INFR-01 | Phase 1 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-04 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| DATA-04 | Phase 2 | Pending |
+| DATA-05 | Phase 2 | Pending |
+| DATA-06 | Phase 2 | Pending |
+| DATA-07 | Phase 2 | Pending |
+| SALE-01 | Phase 3 | Pending |
+| SALE-02 | Phase 3 | Pending |
+| SALE-03 | Phase 3 | Pending |
+| INFR-03 | Phase 3 | Pending |
+| INTR-02 | Phase 3 | Pending |
+| KPI-01 | Phase 4 | Pending |
+| KPI-02 | Phase 4 | Pending |
+| KPI-03 | Phase 4 | Pending |
+| TRND-01 | Phase 5 | Pending |
+| TRND-02 | Phase 5 | Pending |
+| TRND-03 | Phase 5 | Pending |
+| TRND-04 | Phase 5 | Pending |
+| TRND-05 | Phase 5 | Pending |
+| TRND-06 | Phase 5 | Pending |
+| INTR-03 | Phase 5 | Pending |
+| DEPT-01 | Phase 6 | Pending |
+| DEPT-02 | Phase 6 | Pending |
+| DEPT-03 | Phase 6 | Pending |
+| SALE-04 | Phase 6 | Pending |
+| SALE-05 | Phase 6 | Pending |
+| SALE-06 | Phase 6 | Pending |
+| INTR-01 | Phase 6 | Pending |
+| TEAM-01 | Phase 7 | Pending |
+| TEAM-02 | Phase 7 | Pending |
+| TEAM-03 | Phase 7 | Pending |
+| TEAM-04 | Phase 7 | Pending |
+| TEAM-05 | Phase 7 | Pending |
+| TEAM-06 | Phase 7 | Pending |
+| RPT-01 | Phase 8 | Pending |
+| RPT-02 | Phase 8 | Pending |
+| RPT-03 | Phase 8 | Pending |
+| RPT-04 | Phase 8 | Pending |
+| RPT-05 | Phase 8 | Pending |
+| RPT-06 | Phase 8 | Pending |
+| CHRT-01 | Phase 9 | Pending |
+| CHRT-02 | Phase 9 | Pending |
+| CHRT-03 | Phase 9 | Pending |
+| SCRP-01 | Phase 10 | Pending |
+| SCRP-02 | Phase 10 | Pending |
+| SCRP-03 | Phase 10 | Pending |
+| SCRP-04 | Phase 10 | Pending |
+| SCRP-05 | Phase 10 | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 0
-- Unmapped: 48
+- v1 requirements: 56 total
+- Mapped to phases: 56
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after initial definition*
+*Last updated: 2026-04-06 after roadmap creation*
