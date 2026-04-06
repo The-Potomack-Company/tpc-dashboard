@@ -1,6 +1,6 @@
 # TPC Dashboard — Database Schema
 
-> For PM review. This schema lives in the **shared Supabase project** alongside TPC App and Cataloger extension tables.
+> For review. This schema lives in the **shared Supabase project** alongside TPC App and Cataloger extension tables.
 
 ## Existing Tables (Read-Only from Dashboard)
 
@@ -273,7 +273,7 @@ analytics_events                    (TPC AI Cataloger v2.0)
 
 ---
 
-## Notes for PM Review
+## Notes for Review
 
 1. **No duplication**: Dashboard stores auction profile data in its own tables. TPC App and Cataloger tables are read-only.
 2. **Sale number is unique**: Each PDF maps to one `sales` row + N `sale_departments` rows.
