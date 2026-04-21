@@ -812,32 +812,22 @@ export function crossValidate(input: ValidationInput): { passed: boolean; mismat
 | A7 | Cross-validation only on the four monetary columns shown (`total_sold_value`, `total_low_estimate`, `total_high_estimate`, `total_reserves`) plus the two integer columns (`lots_auctioned`, `lots_sold`) — this is the useful subset; hammer/premium/etc. may appear on dept pages but require re-inspection. | Cross-validation code | Missing a cross-validation opportunity (premium, insurance). Easy to add after first dept-page verification. |
 | A8 | The RPC function's `security definer` + `revoke all from public` + `grant execute to service_role` is the correct Supabase idiom for a script-only function. | Pattern 5 SQL | If wrong, either the function is callable by authenticated users (bad — it can write anything) OR the script can't call it (run fails). Verify by invoking with both service-role and anon-key clients during Wave 0 tests; anon-key call MUST fail. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does the "revenue" column on `sale_departments` have an expected formula?**
-   - What we know: `sale_departments.revenue numeric(14,2)` exists in the Phase 1 migration. Department pages show `Premium:`, `Commission:`, `Insurance:`, `Lot Charges:` but NO single "Total Revenue" line.
-   - What's unclear: Whether `revenue` should equal `Premium + Commission + Insurance + Lot Charges` (a derived sum) or a specific PDF line we haven't found.
-   - Recommendation: Planner should add a task to inspect 3+ real PDFs via the `--verbose --limit 1` discovery mode and define the formula in a dedicated plan. If derived-sum, document it explicitly in a code comment + test.
+   - **RESOLVED:** `revenue = Premium + Commission + Insurance + Lot Charges` (derived sum — the only revenue-contributing fields present on dept pages). Plan 02-02 encodes the formula inline + asserts it in `department-page.test.ts` against the IT254 FRN fixture. Referral Fees / Level Up / Other Charges exist ONLY on page 1 (sale-level), which is why cross-validation does NOT sum dept.revenue against sale.net_revenue.
 
 2. **What vocabulary should `sales.payment_status` use?**
-   - What we know: PDFs contain `Paid Invoices (All lots flagged paid): 224`, `UnPaid Invoices (Not all lots paid): 0`, `Paid Settlements: 1`, `Unpaid Settlements: 0`, `Lots Missing Paddle/Unsold Code: 0`.
-   - What's unclear: Phase 3 will render this — does it want a text label or the raw counts?
-   - Recommendation: Store the raw counts as a JSON string (`{"paid_invoices":224,"unpaid_invoices":0,"paid_settlements":1,"unpaid_settlements":0,"missing_paddle":0}`) and let Phase 3 render however it wants. Keep `payment_status` as a human label derived from the counts (e.g., `"paid"` if unpaid==0, else `"partial"`, else `"unpaid"`).
+   - **RESOLVED:** Human label derived from counts: `"paid"` when `unpaid_invoices == 0`, `"partial"` when `unpaid_invoices > 0 AND paid_invoices > 0`, `"unpaid"` when `paid_invoices == 0`. Raw counts also captured in a structured JSON text for Phase 3 rendering (stored in the same `payment_status` column as compact JSON — this keeps the schema single-column while preserving counts).
 
 3. **What exactly IS the `title` field for a sale?**
-   - What we know: Page 1 has `Auction Profile for Sale IT254, November 16, 2022` followed by `Estate of General Colin L. Powell` followed by `All Departments`.
-   - What's unclear: Is `title` the sale's human name (`Estate of General Colin L. Powell`), or the full header line (`Auction Profile for Sale IT254, November 16, 2022`)?
-   - Recommendation: Use the line BETWEEN `Auction Profile for Sale ...` and `All Departments` — that is the human-meaningful title. Fallback to the `Auction Profile` line if the middle line is missing.
+   - **RESOLVED:** Use the line BETWEEN `Auction Profile for Sale ...` and `All Departments` (the human name, e.g., `"Estate of General Colin L. Powell"`). Fallback to the full `Auction Profile for Sale ...` line when the middle line is missing or blank.
 
 4. **How to detect `sale_date` reliably?**
-   - What we know: Date appears inside the `Auction Profile for Sale IT254, November 16, 2022` line.
-   - What's unclear: Format is always `Month DD, YYYY` but needs `Date.parse`-compatible ISO output.
-   - Recommendation: `new Date("November 16, 2022").toISOString().slice(0, 10)` → `2022-11-16`. Verify across 10+ PDFs in Wave 0. Fall back to `null` on parse failure rather than failing the record.
+   - **RESOLVED:** Extract `Month DD, YYYY` from the `Auction Profile for Sale ... , {date}` line and convert via `new Date("November 16, 2022").toISOString().slice(0, 10)` → `2022-11-16`. On parse failure: `sale_date = null` (best-effort per-file semantics). Sale-page Wave 0 test covers three format variants.
 
 5. **Should the plan seed the missing department codes explicitly?**
-   - What we know: Seed migration has 22 codes; research found at least 12 more (ANT, ASNP, CNS, FASH, GAR, ISL, JWL, LIT, MANU, MIN, NAT, REL, RUG, TRI).
-   - What's unclear: Do we seed them up-front (an additional seed migration) or let auto-discovery populate them?
-   - Recommendation: Let auto-discovery populate. Phase 2 DATA-06 is satisfied because (a) the 22 known codes are already seeded and (b) the import run will add ALL observed codes by the time it finishes. A follow-up "normalize display names" migration is cheap after first run.
+   - **RESOLVED:** No additional seed migration. Auto-discovery via the RPC function's `on conflict do nothing` insert into `departments` with `auto_discovered=true` populates the 12+ missing codes at first import run. DATA-06 is satisfied by (a) the 22 pre-seeded codes from Phase 1 + (b) auto-discovery of all observed codes during Wave 5 full run. A follow-up "normalize display names" cleanup migration can happen post-import if desired.
 
 ## Environment Availability
 
