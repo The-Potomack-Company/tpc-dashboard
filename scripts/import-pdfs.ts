@@ -222,10 +222,23 @@ export async function main(
     try {
       const importSaleModule = await import('./lib/import-sale.js');
       importSaleFn = importSaleModule.importSale;
-    } catch {
-      // In a dry-run-only dev environment, supabase-admin.js may not be
-      // loadable. That's fine; we simply never call importSale.
+    } catch (err) {
+      // In a dry-run-only dev environment, supabase-admin.js may not
+      // be loadable (e.g., SUPABASE_SERVICE_ROLE_KEY missing). That's
+      // fine for --dry-run, which never calls importSale. WR-05: do
+      // NOT silently swallow — surface the underlying error in verbose
+      // mode so an operator misconfigured for the wrong reason can
+      // see why. A live run will fail at the env-var precheck above,
+      // but only if the key is entirely absent, not if it's present
+      // but malformed.
       importSaleFn = null;
+      if (parsed.verbose) {
+        io.err(
+          `NOTE: admin client unavailable in --dry-run (${
+            err instanceof Error ? err.message : String(err)
+          }). Live runs will fail if the env is not fixed.`,
+        );
+      }
     }
   }
 
