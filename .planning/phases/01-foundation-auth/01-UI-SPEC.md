@@ -56,8 +56,8 @@ Declared values (multiples of 4 only — Tailwind's default 4px base unit is use
 |-------|-------|-------|
 | xs | 4px (`space-1`) | Icon-to-label gap, tight inline spacing |
 | sm | 8px (`space-2`) | Form field internal gaps, badge padding |
-| md | 16px (`space-4`) | Default element spacing, form row gap, card padding-inline |
-| lg | 24px (`space-6`) | Section padding, card padding-block, sidebar link gap |
+| md | 16px (`space-4`) | Default element spacing, form row gap, button-to-error gap |
+| lg | 24px (`space-6`) | Section padding, card padding-block, sidebar link gap, field-to-button gap on login |
 | xl | 32px (`space-8`) | Major vertical rhythm (login header-to-form), shell gutters |
 | 2xl | 48px (`space-12`) | Page-top spacing on content routes, shell sidebar width (`w-60` = 240px — actual width uses lg tier below) |
 | 3xl | 64px (`space-16`) | Reserved; not used in Phase 1 |
@@ -74,7 +74,7 @@ Declared values (multiples of 4 only — Tailwind's default 4px base unit is use
 | Main content max-width | `max-w-7xl` | 1280px — desktop-first, centered |
 | Main content inline padding | `px-8` | 32px |
 
-Exceptions: none. All spacing is a multiple of 4.
+Exceptions: none. All spacing is a multiple of 4 AND lives in the declared token set above.
 
 ---
 
@@ -83,15 +83,15 @@ Exceptions: none. All spacing is a multiple of 4.
 | Role | Size | Weight | Line Height | Tailwind class |
 |------|------|--------|-------------|----------------|
 | Body | 16px | 400 (regular) | 1.5 | `text-base` |
-| Label | 14px | 500 (medium) | 1.5 | `text-sm font-medium` |
+| Label | 14px | 600 (semibold) | 1.5 | `text-sm font-semibold` |
 | Heading | 20px | 600 (semibold) | 1.3 | `text-xl font-semibold` |
 | Display | 24px | 600 (semibold) | 1.25 | `text-2xl font-semibold` |
 
 **Helper/caption copy** (e.g. login subtitle, sidebar "Coming soon" labels, empty-state body): `text-sm` (14px) at weight 400, color `text-gray-500` (light) / `text-gray-400` (dark).
 
-**Weight rule:** exactly two weights — 400 (regular) for body/helper/errors, 500/600 (medium/semibold) for labels and headings. Never introduce 300, 700, 800, or 900 in Phase 1.
+**Weight rule:** exactly two weights — 400 (regular) for body, helper, and error copy; 600 (semibold) for labels, headings, and display. Never introduce 300, 500, 700, 800, or 900 in Phase 1. The `font-medium` class is explicitly out of scope.
 
-**Size rule:** exactly four sizes (14, 16, 20, 24). Error text uses `text-sm` (14px) — same tier as Label, different color.
+**Size rule:** exactly four sizes (14, 16, 20, 24). Error text uses `text-sm` (14px) at weight 400 — same size tier as Label, different weight and color.
 
 ---
 
@@ -196,7 +196,7 @@ All copy is written here verbatim. Executor uses these strings as-is.
 - Full viewport height (`h-dvh`) centered both axes.
 - Card: `max-w-sm` (384px), centered, no visible border in light mode (the white-on-white card floats on white page — same as TPC App's Login.tsx).
 - Vertical stack inside card: title → subtitle → 32px gap → form.
-- Inside form: email block → 16px gap → password block → 24px gap → Sign In button → 12px gap → error (when present).
+- Inside form: email block → 16px gap → password block → 24px gap → Sign In button → 16px gap → error (when present). The login form uses exactly two gap values drawn from the declared scale: 16px (`space-4`) between same-rhythm elements (field-to-field, button-to-error) and 24px (`space-6`) at the field-to-button transition.
 
 ### `/` (Dashboard shell)
 - Full viewport, `h-dvh`, CSS grid or flex: left sidebar (`w-60`, full-height) + right content column (flex-1).
