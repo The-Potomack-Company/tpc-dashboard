@@ -5,8 +5,8 @@ import { AccessDenied } from './AccessDenied';
 export function ProtectedRoute() {
   const session = useAuthStore((s) => s.session);
   const loading = useAuthStore((s) => s.loading);
-  const profile = useAuthStore((s) => s.profile);
   const profileLoading = useAuthStore((s) => s.profileLoading);
+  const profileLoaded = useAuthStore((s) => s.profileLoaded);
   const isAdmin = useAuthStore((s) => s.isAdmin);
 
   // Stage 1: session resolving
@@ -27,8 +27,10 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  // Stage 3: profile still loading (prevents flash of protected content)
-  if (profileLoading || profile === null) {
+  // Stage 3: profile still loading (prevents flash of protected content).
+  // Gate on profileLoaded so a resolved-but-null profile (no row / fetch
+  // error) falls through to AccessDenied instead of spinning forever.
+  if (profileLoading || !profileLoaded) {
     return (
       <div
         data-testid="profile-loading"
@@ -40,7 +42,8 @@ export function ProtectedRoute() {
     );
   }
 
-  // Stage 4: not admin
+  // Stage 4: not admin (also covers "loaded but no profile row" — AccessDenied
+  // already falls back to user.email when profile is null)
   if (!isAdmin) {
     return <AccessDenied />;
   }

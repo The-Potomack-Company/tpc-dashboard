@@ -20,7 +20,7 @@ vi.mock('../lib/supabase', () => ({
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn(async () => ({ data: null, error: null })),
+      maybeSingle: vi.fn(async () => ({ data: null, error: null })),
     })),
   },
 }));
@@ -74,6 +74,7 @@ describe('ProtectedRoute', () => {
       isAdmin: false,
       loading: true,
       profileLoading: false,
+      profileLoaded: false,
       signIn: vi.fn(async () => ({ error: null })),
       signOut: vi.fn(async () => undefined),
     });
@@ -101,6 +102,7 @@ describe('ProtectedRoute', () => {
       user: session.user,
       profile: null,
       profileLoading: true,
+      profileLoaded: false,
     });
     render(<TestTree />);
     expect(screen.getByTestId('profile-loading')).toBeInTheDocument();
@@ -115,6 +117,7 @@ describe('ProtectedRoute', () => {
       user: session.user,
       profile: makeProfile('specialist'),
       profileLoading: false,
+      profileLoaded: true,
       isAdmin: false,
     });
     render(<TestTree />);
@@ -122,6 +125,24 @@ describe('ProtectedRoute', () => {
       screen.getByRole('heading', { name: 'Access denied' }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-content')).not.toBeInTheDocument();
+  });
+
+  it('shows AccessDenied when authenticated with no profile row (profileLoaded but null)', () => {
+    const session = makeSession('u3', 'noprofile@b.co');
+    useAuthStore.setState({
+      loading: false,
+      session,
+      user: session.user,
+      profile: null,
+      profileLoading: false,
+      profileLoaded: true,
+      isAdmin: false,
+    });
+    render(<TestTree />);
+    expect(
+      screen.getByRole('heading', { name: 'Access denied' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-loading')).not.toBeInTheDocument();
   });
 
   it('renders Outlet content for authenticated admin', () => {
@@ -132,6 +153,7 @@ describe('ProtectedRoute', () => {
       user: session.user,
       profile: makeProfile('admin'),
       profileLoading: false,
+      profileLoaded: true,
       isAdmin: true,
     });
     render(<TestTree />);

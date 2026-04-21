@@ -12,6 +12,10 @@ interface AuthState {
   isAdmin: boolean;
   loading: boolean;
   profileLoading: boolean;
+  // True after the first profile fetch attempt resolves (success or failure).
+  // Distinguishes "still loading" from "loaded but no row / error" so
+  // ProtectedRoute can avoid an infinite spinner when profile is null.
+  profileLoaded: boolean;
   initialize: () => () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -24,6 +28,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isAdmin: false,
   loading: true,
   profileLoading: false,
+  profileLoaded: false,
 
   initialize: () => {
     const {
@@ -36,19 +41,27 @@ export const useAuthStore = create<AuthState>()((set) => ({
       });
 
       if (session?.user) {
-        set({ profileLoading: true });
+        set({ profileLoading: true, profileLoaded: false });
+        // maybeSingle() returns { data: null } instead of an error when no
+        // row exists, so a user without a profiles row doesn't get stuck.
         const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         set({
           profile: data ?? null,
           isAdmin: data?.role === 'admin',
           profileLoading: false,
+          profileLoaded: true,
         });
       } else {
-        set({ profile: null, isAdmin: false, profileLoading: false });
+        set({
+          profile: null,
+          isAdmin: false,
+          profileLoading: false,
+          profileLoaded: true,
+        });
       }
     });
 

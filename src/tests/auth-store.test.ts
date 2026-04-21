@@ -35,7 +35,7 @@ vi.mock('../lib/supabase', () => {
       from: vi.fn(() => ({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi.fn(async () => ({
+        maybeSingle: vi.fn(async () => ({
           data: { id: 'u1', role: 'admin', display_name: 'Admin', is_active: true },
           error: null,
         })),
@@ -65,6 +65,7 @@ describe('useAuthStore', () => {
       isAdmin: false,
       loading: true,
       profileLoading: false,
+      profileLoaded: false,
     });
     (supabase.auth as unknown as AuthWithHelper).__resetAuthCallbacks();
     vi.clearAllMocks();
@@ -121,7 +122,7 @@ describe('useAuthStore', () => {
     (supabase.from as unknown as MockableFrom).mockReturnValueOnce({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn(async () => ({
+      maybeSingle: vi.fn(async () => ({
         data: { id: 'u2', role: 'specialist', display_name: 'Spec', is_active: true },
         error: null,
       })),
