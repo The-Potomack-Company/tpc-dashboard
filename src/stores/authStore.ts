@@ -44,11 +44,18 @@ export const useAuthStore = create<AuthState>()((set) => ({
         set({ profileLoading: true, profileLoaded: false });
         // maybeSingle() returns { data: null } instead of an error when no
         // row exists, so a user without a profiles row doesn't get stuck.
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
+        if (error) {
+          // Surface fetch failures (RLS reject, network, Supabase outage).
+          // Without this, any failure silently locks the user out with no
+          // signal to the user or future observability pipeline.
+          // eslint-disable-next-line no-console
+          console.error('[authStore] profile fetch failed', error);
+        }
         set({
           profile: data ?? null,
           isAdmin: data?.role === 'admin',
