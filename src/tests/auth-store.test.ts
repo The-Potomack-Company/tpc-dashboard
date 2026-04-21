@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the supabase module BEFORE importing authStore. The mock exposes a
-// `__fireAuthEvent` helper so tests can simulate onAuthStateChange callbacks.
+// `__fireAuthEvent` helper so tests can simulate onAuthStateChange callbacks
+// and a `__resetAuthCallbacks` helper so each test starts with an empty
+// subscriber list (otherwise callbacks accumulate across tests and multiple
+// stores all react to a single fired event, corrupting state).
 vi.mock('../lib/supabase', () => {
   const onAuthStateChangeCallbacks: Array<(evt: string, session: unknown) => void> = [];
   return {
@@ -11,10 +14,22 @@ vi.mock('../lib/supabase', () => {
         signOut: vi.fn(async () => ({ error: null })),
         onAuthStateChange: vi.fn((cb: (evt: string, session: unknown) => void) => {
           onAuthStateChangeCallbacks.push(cb);
-          return { data: { subscription: { unsubscribe: vi.fn() } } };
+          return {
+            data: {
+              subscription: {
+                unsubscribe: vi.fn(() => {
+                  const idx = onAuthStateChangeCallbacks.indexOf(cb);
+                  if (idx >= 0) onAuthStateChangeCallbacks.splice(idx, 1);
+                }),
+              },
+            },
+          };
         }),
         __fireAuthEvent: (evt: string, session: unknown) => {
           onAuthStateChangeCallbacks.forEach((cb) => cb(evt, session));
+        },
+        __resetAuthCallbacks: () => {
+          onAuthStateChangeCallbacks.length = 0;
         },
       },
       from: vi.fn(() => ({
@@ -34,6 +49,7 @@ import { supabase } from '../lib/supabase';
 
 type AuthWithHelper = {
   __fireAuthEvent: (evt: string, session: unknown) => void;
+  __resetAuthCallbacks: () => void;
 };
 
 type MockableFrom = {
@@ -50,6 +66,7 @@ describe('useAuthStore', () => {
       loading: true,
       profileLoading: false,
     });
+    (supabase.auth as unknown as AuthWithHelper).__resetAuthCallbacks();
     vi.clearAllMocks();
   });
 
