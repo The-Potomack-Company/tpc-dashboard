@@ -109,6 +109,7 @@ export type Database = {
       }
       departments: {
         Row: {
+          auto_discovered: boolean
           code: string
           created_at: string
           display_name: string | null
@@ -116,6 +117,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_discovered?: boolean
           code: string
           created_at?: string
           display_name?: string | null
@@ -123,6 +125,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_discovered?: boolean
           code?: string
           created_at?: string
           display_name?: string | null
@@ -404,6 +407,7 @@ export type Database = {
           total_sold_value: number | null
           total_unsold_value: number | null
           updated_at: string
+          validation_warning: boolean
           winning_buyers: number | null
         }
         Insert: {
@@ -432,6 +436,7 @@ export type Database = {
           total_sold_value?: number | null
           total_unsold_value?: number | null
           updated_at?: string
+          validation_warning?: boolean
           winning_buyers?: number | null
         }
         Update: {
@@ -460,6 +465,7 @@ export type Database = {
           total_sold_value?: number | null
           total_unsold_value?: number | null
           updated_at?: string
+          validation_warning?: boolean
           winning_buyers?: number | null
         }
         Relationships: []
@@ -577,7 +583,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      import_sale_with_departments: {
+        Args: { p_departments: Json; p_sale: Json }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

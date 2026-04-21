@@ -10,7 +10,7 @@
     "test": "vitest --run",
     "preview": "vite preview",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types --lang=typescript --schema public > src/db/database.types.ts"
+    "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts"
   },
   "dependencies": {
     "react": "^19.2.0",
