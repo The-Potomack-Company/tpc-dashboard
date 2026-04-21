@@ -35,10 +35,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Unauthenticated users are redirected to login and cannot access any data endpoints
   4. Database schema exists with all dashboard-owned tables (sales, sale_departments, departments, scraper_runs, saved_reports) and does not modify any TPC App tables
   5. All financial aggregation queries use PostgreSQL DECIMAL arithmetic, not JavaScript
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md — Scaffold Vite + React 19 + TS + Tailwind v4 + Vitest + ESLint + directory skeleton
+- [ ] 01-02-PLAN.md — Supabase migrations (5 dashboard tables + RLS + seed), db push, regen types
+- [ ] 01-03-PLAN.md — Supabase client + authStore + main.tsx composition + Wave 0 tests (client/store/schema)
+- [ ] 01-04-PLAN.md — Login/ProtectedRoute/AccessDenied/DashboardLayout/routes + Wave 0 UI tests
+- [ ] 01-05-PLAN.md — README, REQUIREMENTS/STATE updates, manual QA checklist, Vercel deploy
 **UI hint**: yes
 
 ### Phase 2: PDF Import Pipeline
@@ -185,7 +189,7 @@ Note: Phases 4, 5, and 7 can run in parallel after Phase 3. Phase 9 can run afte
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 0/? | Not started | - |
+| 1. Foundation & Auth | 0/5 | Planned | - |
 | 2. PDF Import Pipeline | 0/? | Not started | - |
 | 3. Sale Views | 0/? | Not started | - |
 | 4. KPI Landing Page | 0/? | Not started | - |
