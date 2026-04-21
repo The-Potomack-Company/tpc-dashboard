@@ -74,6 +74,15 @@ begin
 
   -- Insert department rows. Unknown codes are auto-discovered
   -- (new departments row with auto_discovered = true).
+  --
+  -- WR-06: for KNOWN codes whose stored display_name is still the
+  -- placeholder (equal to the code — the seed default in
+  -- 20260421000008_seed_departments.sql), refine the name from the
+  -- incoming PDF value when it differs. This gives the 22 seeded rows
+  -- a chance to acquire their richer PDF-derived name on first import
+  -- ("FRN Furniture (General)" etc.) without stomping on any name an
+  -- operator has manually curated. Rows where display_name != code
+  -- are treated as curated and left alone.
   for v_dept in select * from jsonb_array_elements(p_departments)
   loop
     select id into v_dept_id
@@ -88,6 +97,13 @@ begin
         true
       )
       returning id into v_dept_id;
+    else
+      update public.departments
+      set display_name = v_dept->>'display_name'
+      where id = v_dept_id
+        and display_name = code
+        and v_dept->>'display_name' is not null
+        and v_dept->>'display_name' <> code;
     end if;
 
     insert into public.sale_departments (
