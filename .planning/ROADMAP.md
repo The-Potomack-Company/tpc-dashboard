@@ -55,10 +55,14 @@ Plans:
   3. Department record sums match the "All Departments" totals for every imported sale (cross-validation passes)
   4. Re-running the import on the same PDFs skips all duplicates and produces no errors
   5. The departments reference table contains all known department codes (ASN, PNT, SIL, CER, FRN, etc.) with display names
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — Migrations (validation_warning + auto_discovered) + import_sale_with_departments RPC + BLOCKING db push + types regen
+- [ ] 02-02-PLAN.md — Install pdf-parse/tsx/dotenv + scripts/ scaffolding + numeric/sale/dept parsers + Zod schemas + isolated supabase-admin + parse-pdf orchestrator + Wave 0 unit tests
+- [ ] 02-03-PLAN.md — cross-validate.ts (DATA-05 tolerance) + import-sale.ts (idempotent + auto-discover) + Wave 0 integration tests
+- [ ] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + .env.example + integration test
+- [ ] 02-05-PLAN.md — README + PROJECT.md path correction + STATE.md + manual-QA checkpoint (full 457 run + 10-sale spot-check + re-run idempotency) + REQUIREMENTS/ROADMAP finalization
 
 ### Phase 3: Sale Views
 **Goal**: Users can browse all imported sales and drill into any individual sale to see its complete auction profile with department breakdown
@@ -190,7 +194,7 @@ Note: Phases 4, 5, and 7 can run in parallel after Phase 3. Phase 9 can run afte
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 0/5 | Planned | - |
-| 2. PDF Import Pipeline | 0/? | Not started | - |
+| 2. PDF Import Pipeline | 0/5 | Planned | - |
 | 3. Sale Views | 0/? | Not started | - |
 | 4. KPI Landing Page | 0/? | Not started | - |
 | 5. Trend Analysis | 0/? | Not started | - |
