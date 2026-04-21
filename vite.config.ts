@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
+    environmentMatchGlobs: [
+      ['src/**', 'jsdom'],
+      ['scripts/**', 'node'],
+    ],
     setupFiles: ['src/tests/setup.ts'],
   },
 });
