@@ -12,7 +12,8 @@ Give the TPC team a single place to see how their auctions are performing over t
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Team access using existing Supabase auth system as TPC App — **Validated in Phase 1 (single-admin v1; specialist view deferred to v2)**
+- [x] Dashboard-owned schema (sales, sale_departments, departments, scraper_runs, saved_reports) deployed to shared Supabase with admin-only RLS — **Validated in Phase 1**
 
 ### Active
 
@@ -83,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after initialization*
+*Last updated: 2026-04-21 after Phase 1 completion*
