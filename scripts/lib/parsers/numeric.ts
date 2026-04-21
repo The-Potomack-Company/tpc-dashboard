@@ -72,17 +72,24 @@ export function parseLotsSold(
 
 export function parseAuctionedLots(
   raw: string | null | undefined,
-): { count: number | null; withdrawn?: number } {
+): { count: number | null } {
   if (raw === null || raw === undefined) return { count: null };
   const s = String(raw).trim();
   if (!s) return { count: null };
-  // "33 (1 Withdrawn)" → count 33, withdrawn 1
+  // "33 (1 Withdrawn)" → count 33
   // "428"              → count 428
-  const m = /^(?<count>[\d,]+)(?:\s+\((?<withdrawn>\d+)\s+Withdrawn\))?$/.exec(s);
+  //
+  // WR-02 (v1 deferral): the "(N Withdrawn)" suffix is matched to consume
+  // the input, but the withdrawn count itself is intentionally discarded.
+  // `count` already excludes withdrawn lots per the "not incl. withdrawn"
+  // RFC convention, and neither the sales nor sale_departments schema
+  // has a lots_withdrawn column in v1. Re-introducing a withdrawn field
+  // on the return shape invites a future edit that accidentally writes
+  // it into lots_auctioned (double-counting). Preserving the data would
+  // require a schema migration adding lots_withdrawn to both tables.
+  const m = /^(?<count>[\d,]+)(?:\s+\(\d+\s+Withdrawn\))?$/.exec(s);
   if (!m?.groups) return { count: null };
   const count = parseInt(m.groups.count.replace(/,/g, ''), 10);
   if (Number.isNaN(count)) return { count: null };
-  return m.groups.withdrawn
-    ? { count, withdrawn: parseInt(m.groups.withdrawn, 10) }
-    : { count };
+  return { count };
 }
