@@ -38,11 +38,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold Vite + React 19 + TS + Tailwind v4 + Vitest + ESLint + directory skeleton
-- [ ] 01-02-PLAN.md — Supabase migrations (5 dashboard tables + RLS + seed), db push, regen types
-- [ ] 01-03-PLAN.md — Supabase client + authStore + main.tsx composition + Wave 0 tests (client/store/schema)
-- [ ] 01-04-PLAN.md — Login/ProtectedRoute/AccessDenied/DashboardLayout/routes + Wave 0 UI tests
-- [ ] 01-05-PLAN.md — README, REQUIREMENTS/STATE updates, manual QA checklist, Vercel deploy
+- [x] 01-01-PLAN.md — Scaffold Vite + React 19 + TS + Tailwind v4 + Vitest + ESLint + directory skeleton
+- [x] 01-02-PLAN.md — Supabase migrations (5 dashboard tables + RLS + seed), db push, regen types
+- [x] 01-03-PLAN.md — Supabase client + authStore + main.tsx composition + Wave 0 tests (client/store/schema)
+- [x] 01-04-PLAN.md — Login/ProtectedRoute/AccessDenied/DashboardLayout/routes + Wave 0 UI tests
+- [x] 01-05-PLAN.md — README, REQUIREMENTS/STATE updates, manual QA checklist, Vercel deploy
 **UI hint**: yes
 
 ### Phase 2: PDF Import Pipeline
