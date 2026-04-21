@@ -22,6 +22,16 @@
 // Mismatch strings are human-readable (used in scraper_runs.logs in
 // Plan 02-04): `${col}: sum(dept)=$X.XX vs sale=$Y.YY` for monetary
 // and `${col}: sum(dept)=N vs sale=M` for integers.
+//
+// Null-coercion (WR-03): when any department row has a null for a
+// validated column, the reducer treats that null as 0 before summing.
+// A reader of the mismatch message therefore cannot tell by the text
+// alone whether `sum(dept)=$0.00` means "every dept parsed as zero"
+// or "every dept failed to parse this column". To make the distinction
+// surfacable to operator triage, any mismatch line that involves at
+// least one null dept value is prefixed with "(PARSE-GAP) " so
+// downstream tooling can branch on parse-gap vs arithmetic-drift
+// without re-deriving it from the inputs.
 
 import type { SaleRecord, SaleDepartmentRecord } from './schemas.js';
 
@@ -41,61 +51,90 @@ export function crossValidate(input: CrossValidateInput): CrossValidateResult {
   const cents = (n: number | null | undefined): number =>
     n == null ? 0 : Math.round(n * 100);
 
+  // Build column-projected arrays once so we can compute both the sum
+  // (with null→0 coercion) and the "any null present" flag without
+  // walking input.departments multiple times.
+  const intCol = (pick: (d: SaleDepartmentRecord) => number | null) => {
+    const values = input.departments.map(pick);
+    return {
+      sum: values.reduce<number>((s, v) => s + (v ?? 0), 0),
+      hasNull: values.some((v) => v == null),
+    };
+  };
+  const moneyCol = (pick: (d: SaleDepartmentRecord) => number | null) => {
+    const values = input.departments.map(pick);
+    return {
+      sumDollars: values.reduce<number>((s, v) => s + (v ?? 0), 0),
+      hasNull: values.some((v) => v == null),
+    };
+  };
+  // WR-03: prefix mismatch with "(PARSE-GAP) " when the dept sum was
+  // contaminated by at least one null value. The sale-side value may
+  // legitimately be non-null and the drift numerically correct; the
+  // tag tells the operator "this is a parse-coverage issue, not a
+  // reconciliation issue."
+  const tag = (hasNull: boolean): string => (hasNull ? '(PARSE-GAP) ' : '');
+
   // --- Integer columns: exact match required --------------------------
-  const sumLotsAuctioned = input.departments.reduce(
-    (s, d) => s + (d.lots_auctioned ?? 0),
-    0,
-  );
+  const lotsAuctioned = intCol((d) => d.lots_auctioned);
   const saleLotsAuctioned = input.sale.lots_auctioned ?? 0;
-  if (sumLotsAuctioned !== saleLotsAuctioned) {
+  if (lotsAuctioned.sum !== saleLotsAuctioned) {
     mismatches.push(
-      `lots_auctioned: sum(dept)=${sumLotsAuctioned} vs sale=${saleLotsAuctioned}`,
+      `${tag(lotsAuctioned.hasNull)}lots_auctioned: sum(dept)=${lotsAuctioned.sum} vs sale=${saleLotsAuctioned}`,
     );
   }
 
-  const sumLotsSold = input.departments.reduce(
-    (s, d) => s + (d.lots_sold ?? 0),
-    0,
-  );
+  const lotsSold = intCol((d) => d.lots_sold);
   const saleLotsSold = input.sale.lots_sold ?? 0;
-  if (sumLotsSold !== saleLotsSold) {
-    mismatches.push(`lots_sold: sum(dept)=${sumLotsSold} vs sale=${saleLotsSold}`);
+  if (lotsSold.sum !== saleLotsSold) {
+    mismatches.push(
+      `${tag(lotsSold.hasNull)}lots_sold: sum(dept)=${lotsSold.sum} vs sale=${saleLotsSold}`,
+    );
   }
 
   // --- Monetary columns: ±toleranceCents ------------------------------
   const checkMoney = (
     name: string,
     saleVal: number | null,
-    deptSum: number,
+    deptSumDollars: number,
+    hasNull: boolean,
   ): void => {
     const s = cents(saleVal);
-    const d = Math.round(deptSum * 100);
+    const d = Math.round(deptSumDollars * 100);
     if (Math.abs(s - d) > input.toleranceCents) {
       mismatches.push(
-        `${name}: sum(dept)=$${(d / 100).toFixed(2)} vs sale=$${(s / 100).toFixed(2)}`,
+        `${tag(hasNull)}${name}: sum(dept)=$${(d / 100).toFixed(2)} vs sale=$${(s / 100).toFixed(2)}`,
       );
     }
   };
 
+  const totalSoldValue = moneyCol((d) => d.total_sold_value);
   checkMoney(
     'total_sold_value',
     input.sale.total_sold_value,
-    input.departments.reduce((s, d) => s + (d.total_sold_value ?? 0), 0),
+    totalSoldValue.sumDollars,
+    totalSoldValue.hasNull,
   );
+  const lowEstimate = moneyCol((d) => d.low_estimate);
   checkMoney(
     'total_low_estimate',
     input.sale.total_low_estimate,
-    input.departments.reduce((s, d) => s + (d.low_estimate ?? 0), 0),
+    lowEstimate.sumDollars,
+    lowEstimate.hasNull,
   );
+  const highEstimate = moneyCol((d) => d.high_estimate);
   checkMoney(
     'total_high_estimate',
     input.sale.total_high_estimate,
-    input.departments.reduce((s, d) => s + (d.high_estimate ?? 0), 0),
+    highEstimate.sumDollars,
+    highEstimate.hasNull,
   );
+  const reserves = moneyCol((d) => d.reserves);
   checkMoney(
     'total_reserves',
     input.sale.total_reserves,
-    input.departments.reduce((s, d) => s + (d.reserves ?? 0), 0),
+    reserves.sumDollars,
+    reserves.hasNull,
   );
 
   return { passed: mismatches.length === 0, mismatches };

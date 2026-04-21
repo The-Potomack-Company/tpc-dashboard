@@ -206,4 +206,44 @@ describe('crossValidate — null handling', () => {
     expect(result.passed).toBe(true);
     expect(result.mismatches).toEqual([]);
   });
+
+  it('tags (PARSE-GAP) on mismatches when any dept has null for that column (WR-03)', () => {
+    // Sale claims total_sold_value=$100,000 but every dept has null for
+    // total_sold_value → null-coerced sum is 0 → mismatch reported.
+    // The message should be tagged "(PARSE-GAP)" so operator triage can
+    // distinguish "no dept parsed this column" from "arithmetic drift".
+    const depts = makeCleanDepts().map((d) => ({
+      ...d,
+      total_sold_value: null,
+    }));
+    const result = crossValidate({
+      sale: makeSale(), // total_sold_value: 100000
+      departments: depts,
+      toleranceCents: 25,
+    });
+    expect(result.passed).toBe(false);
+    const soldValueMismatch = result.mismatches.find((m) =>
+      m.includes('total_sold_value'),
+    );
+    expect(soldValueMismatch).toBeDefined();
+    expect(soldValueMismatch).toMatch(/^\(PARSE-GAP\) /);
+  });
+
+  it('does NOT tag (PARSE-GAP) when all dept values are present but drift', () => {
+    // Legitimate arithmetic drift (no nulls involved) should NOT carry
+    // the parse-gap tag.
+    const depts = makeCleanDepts();
+    depts[0] = makeDept('AMER', { total_sold_value: 20000 - 1.0 }); // $1 drift
+    const result = crossValidate({
+      sale: makeSale(),
+      departments: depts,
+      toleranceCents: 25,
+    });
+    expect(result.passed).toBe(false);
+    const soldValueMismatch = result.mismatches.find((m) =>
+      m.includes('total_sold_value'),
+    );
+    expect(soldValueMismatch).toBeDefined();
+    expect(soldValueMismatch).not.toMatch(/^\(PARSE-GAP\) /);
+  });
 });
