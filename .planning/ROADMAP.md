@@ -58,11 +58,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Migrations (validation_warning + auto_discovered) + import_sale_with_departments RPC + BLOCKING db push + types regen
-- [ ] 02-02-PLAN.md — Install pdf-parse/tsx/dotenv + scripts/ scaffolding + numeric/sale/dept parsers + Zod schemas + isolated supabase-admin + parse-pdf orchestrator + Wave 0 unit tests
-- [ ] 02-03-PLAN.md — cross-validate.ts (DATA-05 tolerance) + import-sale.ts (idempotent + auto-discover) + Wave 0 integration tests
-- [ ] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + .env.example + integration test
-- [ ] 02-05-PLAN.md — README + PROJECT.md path correction + STATE.md + manual-QA checkpoint (full 457 run + 10-sale spot-check + re-run idempotency) + REQUIREMENTS/ROADMAP finalization
+- [x] 02-01-PLAN.md — Migrations (validation_warning + auto_discovered) + import_sale_with_departments RPC + BLOCKING db push + types regen
+- [x] 02-02-PLAN.md — Install pdf-parse/tsx/dotenv + scripts/ scaffolding + numeric/sale/dept parsers + Zod schemas + isolated supabase-admin + parse-pdf orchestrator + Wave 0 unit tests
+- [x] 02-03-PLAN.md — cross-validate.ts (DATA-05 tolerance) + import-sale.ts (idempotent + auto-discover) + Wave 0 integration tests
+- [x] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + .env.example + integration test
+- [x] 02-05-PLAN.md — README + PROJECT.md path correction + STATE.md + manual-QA checkpoint (full 457 run + 10-sale spot-check + re-run idempotency) + REQUIREMENTS/ROADMAP finalization
 
 ### Phase 3: Sale Views
 **Goal**: Users can browse all imported sales and drill into any individual sale to see its complete auction profile with department breakdown
