@@ -45,7 +45,7 @@ Give the TPC team a single place to see how their auctions are performing over t
 
 - **TPC App** (TPC Speech Cataloger): PWA at ~/TPC_App, deployed on Vercel. Supabase database with tables: profiles, sessions, items, export_history, photos. Auth via Supabase with admin/specialist roles.
 - **TPC AI Cataloger**: Chrome extension at ~/Projects/TPC_AI_Cataloger. v2.0 analytics pipeline (Phases 28-31) will add analytics_events table to shared Supabase with 5 workflow event types (W1-W5): single catalog, batch catalog, portal upload, spreadsheet transform, app data import.
-- **RFC Auction Profiles**: 457 PDFs in ~/Desktop/rfc_profiles/. Each is a multi-page report for one sale, with page 1 being the "All Departments" summary and subsequent pages being per-department breakdowns. Departments include: AMER, ASD, ASN, ASNP, BKS, CER, CLK, DEC, DRW, ENT, FRN, GEN, GLS, MAP, MDF, MUS, PER, PND, PNT, SPT, SIL, TXTL, and others.
+- **RFC Auction Profiles**: 457 PDFs in ~/Projects/rfc_profiles/rfc_profiles/. Each is a multi-page report for one sale, with page 1 being the "All Departments" summary and subsequent pages being per-department breakdowns. Departments include: AMER, ASD, ASN, ASNP, BKS, CER, CLK, DEC, DRW, ENT, FRN, GEN, GLS, MAP, MDF, MUS, PER, PND, PNT, SPT, SIL, TXTL, and others.
 - **Supabase**: Shared project already set up, connected to TPC App, will be connected to Cataloger extension. Dashboard reads from same project.
 - **RFC Access**: Web scraping only (no API). Needs login credentials for automated profile retrieval.
 
@@ -84,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 1 completion*
+*Last updated: 2026-04-21 after Phase 2 docs pass (import pipeline built; live 457-PDF run deferred pending SUPABASE_SERVICE_ROLE_KEY)*

@@ -136,13 +136,13 @@
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Partial (v1: single-admin — specialist blocked at auth gate; specialist-restricted view deferred to v2) |
 | AUTH-04 | Phase 1 | Pending |
-| DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 2 | Pending |
-| DATA-03 | Phase 2 | Pending |
-| DATA-04 | Phase 2 | Pending |
-| DATA-05 | Phase 2 | Pending |
-| DATA-06 | Phase 2 | Pending |
-| DATA-07 | Phase 2 | Pending |
+| DATA-01 | Phase 2 | Partial (Phase 2: pipeline built + integration-tested end-to-end via --dry-run --limit 3 on real PDFs; live 457-PDF import deferred pending operator adding SUPABASE_SERVICE_ROLE_KEY to .env.local) |
+| DATA-02 | Phase 2 | Partial (Phase 2: parser + Zod schemas + RPC path built and unit-tested; live round-trip spot-check on 10 sales deferred with DATA-01) |
+| DATA-03 | Phase 2 | Partial (Phase 2: per-department parser + RPC insert built and unit-tested; live spot-check deferred with DATA-01) |
+| DATA-04 | Phase 2 | Partial (Phase 2: numeric parser covers commas, percentages, ranges, parentheticals per numeric.test.ts 20+ cases; live confirmation on real PDFs deferred with DATA-01) |
+| DATA-05 | Phase 2 | Partial (Phase 2: cross-validation logic built with ±$0.25 tolerance; live warning-flag count pending DATA-01 run) |
+| DATA-06 | Phase 2 | Partial (Phase 2: 22 seed codes migrated; auto-discover path built and unit-tested; live auto-discovered code list pending DATA-01 run) |
+| DATA-07 | Phase 2 | Partial (Phase 2: dup check + UNIQUE constraint in place and unit-tested; live re-run idempotency confirmation pending DATA-01 run) |
 | SALE-01 | Phase 3 | Pending |
 | SALE-02 | Phase 3 | Pending |
 | SALE-03 | Phase 3 | Pending |
@@ -193,4 +193,4 @@
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after roadmap creation*
+*Last updated: 2026-04-21 — DATA-01..07 marked Partial pending DATA-01 live 457-PDF run (operator-gated on SUPABASE_SERVICE_ROLE_KEY)*
