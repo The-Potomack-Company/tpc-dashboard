@@ -134,7 +134,7 @@
 | INFR-04 | Phase 1 | Pending |
 | AUTH-01 | Phase 1 | Pending |
 | AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Partial (v1: single-admin — specialist blocked at auth gate; specialist-restricted view deferred to v2) |
 | AUTH-04 | Phase 1 | Pending |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
