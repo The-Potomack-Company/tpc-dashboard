@@ -18,6 +18,10 @@ created: 2026-04-21
 
 **Design north star:** Keep Phase 1's visual vocabulary intact. Data tables are the first complex UI in this project — they lean on gray tones (not accent) to stay readable across hundreds of rows. Accent remains reserved for Phase 1's 5 elements plus exactly two Phase 3 additions (active sort column indicator, row focus ring). Desktop-first per INFR-03 — sidebar collapses to an icon rail at `md` (768–1023px); below 768px is out of scope.
 
+**Primary visual anchor per surface:**
+- `/sales` — the sales list table, spanning the full content width below the heading (heading and filter input frame it but do not compete for visual weight).
+- `/sales/:saleNumber` — the summary KPI card sits directly below the heading as the first-fold focal element; the department breakdown table is the secondary anchor below.
+
 ---
 
 ## Design System
@@ -75,17 +79,15 @@ Declared values (identical to Phase 1 — no new tokens):
 | Filter input max-width | `max-w-xs` | 320px | Proportional to a desktop table row; keeps focus on the data |
 | Sale detail summary card padding | `p-6` | 24px (lg) | Standard card padding; matches Phase 1 card rhythm |
 | Summary card KPI tile padding | `p-4` | 16px (md) | Tighter than the card itself; 12 tiles fit a dense 4×3 grid |
-| Summary card KPI grid gap | `gap-px` + divider | 1px hairline dividers | Visual density; CSS grid `gap-px` + tile background `bg-white dark:bg-gray-900` on a `bg-gray-200 dark:bg-gray-700` grid container produces the divider effect with zero custom CSS |
-| Validation banner padding | `px-4 py-3` | 16px × 12px | 12px block padding is the single exception to the 4-multiple scale — adopted because `py-3` (12px) is the Tailwind-native vertical pad for notification bars and the banner is intentionally compact. See Exceptions. |
+| Summary card KPI grid dividers | `divide-x divide-y divide-gray-200 dark:divide-gray-700` | 1px borders | No spacing token consumed — grid cells abut and CSS `divide-*` draws 1px borders between them. Replaces prior `gap-px` approach. |
+| Validation banner padding | `px-4 py-3` | 16px × 12px | 12px block padding is a multiple of 4 (Tailwind `py-3`). Intentionally denser than full card padding so the banner reads as a notification bar. |
 | Skeleton row count (list) | 10 rows | — | Fits one viewport worth of data; avoids shimmer distracting on smaller monitors |
 | Skeleton row count (detail dept table) | 6 rows | — | Typical sales have 8–20 departments; 6 rows signals shape without pretending to be the full result |
 | Virtualization row overscan | 10 rows | — | TanStack Virtual `overscan: 10` — smooth scroll without inflating DOM |
 
-**Exceptions:**
-- Validation banner uses `py-3` (12px block padding) instead of `py-4` (16px). 12px is not a 4-multiple — wait, 12px IS a multiple of 4. No exception. The scale is 4/8/16/24/32/48/64 because those are the *declared tokens*, not because intermediate multiples of 4 are forbidden. Using `py-3` here is a deliberate choice to make the banner visually denser than a full card, and it still complies with the "multiples of 4 only" rule.
-- Skeleton shimmer bar heights: `h-4` (16px) for text lines, `h-3` (12px) for secondary lines. Both are multiples of 4.
+**Exceptions / non-standard values:** None. Every spacing value in this spec is a multiple of 4 (the declared tokens 4/8/16/24/32/48/64 plus the Tailwind-native intermediate multiples-of-4 `py-3` = 12px, `h-10` = 40px, `h-11` = 44px). The prior `gap-px` (1px) and `mt-0.5` (2px) values have been removed — KPI grid now uses border-based `divide-*` dividers and the validation banner icon is centered with `items-center` (no nudge).
 
-All Phase 3 dimensions are multiples of 4. No exceptions required.
+- Skeleton shimmer bar heights: `h-4` (16px) for text lines, `h-3` (12px) for secondary lines. Both are multiples of 4.
 
 ---
 
@@ -145,7 +147,7 @@ Continues Phase 1's 60 / 30 / 10 split. Adds two surface variants (table header 
 | Accent (10%) | `#2563eb` (blue-600 via `--color-accent`) | See "Accent reserved for" list below |
 | Destructive | `red-600` (`#dc2626`) light / `red-400` (`#f87171`) dark | Inline query error text (when `useSales()` or `useSale()` fails), retry button text-only variant. NOT used for negative numbers in tables — negative deltas are a Phase 6 concern (comparison view). |
 | Warning (amber) | `amber-50` bg / `amber-500/50` border / `amber-900` text (light) · `amber-950/40` bg / `amber-500/50` border / `amber-100` text (dark) | Validation banner only. Single reserved use. |
-| Border | `gray-200` / `gray-700` (dark) | Table horizontal row dividers (`divide-y`), card borders, input borders, summary card outline |
+| Border | `gray-200` / `gray-700` (dark) | Table horizontal row dividers (`divide-y`), card borders, input borders, summary card outline, KPI grid cell dividers |
 | Muted row text | `gray-500` / `gray-400` (dark) | KPI tile labels, `—` empty placeholder, "Totals" row background in dept table (`bg-gray-50/50` overlay) |
 
 **Accent reserved for** (Phase 1's 5 + Phase 3's 2 = 7 total):
@@ -243,6 +245,8 @@ All Phase 3 copy is written here verbatim. Executor uses these strings as-is.
 | Error state retry button | `Retry` |
 | Error state back link | `Back to sales` |
 
+**Intentional consistency exception — `Retry` (single-verb CTA):** Every retry surface in Phase 3 (sales list error, sale detail error, any future retry) uses the single word `Retry`. This deliberately deviates from the verb-plus-noun CTA rule because (a) the retry action's object is already named by the sibling error heading ("Couldn't load sales" → `Retry` is unambiguously "retry loading sales"), (b) retry buttons appear at the bottom of short error cards where the context is fully visible, and (c) consistency across error surfaces beats per-surface copy variance. Do not introduce `Retry loading`, `Try again`, or `Refresh` anywhere in the project without updating this exception.
+
 ### KPI summary card (sale detail)
 
 Each tile has a label and a value. Labels are copy-locked here so the executor cannot coin their own.
@@ -269,7 +273,7 @@ Each tile has a label and a value. Labels are copy-locked here so the executor c
 | `Buyers` | `buyers` | Integer |
 | `Payment status` | `payment_status` derived label | Label only in v1 (e.g. `12 paid, 3 pending, 1 partial`); the JSON counts appear as a `title` tooltip on the tile for desktop hover — see Claude's Discretion resolution below |
 
-**Grid layout:** Each tile occupies one cell of a responsive grid: `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px` inside a `bg-gray-200 dark:bg-gray-700` container. Tiles have `bg-white dark:bg-gray-900` so the container background bleeds through the `gap-px` to produce 1px hairline dividers with zero custom CSS. The 4×N grid naturally accommodates 18 tiles (= 4×5 with 2 unused cells, or 4×4 + 2 in a final row — order tiles by the table above and let the last two land naturally).
+**Grid layout:** Each tile occupies one cell of a responsive grid: `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 divide-x divide-y divide-gray-200 dark:divide-gray-700` inside the summary card's rounded border. Tiles abut with zero gap; CSS `divide-x divide-y` draws 1px dividers between cells — no spacing token consumed, no custom CSS. Tiles have `bg-white dark:bg-gray-900` (same as the surrounding card surface). The 4×N grid naturally accommodates 18 tiles (= 4×5 with 2 unused cells, or 4×4 + 2 in a final row — order tiles by the table above and let the last two land naturally). The outer summary card already has `rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden`, which clips the divider lines cleanly at the card's rounded edges.
 
 **Payment status resolution (Claude's Discretion decision):** Render the derived label as the tile value. Add a `title` attribute containing the expanded JSON counts, so desktop users get a native tooltip on hover. Do not build a custom tooltip component in Phase 3 — that's a Phase 5+ investment.
 
@@ -305,7 +309,7 @@ Each tile has a label and a value. Labels are copy-locked here so the executor c
 **Error patterns:**
 - Inline error states only. No global error dialog, no toast library.
 - Every error surface has `role="alert"` on its heading.
-- Retry is always available and always labelled `Retry` — no "Try again", no "Refresh" — one verb.
+- Retry is always available and always labelled `Retry` — no "Try again", no "Refresh" — one verb. See the Intentional consistency exception in Copywriting.
 
 **Keyboard tab order on `/sales`:** header user menu (inherited shell) → filter input → clear-filter button (if visible) → first column header → next header → ... → first data row → next row → ... (virtualization preserves tab order for the rows currently in the DOM; overscan of 10 avoids lost focus on scroll).
 
@@ -363,15 +367,15 @@ Each tile has a label and a value. Labels are copy-locked here so the executor c
 </main>
 ```
 
-- Summary card: `rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden` with the KPI grid inside.
+- Summary card: `rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden` wrapping a `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 divide-x divide-y divide-gray-200 dark:divide-gray-700` KPI grid. The outer card's `overflow-hidden` clips the divider lines cleanly at the rounded corners.
 - Department table: identical structural styling to the sales list table, but **no virtualization** (typical 8–20 rows), **no row click handler**, **no row focus ring**.
 - Footer row in department table: `<tfoot>` with `bg-gray-50 dark:bg-gray-800 font-semibold border-t-2 border-gray-300 dark:border-gray-600`. 2px top border is the visual separator; body rows use 1px dividers.
 
 ### Validation banner component
 
 ```
-<div role="alert" className="rounded-lg border border-amber-500/50 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-start gap-3">
-  <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+<div role="alert" className="rounded-lg border border-amber-500/50 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-center gap-3">
+  <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
   <p className="text-sm text-amber-900 dark:text-amber-100 flex-1">
     Department totals don't match the sale totals for this sale. Values may be off — spot-check against the source PDF before relying on them.
   </p>
@@ -380,6 +384,8 @@ Each tile has a label and a value. Labels are copy-locked here so the executor c
   </button>
 </div>
 ```
+
+Banner icon is vertically centered with the first (only) line of banner text via `items-center` on the flex container — no per-element nudge needed. If a future banner variant grows to multiple lines of body text, switch the container to `items-start` and set icon `mt-1` (4px, a multiple of 4) to align with the first line's cap height; do not use `mt-0.5`.
 
 ### Responsive breakpoints
 
