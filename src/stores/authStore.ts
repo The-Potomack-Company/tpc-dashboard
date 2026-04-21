@@ -21,7 +21,7 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
   session: null,
   user: null,
   profile: null,
@@ -41,14 +41,23 @@ export const useAuthStore = create<AuthState>()((set) => ({
       });
 
       if (session?.user) {
+        // Capture the user id at dispatch time. Supabase does not await
+        // onAuthStateChange callbacks, so if two events fire in rapid
+        // succession (INITIAL_SESSION + token refresh, or sign-out right
+        // after sign-in) two fetches can be in flight. Without this guard
+        // an older response can stomp newer state.
+        const fetchingFor = session.user.id;
         set({ profileLoading: true, profileLoaded: false });
         // maybeSingle() returns { data: null } instead of an error when no
         // row exists, so a user without a profiles row doesn't get stuck.
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', fetchingFor)
           .maybeSingle();
+        // Discard response if the current session has moved on (user
+        // changed or signed out during the fetch).
+        if (get().user?.id !== fetchingFor) return;
         if (error) {
           // Surface fetch failures (RLS reject, network, Supabase outage).
           // Without this, any failure silently locks the user out with no
