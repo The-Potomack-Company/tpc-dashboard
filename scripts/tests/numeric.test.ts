@@ -72,6 +72,14 @@ describe('parseMoneyRange', () => {
     expect(parseMoneyRange('$0-0')).toEqual({ low: 0, high: 0 });
   });
 
+  it('preserves backwards ranges instead of treating them as sentinel (WR-01)', () => {
+    // "$1,000-500" is not observed in the 457-file corpus but if it ever
+    // occurs we want to preserve both values so a data-quality warning
+    // surfaces, rather than silently coercing high to null as if this
+    // were the "-0" sentinel. Only high === 0 with low > 0 is a sentinel.
+    expect(parseMoneyRange('$1,000-500')).toEqual({ low: 1000, high: 500 });
+  });
+
   it('returns nulls for garbage', () => {
     expect(parseMoneyRange('garbage')).toEqual({ low: null, high: null });
   });

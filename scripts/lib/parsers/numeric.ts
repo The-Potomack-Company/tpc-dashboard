@@ -43,8 +43,13 @@ export function parseMoneyRange(
   const low = parseFloat(m.groups.low.replace(/,/g, ''));
   const high = parseFloat(m.groups.high.replace(/,/g, ''));
   if (Number.isNaN(low) || Number.isNaN(high)) return { low: null, high: null };
-  // Sentinel: "$30,000-0" means no upper bound (low > 0, high == 0).
-  return { low, high: high < low && low > 0 ? null : high };
+  // Sentinel: "$30,000-0" means no upper bound. Tighten to require
+  // high === 0 specifically (not any high < low). A legitimate but
+  // backwards range like "$1,000-500" preserves both values so
+  // downstream tooling can surface it as a data-quality warning
+  // rather than silently masking it as "no upper bound".
+  const isRfcSentinel = high === 0 && low > 0;
+  return { low, high: isRfcSentinel ? null : high };
 }
 
 export function parseLotsSold(
