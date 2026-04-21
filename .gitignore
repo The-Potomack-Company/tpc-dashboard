@@ -32,6 +32,8 @@ dist-ssr
 *.sw?
 
 # Supabase CLI local state
+supabase/.branches
+supabase/.temp
 supabase/.temp/
 
 # Cloudflare Workers
