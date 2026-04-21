@@ -188,9 +188,14 @@ export async function main(
       const adminModule = await import('./lib/supabase-admin.js');
       admin = adminModule.supabaseAdmin;
 
+      // WR-04: sales_found reflects the corpus size (pre-limit), not the
+      // subset this run chose to process. An operator inspecting the DB
+      // should see "how many PDFs are in the source directory", not
+      // "how many this particular invocation asked for". The actually-
+      // processed count lands in logs.processed.
       const { data, error } = await admin
         .from('scraper_runs')
-        .insert({ status: 'running', sales_found: files.length })
+        .insert({ status: 'running', sales_found: allFiles.length })
         .select('id')
         .single();
 
@@ -318,8 +323,12 @@ export async function main(
         status,
         finished_at: new Date().toISOString(),
         sales_imported: summary.inserted,
-        error_message:
-          summary.failed > 0 ? `${summary.failed} files failed` : null,
+        // WR-04: include skipped/failed counts in error_message so an
+        // operator glancing at scraper_runs can distinguish "healthy
+        // idempotency replay" (lots of duplicates) from "parse
+        // regression" (failures) without opening the logs jsonb. null
+        // only when the run had neither failures nor empty skips.
+        error_message: buildErrorMessage(summary),
         logs: summaryToLogs(summary),
       })
       .eq('id', runId);
@@ -460,6 +469,11 @@ function computeStatus(s: RunSummary): 'success' | 'partial' | 'failure' {
 function summaryToLogs(s: RunSummary): Record<string, unknown> {
   return {
     total: s.total,
+    // WR-04: `processed` mirrors `total` but names the concept
+    // explicitly. scraper_runs.sales_found is now the corpus size
+    // (pre-limit); `logs.processed` is how many this run actually
+    // iterated over (post-limit).
+    processed: s.total,
     inserted: s.inserted,
     skipped_duplicate: s.skipped_duplicate,
     skipped_empty: s.skipped_empty,
@@ -468,6 +482,20 @@ function summaryToLogs(s: RunSummary): Record<string, unknown> {
     duration_ms: s.duration_ms,
     failures: s.failures,
   };
+}
+
+// WR-04: build a single-line summary of non-success outcomes for
+// scraper_runs.error_message. Returns null only when the run was
+// completely clean (no failures, no empty placeholders). Duplicates
+// are mentioned as context: "healthy idempotency replay" should not
+// look identical to "parse regression".
+function buildErrorMessage(s: RunSummary): string | null {
+  if (s.failed === 0 && s.skipped_empty === 0) return null;
+  const parts: string[] = [];
+  if (s.failed > 0) parts.push(`${s.failed} failed`);
+  if (s.skipped_empty > 0) parts.push(`${s.skipped_empty} empty`);
+  if (s.skipped_duplicate > 0) parts.push(`${s.skipped_duplicate} duplicates`);
+  return parts.join(', ');
 }
 
 function formatDuration(ms: number): string {
