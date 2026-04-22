@@ -62,15 +62,19 @@ export function SalesPage() {
               {count} sales imported
             </p>
           )}
-          {filter && count > 0 && (
-            <p
-              aria-live="polite"
-              aria-atomic="true"
-              className="text-sm text-gray-500 dark:text-gray-400 mt-1"
-            >
-              {filteredCount} of {count} sales
-            </p>
-          )}
+          {/* WR-03: Always mount the live region — some ATs treat conditional
+              mounting as removal rather than update, losing the announcement.
+              When inactive we collapse via sr-only so the visual layout is
+              unchanged. */}
+          <p
+            aria-live="polite"
+            aria-atomic="true"
+            className={`text-sm text-gray-500 dark:text-gray-400 mt-1 ${
+              filter && count > 0 ? '' : 'sr-only'
+            }`}
+          >
+            {filter && count > 0 ? `${filteredCount} of ${count} sales` : ''}
+          </p>
         </div>
         <FilterInput
           value={filter}

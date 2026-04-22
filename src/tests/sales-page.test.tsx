@@ -140,13 +140,20 @@ describe('SalesPage', () => {
     useSalesMock.mockReturnValue({ isLoading: false, isError: false, isSuccess: true, data: sales, error: null, refetch: vi.fn() });
     const user = userEvent.setup();
     const { container } = renderPage();
-    expect(container.querySelector('[aria-live="polite"]')).toBeNull();
+    // WR-03: Live region is always mounted (not conditionally rendered) so
+    // some ATs don't miss the first announcement. Inactive state uses
+    // sr-only + empty text content.
+    const initialLiveRegion = container.querySelector('[aria-live="polite"]');
+    expect(initialLiveRegion).not.toBeNull();
+    expect(initialLiveRegion?.textContent ?? '').toBe('');
+    expect(initialLiveRegion?.className).toMatch(/sr-only/);
     const input = screen.getByLabelText('Filter sales by title or sale number');
     await user.type(input, 'vintage');
     await waitFor(() => {
       const liveRegion = container.querySelector('[aria-live="polite"]');
       expect(liveRegion).not.toBeNull();
       expect(liveRegion?.textContent).toMatch(/2 of 3 sales/);
+      expect(liveRegion?.className ?? '').not.toMatch(/sr-only/);
     });
   });
 
