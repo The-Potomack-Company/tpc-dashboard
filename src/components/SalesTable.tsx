@@ -93,8 +93,13 @@ export function SalesTable({ sales, filterText }: SalesTableProps) {
       {
         id: 'sell_through',
         header: 'Sell-through',
+        // Guard only `lots_auctioned > 0` so lots_sold === 0 renders a valid
+        // 0% sell-through instead of EMPTY. Matches SaleSummaryCard's
+        // derivation exactly; divergence was flagged as WR-01.
         accessorFn: (row) =>
-          row.lots_auctioned && row.lots_sold
+          row.lots_sold != null &&
+          row.lots_auctioned != null &&
+          row.lots_auctioned > 0
             ? row.lots_sold / row.lots_auctioned
             : null,
         cell: (info) => formatPercent(info.getValue<number | null>()),
