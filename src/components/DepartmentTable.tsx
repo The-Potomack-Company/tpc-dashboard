@@ -22,8 +22,8 @@
 //     they are read-only display rows by spec.
 //
 // Threat model: T-03-01 (XSS via department.display_name, department_code)
-// is mitigated by React auto-escaping all text nodes; no
-// dangerouslySetInnerHTML sinks exist in this file.
+// is mitigated by React auto-escaping all text nodes; no raw-HTML
+// injection sinks exist in this file.
 
 import * as React from 'react';
 import {

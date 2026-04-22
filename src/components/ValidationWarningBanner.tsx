@@ -9,7 +9,7 @@
 //
 // Threat model: T-03-01 — React auto-escapes the only dynamic value
 // (saleNumber) and it never enters the DOM; it only flows into the
-// invalidateQueries query key. No dangerouslySetInnerHTML.
+// invalidateQueries query key. No raw-HTML injection sinks.
 
 import { useQueryClient } from '@tanstack/react-query';
 
