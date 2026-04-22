@@ -79,17 +79,18 @@ describe('useKpiSummary', () => {
     rpcMock.mockResolvedValueOnce({ data: validPayload, error: null });
     rpcMock.mockResolvedValueOnce({ data: validPayload, error: null });
 
+    type Period = 'ytd' | 'l6m' | 'l12m';
     const wrapper = makeWrapper();
+    const initialProps: { period: Period } = { period: 'l12m' };
     const { result, rerender } = renderHook(
-      ({ period }: { period: 'ytd' | 'l6m' | 'l12m' }) =>
-        useKpiSummary(period),
-      { wrapper, initialProps: { period: 'l12m' as const } },
+      ({ period }: { period: Period }) => useKpiSummary(period),
+      { wrapper, initialProps },
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(rpcMock).toHaveBeenCalledTimes(1);
 
-    rerender({ period: 'ytd' as const });
+    rerender({ period: 'ytd' });
 
     await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(2));
   });
