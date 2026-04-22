@@ -66,12 +66,20 @@ describe('DashboardLayout (Wave 4)', () => {
 
   it('renders disabled (aria-disabled) nav entries for not-yet-built phases', () => {
     renderLayout('/sales');
-    const disabledLabels = ['Trends', 'Departments', 'Team', 'Reports', 'Custom Charts'];
+    // Phase 5 (plan 05-07) flipped Trends to an active NavLink — it is no
+    // longer in the disabled set.
+    const disabledLabels = ['Departments', 'Team', 'Reports', 'Custom Charts'];
     for (const label of disabledLabels) {
       const el = screen.getByText(label).closest('[aria-disabled]');
       expect(el).not.toBeNull();
       expect(el?.getAttribute('aria-disabled')).toBe('true');
     }
+  });
+
+  it('renders Trends as an active NavLink to /trends (Phase 5 plan 05-07)', () => {
+    renderLayout('/sales');
+    const trendsLink = screen.getByRole('link', { name: /Trends/i });
+    expect(trendsLink).toHaveAttribute('href', '/trends');
   });
 
   it('has responsive sidebar grid classes on the root container', () => {

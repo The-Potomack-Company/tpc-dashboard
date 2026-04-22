@@ -73,10 +73,11 @@ interface NavItem {
   Icon: () => ReactElement;
 }
 
-// Sales is the only active entry in Phase 3. Phases 4-9 add the rest.
+// Sales is active from Phase 3; Trends joins in Phase 5 (plan 05-07).
+// Phases 6-9 activate the rest.
 const NAV_ITEMS: NavItem[] = [
   { label: "Sales", to: "/sales", Icon: IconTableCells },
-  { label: "Trends", Icon: IconChartBar },
+  { label: "Trends", to: "/trends", Icon: IconChartBar },
   { label: "Departments", Icon: IconBuildingLibrary },
   { label: "Team", Icon: IconUsers },
   { label: "Reports", Icon: IconDocumentText },
