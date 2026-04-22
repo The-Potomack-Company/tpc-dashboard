@@ -32,7 +32,15 @@ export function FilterInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') onChange('');
+          // WR-09: Guard the manual clear so it doesn't double-fire with
+          // Safari's native <input type="search"> Escape-clear behavior.
+          // Only clear if there is something to clear, and prevent the
+          // browser from ALSO firing a second onChange('') after our
+          // handler resolves.
+          if (e.key === 'Escape' && value !== '') {
+            e.preventDefault();
+            onChange('');
+          }
         }}
         placeholder={placeholder}
         aria-label={ariaLabel}
