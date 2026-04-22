@@ -18,7 +18,7 @@
 //     render EMPTY in the footer (they don't sum meaningfully).
 //   - sell_through_pct is stored 0-100 in the DB; we divide by 100
 //     before passing to formatPercent (which expects a ratio).
-//   - Rows have no tabIndex, no onClick, no cursor-pointer class —
+//   - Rows have no tab-index, no click handler, no cursor-pointer class —
 //     they are read-only display rows by spec.
 //
 // Threat model: T-03-01 (XSS via department.display_name, department_code)
