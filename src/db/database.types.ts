@@ -587,6 +587,15 @@ export type Database = {
         Args: { p_departments: Json; p_sale: Json }
         Returns: string
       }
+      kpi_summary: {
+        Args: {
+          compare_end: string
+          compare_start: string
+          period_end: string
+          period_start: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
