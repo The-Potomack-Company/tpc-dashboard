@@ -129,10 +129,15 @@ Plans:
   3. User can view department share of sale as a stacked 100% bar chart
   4. User can compare 2-4 sales side-by-side with all metrics in columns, with color-coded deltas showing improvement or decline
   5. User can view a revenue waterfall chart for any sale showing the path from hammer price to net revenue
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 06-01: TBD
+- [ ] 06-01-PLAN.md — Migrations (3 new RPCs) + BLOCKING db push + types regen + delta/waterfall libs + 4 data hooks (Wave 1)
+- [ ] 06-02-PLAN.md — /departments page skeleton: DeptRankingMetricToggle + DepartmentRankingsTable + page-level cross-filter state (Wave 2)
+- [ ] 06-03-PLAN.md — DepartmentChipBar + DepartmentRevenueLineChart + DepartmentShareStackedBarChart wired into /departments (Wave 2)
+- [ ] 06-04-PLAN.md — SalesTable selection + SaleSelectionFooter + /sales/compare page + ComparisonTable + parseSalesParam (Wave 2)
+- [ ] 06-05-PLAN.md — RevenueWaterfallChart + collapsible Revenue Breakdown section on Sale Detail (Wave 2)
+- [ ] 06-06-PLAN.md — DashboardLayout Departments NavLink activation + human-verify end-to-end checkpoint (Wave 3)
 **UI hint**: yes
 
 ### Phase 7: Team Activity
@@ -207,7 +212,7 @@ Note: Phases 4, 5, and 7 can run in parallel after Phase 3. Phase 9 can run afte
 | 3. Sale Views | 0/? | Not started | - |
 | 4. KPI Landing Page | 0/? | Not started | - |
 | 5. Trend Analysis | 0/7 | Planned | - |
-| 6. Department Analysis & Sale Comparison | 0/? | Not started | - |
+| 6. Department Analysis & Sale Comparison | 0/6 | Planned | - |
 | 7. Team Activity | 0/? | Not started | - |
 | 8. Reporting & Export | 0/? | Not started | - |
 | 9. Custom Charts | 0/? | Not started | - |
