@@ -110,13 +110,13 @@ Plans:
 **Plans**: 7 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Install recharts + chart-colors.ts + period.ts Range extension + ChartTooltip + ChartSkeleton + ChartCard primitives (Wave 1)
-- [ ] 05-02-PLAN.md — DateRangeFilter (5 presets + Custom disclosure) + MetricToggle (Wave 2, parallel with 05-03)
-- [ ] 05-03-PLAN.md — useSalesInRange + useDepartmentGrid TanStack Query hooks (Wave 2, parallel with 05-02)
-- [ ] 05-04-PLAN.md — rolling-avg helper + NetRevenueTrendChart (TRND-01) + SellThroughTrendChart (TRND-02) (Wave 3)
-- [ ] 05-05-PLAN.md — estimate-accuracy helper + EstimateAccuracyChart (TRND-05) + BidderParticipationChart (TRND-06) (Wave 3)
-- [ ] 05-06-PLAN.md — heat-map-bucket helper + DepartmentHeatMap (TRND-04) (Wave 3)
-- [ ] 05-07-PLAN.md — Trends page composition + /trends route + DashboardLayout Trends NavLink activation + human-verify checkpoint (Wave 4)
+- [x] 05-01-PLAN.md — Install recharts + chart-colors.ts + period.ts Range extension + ChartTooltip + ChartSkeleton + ChartCard primitives (Wave 1)
+- [x] 05-02-PLAN.md — DateRangeFilter (5 presets + Custom disclosure) + MetricToggle (Wave 2, parallel with 05-03)
+- [x] 05-03-PLAN.md — useSalesInRange + useDepartmentGrid TanStack Query hooks (Wave 2, parallel with 05-02)
+- [x] 05-04-PLAN.md — rolling-avg helper + NetRevenueTrendChart (TRND-01) + SellThroughTrendChart (TRND-02) (Wave 3)
+- [x] 05-05-PLAN.md — estimate-accuracy helper + EstimateAccuracyChart (TRND-05) + BidderParticipationChart (TRND-06) (Wave 3)
+- [x] 05-06-PLAN.md — heat-map-bucket helper + DepartmentHeatMap (TRND-04) (Wave 3)
+- [x] 05-07-PLAN.md — Trends page composition + /trends route + DashboardLayout Trends NavLink activation + human-verify checkpoint (Wave 4)
 **UI hint**: yes
 
 ### Phase 6: Department Analysis & Sale Comparison
