@@ -88,10 +88,13 @@ Plans:
   1. Landing page displays KPI scorecards for total revenue, average sell-through rate, total lots sold, and total sales count
   2. Each scorecard shows period-over-period change with directional arrow and percentage
   3. Landing page shows the most recent sales with key metrics visible at a glance
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Migration + kpi_summary RPC + db:push + types regen (Wave 1)
+- [ ] 04-02-PLAN.md — period.ts + formatDelta + kpi-schema (Wave 2)
+- [ ] 04-03-PLAN.md — useKpiSummary + 6 components + tests (Wave 3)
+- [ ] 04-04-PLAN.md — Dashboard page composition + integration test (Wave 4)
 **UI hint**: yes
 
 ### Phase 5: Trend Analysis
