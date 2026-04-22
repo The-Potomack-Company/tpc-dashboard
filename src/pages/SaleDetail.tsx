@@ -110,8 +110,12 @@ export function SaleDetailPage() {
     return <SaleNotFound saleNumber={saleNumber} />;
   }
 
-  // status === 'ok'
-  const { sale, departments } = query.data!;
+  // WR-07: Narrow on `status === 'ok'` explicitly instead of asserting
+  // non-null. Protects against future TanStack Query states (e.g. isPaused,
+  // isFetching-without-data races) where `query.data` could be undefined
+  // while `isLoading` / `isError` are both false.
+  if (query.data?.status !== 'ok') return null;
+  const { sale, departments } = query.data;
 
   return (
     <>
