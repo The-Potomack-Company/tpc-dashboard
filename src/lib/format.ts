@@ -58,9 +58,15 @@ export function formatCount(value: number | null | undefined): string {
 /**
  * Formats an ISO date-only string ("YYYY-MM-DD") as `"Mon D, YYYY"` without
  * a UTC → local-TZ shift. Appending `T00:00:00` pins the parse to local time.
+ *
+ * WR-06: Shape-validate with a regex before concatenating `T00:00:00` so
+ * non-date-only inputs (e.g. full ISO timestamps, freeform strings) render
+ * as EMPTY rather than silently producing an `Invalid Date`.
  */
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) return EMPTY;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) return EMPTY;
   const d = new Date(isoDate + 'T00:00:00');
   if (Number.isNaN(d.getTime())) return EMPTY;
   return dateFormatter.format(d);
