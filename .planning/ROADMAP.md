@@ -91,10 +91,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Migration + kpi_summary RPC + db:push + types regen (Wave 1)
-- [ ] 04-02-PLAN.md — period.ts + formatDelta + kpi-schema (Wave 2)
-- [ ] 04-03-PLAN.md — useKpiSummary + 6 components + tests (Wave 3)
-- [ ] 04-04-PLAN.md — Dashboard page composition + integration test (Wave 4)
+- [x] 04-01-PLAN.md — Migration + kpi_summary RPC + db:push + types regen (Wave 1)
+- [x] 04-02-PLAN.md — period.ts + formatDelta + kpi-schema (Wave 2)
+- [x] 04-03-PLAN.md — useKpiSummary + 6 components + tests (Wave 3)
+- [x] 04-04-PLAN.md — Dashboard page composition + integration test (Wave 4)
 **UI hint**: yes
 
 ### Phase 5: Trend Analysis
