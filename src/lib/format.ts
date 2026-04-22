@@ -108,3 +108,83 @@ export function formatPaymentStatus(
   if (value == null) return EMPTY;
   return PAYMENT_STATUS_LABELS[value] ?? EMPTY;
 }
+
+// Phase 4 — formatDelta helper for KPI scorecards.
+// Locked by 04-UI-SPEC.md § Copywriting Contract → Delta semantics (lines 249–264)
+// and 04-RESEARCH.md § Pattern 5. Returns a structured object (not a string)
+// so the KpiCard can apply the color class to the whole glyph+text span
+// atomically.
+
+export type DeltaDirection = 'up' | 'down' | 'none';
+
+/**
+ * `relative`            — `(current - previous) / previous * 100`, suffix `%`.
+ *                         Used for currency and count KPIs (revenue, lots sold,
+ *                         sales count).
+ * `percentage-points`   — `(current - previous) * 100`, suffix `pp`. Used for
+ *                         the sell-through card only — both values are already
+ *                         ratios 0–1, so subtracting gives absolute pp change.
+ */
+export type DeltaType = 'relative' | 'percentage-points';
+
+export interface FormattedDelta {
+  glyph: '▲' | '▼' | '—';
+  text: string;
+  direction: DeltaDirection;
+  aria: string;
+}
+
+const NO_BASELINE: FormattedDelta = {
+  glyph: '—',
+  text: '',
+  direction: 'none',
+  aria: 'No baseline comparison',
+};
+
+/**
+ * Formats a period-over-period change as a glyph + text + direction + aria
+ * bundle. Returns a structured object (not a string) so the KpiCard can color
+ * the whole `{glyph} {text}` span atomically.
+ *
+ * No-baseline cases (direction === 'none', glyph `—`, empty text):
+ *   - `current == null` OR `previous == null` (either side missing)
+ *   - `type === 'relative'` AND `previous === 0` (divide-by-zero guard)
+ *   - `delta === 0` (flat period; Assumption A2 — reads identically to no baseline)
+ *
+ * See UI-SPEC § Copywriting Contract → Delta semantics for the full copy
+ * contract. KpiCard prepends `{periodLabel}` to the aria after this helper.
+ */
+export function formatDelta(
+  current: number | null | undefined,
+  previous: number | null | undefined,
+  type: DeltaType,
+): FormattedDelta {
+  if (current == null || previous == null) return NO_BASELINE;
+  if (type === 'relative' && previous === 0) return NO_BASELINE;
+
+  const delta =
+    type === 'relative'
+      ? ((current - previous) / previous) * 100
+      : (current - previous) * 100;
+
+  if (delta === 0) return NO_BASELINE;
+
+  const abs = Math.abs(delta).toFixed(1);
+  const suffix = type === 'relative' ? '%' : 'pp';
+  const text = `${abs}${suffix}`;
+
+  if (delta > 0) {
+    return {
+      glyph: '▲',
+      text,
+      direction: 'up',
+      aria: `Up ${text} versus previous`,
+    };
+  }
+  return {
+    glyph: '▼',
+    text,
+    direction: 'down',
+    aria: `Down ${text} versus previous`,
+  };
+}
