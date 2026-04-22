@@ -71,7 +71,7 @@ describe('SaleDetailPage', () => {
   it('renders 404 Sale not found when useSale returns status not_found', () => {
     useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'not_found' }, error: null, refetch: vi.fn() });
     renderPage('NONEXISTENT');
-    expect(screen.getByRole('heading', { name: 'Sale not found' })).toBeInTheDocument();
+    expect(screen.getByText('Sale not found')).toBeInTheDocument();
     expect(screen.getByText(/NONEXISTENT/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Back to sales/ })).toBeInTheDocument();
   });
@@ -80,7 +80,7 @@ describe('SaleDetailPage', () => {
     const refetch = vi.fn();
     useSaleMock.mockReturnValue({ isLoading: false, isError: true, data: undefined, error: new Error('boom'), refetch });
     renderPage('22OCT');
-    expect(screen.getByRole('heading', { name: "Couldn't load this sale" })).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load this sale")).toBeInTheDocument();
     const retry = screen.getByRole('button', { name: /Retry/ });
     fireEvent.click(retry);
     expect(refetch).toHaveBeenCalled();

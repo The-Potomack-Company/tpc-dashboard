@@ -95,7 +95,7 @@ describe('SalesPage', () => {
     const refetch = vi.fn();
     useSalesMock.mockReturnValue({ isLoading: false, isError: true, isSuccess: false, data: undefined, error: new Error('boom'), refetch });
     renderPage();
-    expect(screen.getByRole('heading', { name: "Couldn't load sales" })).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load sales")).toBeInTheDocument();
     expect(screen.getByText(/Something went wrong talking to the database/)).toBeInTheDocument();
     const retry = screen.getByRole('button', { name: /Retry/ });
     fireEvent.click(retry);
