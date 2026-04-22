@@ -151,7 +151,11 @@ export function SalesTable({ sales, filterText }: SalesTableProps) {
   return (
     <div
       ref={parentRef}
-      className="overflow-y-auto max-h-[calc(100dvh-16rem)] rounded-lg border border-gray-200 dark:border-gray-700"
+      // WR-05: `flex-1 min-h-0` replaces a fragile `max-h-[calc(100dvh-16rem)]`.
+      // The parent page (and DashboardLayout) supply a flex-column context
+      // so this container fills exactly the space left after the header,
+      // preventing the double-scrollbar UX when the filter row stacks.
+      className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div style={{ height: `${virtualizer.getTotalSize()}px` }}>
         <table className="w-full">

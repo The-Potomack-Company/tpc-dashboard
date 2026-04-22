@@ -51,7 +51,10 @@ export function SalesPage() {
   }, [sales, deferredFilter, count]);
 
   return (
-    <>
+    // WR-05: Sales page claims the full available height from DashboardLayout
+    // (flex-1 min-h-0) so SalesTable's scroll container can size against
+    // leftover space via flex-1 instead of a fragile calc(100dvh-16rem).
+    <div className="flex-1 min-h-0 flex flex-col">
       <header className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -127,7 +130,7 @@ export function SalesPage() {
       {query.isSuccess && sales.length > 0 && (
         <SalesTable sales={sales} filterText={deferredFilter} />
       )}
-    </>
+    </div>
   );
 }
 

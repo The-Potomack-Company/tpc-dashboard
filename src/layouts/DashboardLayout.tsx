@@ -187,9 +187,17 @@ export function DashboardLayout() {
             )}
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-8 py-8">
-            <Outlet />
+        {/* WR-05: main is a flex column so pages can claim remaining height
+            via `flex-1 min-h-0` (SalesTable virtualization needs a bounded
+            scroll container). Outer scroll lives on the inner wrapper so
+            pages like SaleDetail still scroll naturally when content
+            overflows, while pages like Sales (flex-col with flex-1 table)
+            size their inner scroll against the leftover space. */}
+        <main className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-8 py-8 min-h-full flex flex-col">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>
