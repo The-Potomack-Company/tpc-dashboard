@@ -272,11 +272,11 @@ Each tile has a label and a value. Labels are copy-locked here so the executor c
 | `Net revenue` | `net_revenue` | Currency |
 | `Registered bidders` | `registered_bidders` | Integer |
 | `Buyers` | `buyers` | Integer |
-| `Payment status` | `payment_status` derived label | Label only in v1 (e.g. `12 paid, 3 pending, 1 partial`); the JSON counts appear as a `title` tooltip on the tile for desktop hover — see Claude's Discretion resolution below |
+| `Payment status` | `payment_status` | Label only — human-formatted enum string (`Paid`, `Partial`, `Unpaid`, `—`) via `formatPaymentStatus()`. No tooltip. See Payment status resolution below. |
 
 **Grid layout:** Each tile occupies one cell of a responsive grid: `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 divide-x divide-y divide-gray-200 dark:divide-gray-700` inside the summary card's rounded border. Tiles abut with zero gap; CSS `divide-x divide-y` draws 1px dividers between cells — no spacing token consumed, no custom CSS. Tiles have `bg-white dark:bg-gray-900` (same as the surrounding card surface). The 4×N grid naturally accommodates 18 tiles (= 4×5 with 2 unused cells, or 4×4 + 2 in a final row — order tiles by the table above and let the last two land naturally). The outer summary card already has `rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden`, which clips the divider lines cleanly at the card's rounded edges.
 
-**Payment status resolution (Claude's Discretion decision):** Render the derived label as the tile value. Add a `title` attribute containing the expanded JSON counts, so desktop users get a native tooltip on hover. Do not build a custom tooltip component in Phase 3 — that's a Phase 5+ investment.
+**Payment status resolution:** Phase 2 shipped `sales.payment_status` as a bare enum string (`'paid' | 'partial' | 'unpaid' | null`) — no counts are stored. Render the enum as the tile value using the shared `formatPaymentStatus()` helper in `src/lib/format.ts`, which maps: `'paid' → 'Paid'`, `'partial' → 'Partial'`, `'unpaid' → 'Unpaid'`, `null/undefined → EMPTY` (em-dash). Do NOT attempt to parse JSON from the column (it contains a bare enum, not JSON). Do NOT add a `title` attribute — there are no counts to surface. Reassess in Phase 5+ if Phase 2 is amended to store counts.
 
 **Destructive actions in Phase 3:** None. Phase 3 is read-only. No confirmation dialogs.
 
