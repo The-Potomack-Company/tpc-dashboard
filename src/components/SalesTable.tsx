@@ -201,6 +201,15 @@ export function SalesTable({ sales, filterText }: SalesTableProps) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700 [&>tr:nth-child(even)]:bg-gray-50 dark:[&>tr:nth-child(even)]:bg-gray-900/50">
             {virtualItems.map((vRow, index) => {
               const row = rows[vRow.index];
+              // WR-04 invariant: `translateY(vRow.start - index * vRow.size)`
+              // positions each visible row at its absolute virtual offset
+              // (vRow.start) by subtracting the natural flow offset the row
+              // would otherwise take (index * vRow.size). This works ONLY
+              // because every row is fixed-height at ROW_HEIGHT (vRow.size
+              // is identical for every entry in virtualItems). If variable
+              // row heights are ever introduced (measureElement/dynamic
+              // sizes), replace with absolute positioning or a per-row
+              // cumulative-start offset — the subtraction breaks.
               return (
                 <tr
                   key={row.id}
