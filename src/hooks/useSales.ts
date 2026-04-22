@@ -4,6 +4,12 @@ import type { Database } from '../db/database.types';
 
 type Sale = Database['public']['Tables']['sales']['Row'];
 
+// WR-08: Stable empty-array singleton. Returning `data ?? []` from the
+// queryFn creates a fresh array on every refetch, breaking referential
+// equality downstream (Object.is checks, useMemo dep arrays, etc). The
+// singleton is frozen so accidental in-place mutation fails loudly.
+const EMPTY_SALES: readonly Sale[] = Object.freeze([]) as readonly Sale[];
+
 /**
  * Loads every row of `sales`, sorted newest-first by `sale_date`.
  *
@@ -26,7 +32,10 @@ export function useSales() {
         .select('*')
         .order('sale_date', { ascending: false, nullsFirst: false });
       if (error) throw error;
-      return data ?? [];
+      // WR-08: Return the frozen singleton instead of an inline literal so
+      // consumers that rely on reference stability (useMemo deps, selector
+      // equality, etc.) don't thrash on every refetch.
+      return data ?? (EMPTY_SALES as Sale[]);
     },
   });
 }
