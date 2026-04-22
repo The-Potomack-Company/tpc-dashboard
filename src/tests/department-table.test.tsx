@@ -49,11 +49,18 @@ describe('DepartmentTable', () => {
       'Reserves',
       'Revenue',
     ];
+    const rendered = screen
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent ?? '');
     for (const h of headers) {
+      // Exact header text match — "Sold" and "Sold value" must both appear
+      // as distinct columns, so look for a columnheader that starts with the
+      // header label rather than a substring regex (which would double-match).
       expect(
-        screen.getByRole('columnheader', { name: new RegExp(h) }),
-      ).toBeInTheDocument();
+        rendered.some((text) => text.trim().startsWith(h)),
+      ).toBe(true);
     }
+    expect(rendered).toHaveLength(8);
   });
 
   it('default sort is revenue DESC with aria-sort descending', () => {
