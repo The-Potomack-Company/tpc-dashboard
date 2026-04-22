@@ -77,7 +77,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01: TBD
+- [x] 03-01: TBD
 **UI hint**: yes
 
 ### Phase 4: KPI Landing Page
