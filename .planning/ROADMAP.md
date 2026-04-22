@@ -61,7 +61,7 @@ Plans:
 - [x] 02-01-PLAN.md — Migrations (validation_warning + auto_discovered) + import_sale_with_departments RPC + BLOCKING db push + types regen
 - [x] 02-02-PLAN.md — Install pdf-parse/tsx/dotenv + scripts/ scaffolding + numeric/sale/dept parsers + Zod schemas + isolated supabase-admin + parse-pdf orchestrator + Wave 0 unit tests
 - [x] 02-03-PLAN.md — cross-validate.ts (DATA-05 tolerance) + import-sale.ts (idempotent + auto-discover) + Wave 0 integration tests
-- [x] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + .env.example + integration test
+- [x] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + integration test
 - [x] 02-05-PLAN.md — README + PROJECT.md path correction + STATE.md + manual-QA checkpoint (full 457 run + 10-sale spot-check + re-run idempotency) + REQUIREMENTS/ROADMAP finalization
 
 ### Phase 3: Sale Views
@@ -98,7 +98,7 @@ Plans:
 **UI hint**: yes
 
 ### Phase 5: Trend Analysis
-**Goal**: Users can visualize how auction performance changes over time across multiple dimensions
+**Goal**: Users can visualize how auction performance changes over time across multiple dimensions — net revenue per sale with a rolling-3 trend overlay, sell-through per sale, estimate accuracy bands (below/within/above), bidder participation dual-axis, and a department performance heat map — all filterable via a shared L12M-default DateRangeFilter with presets + custom range and tooltips showing exact values on hover.
 **Depends on**: Phase 3
 **Requirements**: TRND-01, TRND-02, TRND-03, TRND-04, TRND-05, TRND-06, INTR-03
 **Success Criteria** (what must be TRUE):
@@ -107,10 +107,16 @@ Plans:
   3. User can filter all trend views by date range using presets (YTD, last 12 months, last 2 years, all time) or a custom range picker
   4. User can view a department performance heat map (rows = departments, columns = sales, color intensity = sell-through or revenue)
   5. Charts display tooltips with exact values on hover
-**Plans**: TBD
+**Plans**: 7 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Install recharts + chart-colors.ts + period.ts Range extension + ChartTooltip + ChartSkeleton + ChartCard primitives (Wave 1)
+- [ ] 05-02-PLAN.md — DateRangeFilter (5 presets + Custom disclosure) + MetricToggle (Wave 2, parallel with 05-03)
+- [ ] 05-03-PLAN.md — useSalesInRange + useDepartmentGrid TanStack Query hooks (Wave 2, parallel with 05-02)
+- [ ] 05-04-PLAN.md — rolling-avg helper + NetRevenueTrendChart (TRND-01) + SellThroughTrendChart (TRND-02) (Wave 3)
+- [ ] 05-05-PLAN.md — estimate-accuracy helper + EstimateAccuracyChart (TRND-05) + BidderParticipationChart (TRND-06) (Wave 3)
+- [ ] 05-06-PLAN.md — heat-map-bucket helper + DepartmentHeatMap (TRND-04) (Wave 3)
+- [ ] 05-07-PLAN.md — Trends page composition + /trends route + DashboardLayout Trends NavLink activation + human-verify checkpoint (Wave 4)
 **UI hint**: yes
 
 ### Phase 6: Department Analysis & Sale Comparison
@@ -200,7 +206,7 @@ Note: Phases 4, 5, and 7 can run in parallel after Phase 3. Phase 9 can run afte
 | 2. PDF Import Pipeline | 0/5 | Planned | - |
 | 3. Sale Views | 0/? | Not started | - |
 | 4. KPI Landing Page | 0/? | Not started | - |
-| 5. Trend Analysis | 0/? | Not started | - |
+| 5. Trend Analysis | 0/7 | Planned | - |
 | 6. Department Analysis & Sale Comparison | 0/? | Not started | - |
 | 7. Team Activity | 0/? | Not started | - |
 | 8. Reporting & Export | 0/? | Not started | - |
