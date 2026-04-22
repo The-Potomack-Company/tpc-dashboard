@@ -14,7 +14,7 @@
 //
 // Threat model: T-03-01 XSS mitigated by React JSX auto-escaping — every
 // sale.title / sale.sale_number flows through flexRender text children,
-// never through dangerouslySetInnerHTML. T-03-08 ReDoS is mitigated by
+// never through a raw-HTML injection sink. T-03-08 ReDoS is mitigated by
 // SalesTable's globalFilterFn: 'includesString' (no regex compilation).
 
 import * as React from 'react';
@@ -30,7 +30,11 @@ export function SalesPage() {
   const [filter, setFilter] = React.useState('');
   const deferredFilter = React.useDeferredValue(filter);
 
-  const sales = query.data ?? [];
+  // Memoize the default [] so the reference is stable across renders
+  // when query.data is undefined (loading/error). This keeps the filtered
+  // count useMemo deps stable (ESLint react-hooks/exhaustive-deps would
+  // flag the logical expression otherwise).
+  const sales = React.useMemo(() => query.data ?? [], [query.data]);
   const count = sales.length;
 
   // Compute the filtered count from the deferred filter so it matches
