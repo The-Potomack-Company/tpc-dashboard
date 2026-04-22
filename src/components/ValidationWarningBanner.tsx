@@ -21,9 +21,15 @@ export function ValidationWarningBanner({
   saleNumber,
 }: ValidationWarningBannerProps) {
   const qc = useQueryClient();
+  // WR-02: Use role="status" + aria-live="polite" instead of role="alert".
+  // role="alert" is assertive and re-interrupts on every mount — after
+  // clicking Reload the banner may remount and steal focus back to
+  // document.body. "polite" announces without interrupting the user's
+  // current focus context.
   return (
     <div
-      role="alert"
+      role="status"
+      aria-live="polite"
       className="rounded-lg border border-amber-500/50 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 flex items-center gap-3"
     >
       {/* Heroicons outline exclamation-triangle (stroke-width 1.5) */}
