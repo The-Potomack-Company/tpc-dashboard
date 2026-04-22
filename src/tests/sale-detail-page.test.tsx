@@ -95,15 +95,20 @@ describe('SaleDetailPage', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Department breakdown' })).toBeInTheDocument();
     expect(screen.getByText('Sale date')).toBeInTheDocument();
     expect(screen.getByText('Lots auctioned')).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).toBeNull();
+    // WR-02: Banner uses role="status" now, so its absence is checked
+    // via queryByRole('status').
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('renders ValidationWarningBanner when validation_warning true', () => {
     const sale = makeSale({ validation_warning: true });
     useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
     renderPage('22OCT');
-    const alert = screen.getByRole('alert');
-    expect(alert).toBeInTheDocument();
+    // WR-02: Banner switched from role="alert" to role="status" (polite)
+    // so it no longer re-interrupts AT focus on remount after Reload.
+    const banner = screen.getByRole('status');
+    expect(banner).toBeInTheDocument();
+    expect(banner).toHaveAttribute('aria-live', 'polite');
     expect(screen.getByRole('button', { name: /Reload sale/ })).toBeInTheDocument();
   });
 
