@@ -7,6 +7,21 @@ import type { Database } from '../db/database.types';
 const { useSaleMock } = vi.hoisted(() => ({ useSaleMock: vi.fn() }));
 vi.mock('../hooks/useSale', () => ({ useSale: (n: string) => useSaleMock(n) }));
 
+// Mock RevenueWaterfallChart so these page-level tests assert ONLY the
+// page's composition contract (collapsible section + aria semantics) and
+// don't double-test the chart itself (which has its own test file).
+// The mock exposes role='img' with the sale_number in aria-label so the
+// expand assertion can query it stably.
+vi.mock('../components/RevenueWaterfallChart', () => ({
+  RevenueWaterfallChart: ({ sale }: { sale: { sale_number: string } }) => (
+    <div
+      role="img"
+      aria-label={`Revenue breakdown waterfall for sale ${sale.sale_number}`}
+      data-testid="revenue-waterfall-chart"
+    />
+  ),
+}));
+
 import { SaleDetailPage } from '../pages/SaleDetail';
 
 type Sale = Database['public']['Tables']['sales']['Row'];
@@ -138,5 +153,73 @@ describe('SaleDetailPage', () => {
     useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
     renderPage('22OCT');
     expect(screen.getByRole('button', { name: /Reload sale/ })).toBeInTheDocument();
+  });
+
+  // ── Phase 6 Plan 06-05 — SALE-06 Revenue Breakdown section (4 new tests) ──
+  //
+  // Complete financial fields so the (mocked) RevenueWaterfallChart would
+  // render its chart body (not EmptyState) when expanded.
+  function makeSaleWithFinancials(overrides: Partial<Sale> = {}): Sale {
+    return makeSale({
+      hammer_total: 100000,
+      buyer_premium: 25000,
+      seller_commission: 10000,
+      insurance: 2000,
+      lot_charges: 3000,
+      referral_fees: 5000,
+      net_revenue: 105000,
+      ...overrides,
+    });
+  }
+
+  it('SALE-06 T-new-1: Revenue breakdown ChartCard renders collapsed by default with hint copy', () => {
+    const sale = makeSaleWithFinancials();
+    useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
+    renderPage('22OCT');
+    // Section title is present.
+    expect(screen.getByRole('heading', { level: 2, name: 'Revenue breakdown' })).toBeInTheDocument();
+    // Chart body is NOT in the DOM (collapsed default — deep-link opt-in not supported per UI-SPEC).
+    expect(screen.queryByTestId('revenue-waterfall-chart')).not.toBeInTheDocument();
+    // Collapsed-state muted hint is visible.
+    expect(screen.getByText('Tap to see the path from hammer to net')).toBeInTheDocument();
+  });
+
+  it('SALE-06 T-new-2: chevron button starts with aria-expanded="false" and "Expand revenue breakdown" label', () => {
+    const sale = makeSaleWithFinancials();
+    useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
+    renderPage('22OCT');
+    const toggle = screen.getByRole('button', { name: 'Expand revenue breakdown' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('SALE-06 T-new-3: clicking the chevron expands the section, reveals the chart, updates aria-* attributes', () => {
+    const sale = makeSaleWithFinancials({ sale_number: '22OCT' });
+    useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
+    renderPage('22OCT');
+    const toggle = screen.getByRole('button', { name: 'Expand revenue breakdown' });
+    fireEvent.click(toggle);
+    // Chart body mounts.
+    const chart = screen.getByTestId('revenue-waterfall-chart');
+    expect(chart).toBeInTheDocument();
+    expect(chart.getAttribute('aria-label')).toMatch(/22OCT/);
+    // Button flips aria-expanded + aria-label.
+    const toggleAfter = screen.getByRole('button', { name: 'Collapse revenue breakdown' });
+    expect(toggleAfter).toHaveAttribute('aria-expanded', 'true');
+    // Collapsed hint is gone.
+    expect(screen.queryByText('Tap to see the path from hammer to net')).not.toBeInTheDocument();
+  });
+
+  it('SALE-06 T-new-4: keyboard Enter toggles the expand state (native <button> semantics)', () => {
+    const sale = makeSaleWithFinancials();
+    useSaleMock.mockReturnValue({ isLoading: false, isError: false, data: { status: 'ok', sale, departments: [] }, error: null, refetch: vi.fn() });
+    renderPage('22OCT');
+    const toggle = screen.getByRole('button', { name: 'Expand revenue breakdown' });
+    // Native <button> fires onClick for Enter/Space. fireEvent.click simulates that activation path.
+    // We also issue keyDown(Enter) to cover the explicit keyboard contract documented
+    // in UI-SPEC § Interaction Contract → "Enter or Space toggles".
+    fireEvent.keyDown(toggle, { key: 'Enter', code: 'Enter' });
+    fireEvent.click(toggle); // browsers fire click on Enter for <button>; jsdom does not — this is the activation proxy.
+    expect(screen.getByTestId('revenue-waterfall-chart')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collapse revenue breakdown' })).toHaveAttribute('aria-expanded', 'true');
   });
 });
