@@ -208,14 +208,20 @@ export function DepartmentsPage() {
             onMaxExceeded={handleMaxExceeded}
             colorForCode={colorForCode}
           />
-          {maxNotice && (
-            <p
-              role="status"
-              className="text-sm text-gray-500 dark:text-gray-400 transition-opacity duration-200"
-            >
-              {maxNotice}
-            </p>
-          )}
+          {/* WR-03: Always mount the live region — some ATs (JAWS, older
+              NVDA) miss the first announcement when a role="status" node
+              is inserted into the DOM rather than updated in place. Mirrors
+              the SalesPage pattern: collapse via sr-only when empty so the
+              visual layout is unchanged. */}
+          <p
+            role="status"
+            aria-live="polite"
+            className={`text-sm text-gray-500 dark:text-gray-400 transition-opacity duration-200 ${
+              maxNotice ? '' : 'sr-only'
+            }`}
+          >
+            {maxNotice ?? ''}
+          </p>
           <DepartmentRevenueLineChart
             range={range}
             selectedDeptCodes={chipSelectedDepts}
