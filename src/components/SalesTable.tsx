@@ -28,6 +28,8 @@ import {
   type ColumnDef,
   type RowData,
   type SortingState,
+  type OnChangeFn,
+  type RowSelectionState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Database } from '../db/database.types';
@@ -45,6 +47,15 @@ interface SalesTableProps {
   sales: Sale[];
   /** Already-debounced filter string from the parent (useDeferredValue). */
   filterText: string;
+  // Phase 6 Plan 06-04 — optional selection column. When onRowSelectionChange
+  // is undefined the rendering is byte-identical to pre-06-04. When defined,
+  // a leading w-12 checkbox column is prepended and getRowId is keyed to
+  // sale_number so selection survives sort/filter re-renders.
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  /** Max-N cap; default 4. Attempts to check the (N+1)th row fire onMaxExceeded and are blocked. */
+  maxSelection?: number;
+  onMaxExceeded?: () => void;
 }
 
 const ROW_HEIGHT = 44; // UI-SPEC h-11
@@ -60,14 +71,30 @@ declare module '@tanstack/react-table' {
   }
 }
 
-export function SalesTable({ sales, filterText }: SalesTableProps) {
+export function SalesTable({
+  sales,
+  filterText,
+  rowSelection,
+  onRowSelectionChange,
+  maxSelection = 4,
+  onMaxExceeded,
+}: SalesTableProps) {
   const navigate = useNavigate();
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: 'sale_date', desc: true },
   ]);
 
+  const selectionEnabled = onRowSelectionChange != null;
+
   const columns = React.useMemo<ColumnDef<Sale>[]>(
-    () => [
+    () => {
+      // Build the column set. When selection is enabled, prepend a w-12
+      // checkbox column whose header is visually blank (sr-only label) and
+      // whose cell renders a native input[type=checkbox] with
+      // stopPropagation on both onClick and onChange (Pitfall 2: row onClick
+      // navigates; unless we stop propagation, clicking the checkbox
+      // navigates away and wipes the selection).
+      const base: ColumnDef<Sale>[] = [
       { accessorKey: 'sale_number', header: 'Sale #', size: 100 },
       { accessorKey: 'title', header: 'Title', size: 280 },
       {
@@ -120,15 +147,81 @@ export function SalesTable({ sales, filterText }: SalesTableProps) {
         size: 140,
         meta: { numeric: true },
       },
-    ],
-    [],
+      ];
+
+      if (!selectionEnabled) return base;
+
+      // Selection column. w-12 (48px) container; centers a native 20x20 checkbox.
+      // Row height stays h-11 (44px) — DO NOT raise estimateSize.
+      const selectionColumn: ColumnDef<Sale> = {
+        id: '_select',
+        size: 48,
+        enableSorting: false,
+        header: () => <span className="sr-only">Select sale</span>,
+        cell: ({ row }) => {
+          return (
+            <div className="w-12 flex items-center justify-center">
+              <input
+                type="checkbox"
+                aria-label={'Select sale ' + row.original.sale_number}
+                checked={row.getIsSelected()}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  const next = e.target.checked;
+                  if (next) {
+                    // Count current selections from the outer rowSelection
+                    // prop (not from table state) so we respect the
+                    // parent-owned truth even across re-renders.
+                    const currentCount = Object.values(
+                      rowSelection ?? {},
+                    ).filter(Boolean).length;
+                    if (currentCount >= maxSelection) {
+                      onMaxExceeded?.();
+                      return;
+                    }
+                  }
+                  row.toggleSelected(next);
+                }}
+                className="w-5 h-5 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+              />
+            </div>
+          );
+        },
+      };
+
+      return [selectionColumn, ...base];
+    },
+    // The selection column reads rowSelection + maxSelection + onMaxExceeded
+    // from closure. Memoize against those + the selectionEnabled flag so the
+    // cell renderer sees fresh values when the parent re-renders with a new
+    // rowSelection snapshot.
+    [selectionEnabled, rowSelection, maxSelection, onMaxExceeded],
   );
 
   const table = useReactTable({
     data: sales,
     columns,
-    state: { sorting, globalFilter: filterText },
+    state: {
+      sorting,
+      globalFilter: filterText,
+      // Only include rowSelection state when selection mode is active, so
+      // existing tests/usage (which never pass rowSelection) see the
+      // pre-06-04 state shape exactly.
+      ...(selectionEnabled ? { rowSelection: rowSelection ?? {} } : {}),
+    },
     onSortingChange: setSorting,
+    // getRowId is only overridden when selection is enabled. Keying rows by
+    // sale_number (not array index) means selection survives sort + filter
+    // re-renders. Existing callers that do not use selection keep TanStack
+    // default numeric-index row IDs.
+    ...(selectionEnabled
+      ? {
+          getRowId: (row: Sale) => row.sale_number,
+          onRowSelectionChange,
+          enableRowSelection: true,
+        }
+      : {}),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -181,21 +274,32 @@ export function SalesTable({ sales, filterText }: SalesTableProps) {
                         isNumeric ? 'text-right' : 'text-left'
                       }`}
                     >
-                      <button
-                        type="button"
-                        onClick={header.column.getToggleSortingHandler()}
-                        className={`flex items-center gap-1 cursor-pointer ${
-                          isNumeric
-                            ? 'justify-end tabular-nums w-full'
-                            : ''
-                        }`}
-                      >
-                        {flexRender(
+                      {header.column.id === '_select' ? (
+                        // Selection column: render the header content (the
+                        // sr-only "Select sale" span) directly without a sort
+                        // button. Not sortable; no SortIndicator; no
+                        // toggleSorting handler.
+                        flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
-                        )}
-                        <SortIndicator state={sortDir} />
-                      </button>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          className={`flex items-center gap-1 cursor-pointer ${
+                            isNumeric
+                              ? 'justify-end tabular-nums w-full'
+                              : ''
+                          }`}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          <SortIndicator state={sortDir} />
+                        </button>
+                      )}
                     </th>
                   );
                 })}

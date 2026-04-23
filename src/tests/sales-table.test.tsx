@@ -246,4 +246,157 @@ describe('SalesTable', () => {
     const rows = screen.getAllByRole('row');
     expect(rows[1].getAttribute('tabindex')).toBe('0');
   });
+
+  // --- Phase 6 Plan 06-04: Optional selection column ---
+
+  it('T-new-1: renders WITHOUT checkbox when onRowSelectionChange is undefined', () => {
+    const sales = [makeSale({ sale_number: '22OCT' })];
+    const { container } = mount(sales);
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    expect(checkboxes.length).toBe(0);
+  });
+
+  it('T-new-2: renders checkbox column with sr-only header when onRowSelectionChange defined', () => {
+    const sales = [
+      makeSale({ sale_number: '2024-01' }),
+      makeSale({ sale_number: '2024-02' }),
+    ];
+    render(
+      <MemoryRouter>
+        <SalesTable
+          sales={sales}
+          filterText=""
+          rowSelection={{}}
+          onRowSelectionChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    const headers = screen.getAllByRole('columnheader');
+    const firstHeader = headers[0];
+    expect(firstHeader.querySelector('.sr-only')?.textContent).toBe(
+      'Select sale',
+    );
+
+    const rows = screen.getAllByRole('row');
+    const checkbox1 = within(rows[1]).getByRole('checkbox');
+    const checkbox2 = within(rows[2]).getByRole('checkbox');
+    expect(checkbox1.getAttribute('aria-label')).toMatch(
+      /Select sale 2024-01/i,
+    );
+    expect(checkbox2.getAttribute('aria-label')).toMatch(
+      /Select sale 2024-02/i,
+    );
+  });
+
+  it('T-new-3: clicking a checkbox fires onRowSelectionChange', () => {
+    const onRowSelectionChange = vi.fn();
+    const sales = [
+      makeSale({ sale_number: '2024-01' }),
+      makeSale({ sale_number: '2024-02' }),
+    ];
+    render(
+      <MemoryRouter>
+        <SalesTable
+          sales={sales}
+          filterText=""
+          rowSelection={{}}
+          onRowSelectionChange={onRowSelectionChange}
+        />
+      </MemoryRouter>,
+    );
+
+    const rows = screen.getAllByRole('row');
+    const checkbox = within(rows[1]).getByRole('checkbox');
+    fireEvent.click(checkbox);
+
+    expect(onRowSelectionChange).toHaveBeenCalled();
+  });
+
+  it('T-new-4: clicking a checkbox does NOT trigger row navigation', () => {
+    const sales = [makeSale({ sale_number: '2024-01' })];
+    render(
+      <MemoryRouter>
+        <SalesTable
+          sales={sales}
+          filterText=""
+          rowSelection={{}}
+          onRowSelectionChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    const rows = screen.getAllByRole('row');
+    const checkbox = within(rows[1]).getByRole('checkbox');
+    fireEvent.click(checkbox);
+
+    expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it('T-new-5: 5th selection is blocked when 4 already selected', () => {
+    const onRowSelectionChange = vi.fn();
+    const onMaxExceeded = vi.fn();
+    const sales = [
+      makeSale({ sale_number: '2024-01' }),
+      makeSale({ sale_number: '2024-02' }),
+      makeSale({ sale_number: '2024-03' }),
+      makeSale({ sale_number: '2024-04' }),
+      makeSale({ sale_number: '2024-05' }),
+    ];
+    render(
+      <MemoryRouter>
+        <SalesTable
+          sales={sales}
+          filterText=""
+          rowSelection={{
+            '2024-01': true,
+            '2024-02': true,
+            '2024-03': true,
+            '2024-04': true,
+          }}
+          onRowSelectionChange={onRowSelectionChange}
+          onMaxExceeded={onMaxExceeded}
+        />
+      </MemoryRouter>,
+    );
+
+    const fifthCheckbox = screen.getByRole('checkbox', {
+      name: /Select sale 2024-05/i,
+    });
+    fireEvent.click(fifthCheckbox);
+
+    expect(onMaxExceeded).toHaveBeenCalledTimes(1);
+    expect(onRowSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it('T-new-6: selection survives sort via getRowId=sale_number', () => {
+    const sales = [
+      makeSale({ sale_number: '2024-01', title: 'Beta' }),
+      makeSale({ sale_number: '2024-02', title: 'Alpha' }),
+    ];
+    render(
+      <MemoryRouter>
+        <SalesTable
+          sales={sales}
+          filterText=""
+          rowSelection={{ '2024-01': true }}
+          onRowSelectionChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    const titleHeader = screen.getByRole('columnheader', { name: /Title/ });
+    const sortButton = within(titleHeader).getByRole('button');
+    fireEvent.click(sortButton);
+
+    const checkbox2024_01 = screen.getByRole('checkbox', {
+      name: /Select sale 2024-01/i,
+    });
+    expect((checkbox2024_01 as HTMLInputElement).checked).toBe(true);
+
+    const checkbox2024_02 = screen.getByRole('checkbox', {
+      name: /Select sale 2024-02/i,
+    });
+    expect((checkbox2024_02 as HTMLInputElement).checked).toBe(false);
+  });
 });
