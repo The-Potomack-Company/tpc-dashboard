@@ -87,10 +87,10 @@ describe('DepartmentChipBar', () => {
     );
     // Dot is an aria-hidden span with inline background-color on the active chip.
     const asnChip = screen.getByRole('switch', { name: /^ASN/ });
-    const asnDot = asnChip.querySelector('[aria-hidden="true"]');
+    const asnDot = asnChip.querySelector('[aria-hidden="true"]') as HTMLElement | null;
     expect(asnDot).not.toBeNull();
-    // Inline style carries the color — case-insensitive match on the hex.
-    expect(asnDot!.getAttribute('style')?.toLowerCase()).toContain('#2563eb');
+    // jsdom normalizes hex → `rgb(...)`. `#2563eb` is `rgb(37, 99, 235)`.
+    expect(asnDot!.style.backgroundColor).toBe('rgb(37, 99, 235)');
 
     // Inactive chips do NOT render a dot.
     const frnChip = screen.getByRole('switch', { name: /^FRN/ });
