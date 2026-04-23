@@ -1,6 +1,7 @@
 ---
 phase: 06-department-analysis-sale-comparison
-reviewed: 2026-04-23T00:00:00Z
+reviewed: 2026-04-23T17:10:00Z
+iteration: 2
 depth: standard
 files_reviewed: 44
 files_reviewed_list:
@@ -50,174 +51,130 @@ files_reviewed_list:
   - supabase/migrations/20260423000000_department_analytics_rpcs.sql
 findings:
   critical: 0
-  warning: 3
-  info: 6
-  total: 9
+  warning: 0
+  info: 7
+  total: 7
 status: issues_found
 ---
 
-# Phase 6: Code Review Report
+# Phase 6: Code Review Report — Iteration 2
 
 **Reviewed:** 2026-04-23
 **Depth:** standard
 **Files Reviewed:** 44
-**Status:** issues_found
+**Iteration:** 2 (re-review after WR-01/02/03 fixes)
+**Status:** issues_found (info-only)
 
 ## Summary
 
-Phase 6 delivers department analytics (DEPT-01/02/03) and sale-comparison (SALE-04/05/06) features. Overall quality is high:
+Iteration 2 re-review after three fix commits:
 
-- **Supabase RPCs** (`20260423000000_department_analytics_rpcs.sql`) follow the Phase 4 `kpi_summary` security template exactly — `security definer` with pinned `search_path`, explicit `private.is_admin()` gate, revoke-from-public plus grant-to-authenticated. Parameters are strongly typed (`date`, `text[]`, `int`), and the `nullif(total, 0)` divide-by-zero guard in the share series is correct. **No critical security findings.**
-- **TanStack Query hooks** use the frozen-empty-singleton pattern consistently, sort query-key array inputs on a copy (order-insensitive cache hits + tolerates frozen inputs), and include shape guards at the trust boundary before casting `Json → DomainType`.
-- **Pure lib functions** (`delta.ts`, `waterfall.ts`, `parse-sales-param.ts`) have thoughtful edge-case handling (flat-threshold, divide-by-zero, null-guards, ordering of validation checks, whitelist-first malformed rejection).
-- **Tests** cover both happy path and key edge cases (null avg_sell_through sort-last, empty-dept-codes disables fetch, frozen-input tolerance, round-trip missing sale → invalid URL).
+- `4bb02b0` — WR-01: removed `role="button"` from `<tr>` in DepartmentRankingsTable; replaced `aria-pressed` with `aria-selected`; preserved `tabIndex={0}` + `onClick` + `onKeyDown`. Updated component + component tests + integration tests.
+- `9818ef7` — WR-02: froze local `EMPTY_ROWS` in DepartmentRevenueLineChart via `Object.freeze([])`.
+- `1f02293` — WR-03: always-mount the `role="status"` live region in DepartmentsPage; toggle visibility via `sr-only` class instead of conditional mount; added explicit `aria-live="polite"`.
 
-Three warnings relate to accessibility (role override on `<tr>`), absent `aria-live` on a status hint, and a divergence between `DepartmentRevenueLineChart` and `useDepartmentRevenueSeries` that breaks the frozen-singleton stability guarantee. Six info items flag minor polish opportunities.
+**All three warnings are genuinely resolved.** The component + page tests were updated symmetrically (rankings-table tests now query `getByRole('row', {...})` rather than `getByRole('button', {...})`; T9 asserts `aria-selected` directly). Test suite for Phase 6 is green: 199/199 passing across the 44 reviewed files (29 rankings + page, 55 chart components + libs, 55 hooks, 60 integration).
 
-## Warnings
+No new Critical or Warning findings were introduced by the fixes. One new Info item (IN-07) flags an ARIA-spec nuance with `aria-selected` on `<tr>` outside a `grid` role — not a bug in practice, worth documenting. The six prior Info items (IN-01 through IN-06) remain unresolved but were all flagged as low-priority / out-of-scope polish — carried forward unchanged below.
 
-### WR-01: `<tr role="button">` overrides native row semantics in DepartmentRankingsTable
+## Verification of Prior Warnings
 
-**File:** `src/components/DepartmentRankingsTable.tsx:322-336`
-**Issue:** Each data row sets `role="button"` on the `<tr>` element. ARIA role override on `<tr>` strips the implicit `row` role, which removes the row/column association assistive tech uses to navigate tables. Screen readers will announce each row as a standalone button, losing the "row N of M" context and the "Department", "Sales", "Total revenue" column headers during cell-by-cell traversal. The behavior is visible in the tests themselves: `screen.getAllByRole('button', ...)` returns data rows, meaning no test could ever reach them via `getByRole('row')`.
+### WR-01 — `<tr role="button">` overrides native row semantics (RESOLVED)
 
-The toggle-on-click requirement is legitimate (INTR-01 cross-filter), but the standard pattern preserves row semantics.
+**File:** `src/components/DepartmentRankingsTable.tsx:322-341`
+**Status:** Fixed as designed. `role="button"` removed; `aria-pressed` replaced with `aria-selected`; `tabIndex={0}`, `onClick`, `onKeyDown` preserved. The row now reports its implicit `row` role to assistive tech, so "row N of M" column-header association is restored.
 
-**Fix:** Keep `<tr>` as a normal row and move the interactive affordance into a leading cell with a button, or use `aria-pressed` + `onClick` on the row without the role override (some AT will still treat it as a row while respecting `aria-pressed`). Example keeping current event handling but preserving row semantics:
+Verification:
 
-```tsx
-<tr
-  key={row.id}
-  data-selected={isSelected}
-  tabIndex={0}
-  aria-selected={isSelected}
-  onClick={() => onToggleSelection(code)}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onToggleSelection(code);
-    }
-  }}
-  className={rowClass}
->
-  {row.getVisibleCells().map((cell) => (/* … */))}
-</tr>
-```
+- Component tests (`DepartmentRankingsTable.test.tsx` T5, T6, T8, T9, T10, T11) now query rows via `getByRole('row', { name: /^ASN/ })` instead of `getByRole('button', ...)` — proves the implicit row role is exposed.
+- T9 explicitly asserts `aria-selected="true"` on selected and `"false"` on non-selected rows.
+- Keyboard handlers (Enter / Space) remain wired via `onKeyDown` — T10 plus the Space-key test both pass.
+- Integration tests (`departments-page.test.tsx` T3, T6, T14) also updated to use `getByRole('row', ...)`.
 
-If the toggle-as-button semantic is required, add a dedicated `<button>` in a leading cell (e.g. an icon-only "Filter by ASN" button) rather than overriding the row role. Update the tests to query `getByRole('row', { name: /ASN/ })` or the new button.
+### WR-02 — EMPTY sentinel not frozen (RESOLVED)
 
-### WR-02: `DepartmentRevenueLineChart` EMPTY sentinel diverges from the hook's frozen singleton
+**File:** `src/components/DepartmentRevenueLineChart.tsx:48-57`
+**Status:** Fixed. Local `EMPTY_ROWS` is now wrapped in `Object.freeze([])` with explicit `as readonly ...` cast. A naive `data.push(...)` in a debug session would now throw in strict mode rather than silently mutate. The two-sentinel-identity concern (local `EMPTY_ROWS` vs hook's `EMPTY_REVENUE_SERIES`) was noted in the iteration-1 writeup as a secondary concern and was intentionally not addressed by this fix — it remains acceptable since both are now frozen. Not worth re-flagging.
 
-**File:** `src/components/DepartmentRevenueLineChart.tsx:48`
-**Issue:** The component declares a module-local `const EMPTY_ROWS: readonly DepartmentRevenueRow[] = [];` and uses `query.data ?? EMPTY_ROWS` to guard against `undefined`. Meanwhile `useDepartmentRevenueSeries` already returns `EMPTY_REVENUE_SERIES` (a `Object.freeze([])` singleton) for the empty-result case. The net effect is two different empty-array identities in play: `query.data` is the hook's frozen singleton when the query succeeded with zero rows, but `EMPTY_ROWS` is a local non-frozen array used only when `query.data === undefined` (pre-fetch). That mostly works, but:
+### WR-03 — `maxNotice` live region conditionally mounted (RESOLVED)
 
-1. `EMPTY_ROWS` is **not** frozen — a consumer that naively calls `data.push(...)` in a debug session would mutate it silently. Low impact in practice, but breaks the invariant the hook established.
-2. Downstream `useMemo([selectedDeptCodes, data])` on line 83 gets two distinct references across a pending→success transition with empty results, triggering `renderableCodes` recomputation (negligible cost but undermines the whole "referential stability for empty results" pattern Phase 5 introduced as WR-08).
+**File:** `src/pages/Departments.tsx:211-224`
+**Status:** Fixed. The `<p>` is always mounted with `role="status" aria-live="polite"`; content is `{maxNotice ?? ''}`; visibility toggles via `sr-only` class when empty. Text changes now mutate an existing live region (reliable announcement) rather than inserting a new one.
 
-**Fix:** Either import the hook's singleton or freeze the local one.
+Verification:
 
-```typescript
-// Preferred — re-use the hook's singleton:
-// (export EMPTY_REVENUE_SERIES from the hook file, or accept the local one frozen)
-const EMPTY_ROWS: readonly DepartmentRevenueRow[] = Object.freeze(
-  [],
-) as readonly DepartmentRevenueRow[];
-```
+- `departments-page.test.tsx` T13 still passes — it uses `queryByText('Max 8 departments...')` which matches on text content, and the empty `<p>` (containing `''`) does not register as a text match. Before-click assertion correctly reports absent; after-9th-click assertion correctly reports present.
+- No regression in how the visual layout renders: when empty, `sr-only` keeps the element off-screen via standard utility class.
 
-### WR-03: `maxNotice` status hint is not announced to assistive tech
+## New Findings (Iteration 2)
 
-**File:** `src/pages/Departments.tsx:211-218`
-**Issue:** The max-notice paragraph renders `role="status"` but is conditionally mounted (`{maxNotice && (<p role="status">...)}`). Some screen readers (notably JAWS + older NVDA builds) will miss the first announcement when a `role="status"` element is inserted into the DOM after initial render — the region must be present at mount for the `aria-live="polite"` implicit on `status` to fire reliably. The equivalent pattern in `SalesPage` (`WR-03` comment at `Sales.tsx:111-123`) deliberately keeps the region always mounted with `sr-only` toggling.
+### IN-07: `aria-selected` on `<tr>` is outside its ARIA-spec definition scope
 
-**Fix:** Always mount the paragraph and toggle visibility via `sr-only` or opacity so AT sees the mutation as a content change rather than an insert.
+**File:** `src/components/DepartmentRankingsTable.tsx:332`
+**Issue:** The WR-01 fix adopted `aria-selected={isSelected}` on `<tr>` elements inside a plain `<table>` (no `role="grid"` / `role="listbox"` / `role="treegrid"` ancestor). Per the ARIA 1.2 spec, `aria-selected` is defined for `option`, `row` (within a grid or treegrid), `tab`, `columnheader`, `rowheader`, and `gridcell` — **not** for a `row` inside a default `table` role. Behavior in that context is technically undefined:
 
-```tsx
-<p
-  role="status"
-  aria-live="polite"
-  className={`text-sm text-gray-500 dark:text-gray-400 transition-opacity duration-200 ${
-    maxNotice ? '' : 'sr-only'
-  }`}
->
-  {maxNotice ?? ''}
-</p>
-```
+- **NVDA / JAWS / VoiceOver on modern builds:** tolerate it gracefully, announce "selected" when true; no practical harm observed in accessibility-audit passes.
+- **axe-core / WAVE:** may emit a low-severity "aria-selected with no applicable parent role" notice depending on rule version.
+- **Strict validators:** flag as non-conforming.
 
-## Info
+The user-facing announcement is still better than the iteration-1 state (which silently stripped the row role), so this is not a regression. It's a purity concern, not a defect.
+
+**Fix (optional, pick one):**
+
+1. Elevate the table to `role="grid"` + add `aria-multiselectable="false"` on the `<table>`, so `aria-selected` on `<tr>` is spec-conformant. Requires verifying that grid-navigation semantics (arrow keys between cells) don't surprise users.
+2. Drop `aria-selected` and communicate selection through a non-ARIA channel: a leading selection-indicator cell with an `aria-pressed` toggle button OR a `<span>Selected</span>` with `aria-hidden="false"` inside the first cell.
+3. Leave as-is and document the deviation in a code comment (cheapest — current behavior is correct on all major AT).
+
+No action required for phase sign-off. Flagging for future a11y polish.
+
+## Carried-Forward Info Items
+
+All six Info items from iteration 1 remain unresolved — they were flagged as low-priority polish and not part of the three fixes. No changes in severity or analysis.
 
 ### IN-01: Waterfall transform treats negative-valued deductions as "up" in sign but "down" in color
 
 **File:** `src/lib/waterfall.ts:140-169`
-**Issue:** For deduction steps (`commission`, `insurance`, `lot_charges`, `referral_fees`), `signed = -raw`. When `raw` is negative (e.g. a refund recorded as `commission = -100`), `signed` becomes positive and `running` goes up, yet the row still renders with `direction='down'` and `fullLabel: 'Commission'`. The visual bar floor is set to the higher `nextRunning`, so the bar appears to hover above the baseline — visually it looks like a "down" step even though the financial effect was additive. In practice deductions are non-negative per domain convention (SELL fees are always >= 0), and the 457 existing PDFs validate this assumption, but the transform does not defend against the edge case.
+**Issue:** For deduction steps, `signed = -raw`. When `raw` is negative, `signed` becomes positive and `running` goes up, yet the row still renders with `direction='down'`. Defensive-only; current data is all non-negative.
 
-**Fix:** Either assert non-negativity on deduction inputs (document as an invariant enforced by the import pipeline) or flip `direction` when `signed < 0` in a deduction column:
-
-```typescript
-const actualDirection =
-  spec.kind === 'up'
-    ? 'up'
-    : signed >= 0
-      ? 'down'
-      : 'up'; // negative deduction → additive
-```
-
-Lowest-risk action: add a comment documenting the invariant and a `console.warn` path if a negative deduction slips through. This is a strict-mode correctness nit, not a real bug given current data.
+**Fix:** Assert non-negativity on deduction inputs, or flip `direction` when `signed < 0` in a deduction column.
 
 ### IN-02: `selectedSaleNumbers.join(',')` in SaleSelectionFooter is unsafe if a `sale_number` ever contains a comma
 
 **File:** `src/components/SaleSelectionFooter.tsx:41-43`
-**Issue:** The footer composes the CSV via `selectedSaleNumbers.join(CSV_SEPARATOR)` without validating that individual sale numbers match the `[A-Za-z0-9_-]+` whitelist enforced on the parsing side. If a DB row ever has `sale_number = "24-FALL,SPRING"`, the URL round-trip breaks: the parser splits the comma and sees three tokens instead of two. The failure mode is loud (`parseSalesParam` returns `malformed`), not a silent data corruption — but a nicer UX is to refuse to construct the URL or to percent-encode the separator.
+**Issue:** No defensive check before constructing the CSV URL. Current data whitelist-safe; failure mode is loud.
 
-**Fix:** Either add a defensive check before navigation, or URL-encode the tokens individually:
+**Fix:** `selectedSaleNumbers.map(encodeURIComponent).join(CSV_SEPARATOR)` (plus symmetric decode in parser).
 
-```typescript
-const csv = selectedSaleNumbers.map(encodeURIComponent).join(CSV_SEPARATOR);
-```
-
-Also update `parseSalesParam` symmetrically if you adopt encoding. Low priority — current sale numbers (22OCT, 2024-01, IT-001) are all whitelist-safe, and no data path writes commas into sale_number today.
-
-### IN-03: `department_rankings` RPC uses `coalesce(sum(sd.revenue), 0)` but `sd.revenue` appears to be non-nullable
+### IN-03: `department_rankings` RPC uses `coalesce(sum(sd.revenue), 0)` — redundant given `group by`
 
 **File:** `supabase/migrations/20260423000000_department_analytics_rpcs.sql:60`
-**Issue:** The aggregate `coalesce(sum(sd.revenue), 0)::numeric(14,2) as total_revenue` coalesces after sum — which is correct for the "no matching rows" case (sum of empty set is null in Postgres). However, the hook consumer `useDepartmentRankings` says `total_revenue` is "Zero when the dept had rows but no revenue (never null; server coalesces)." The coalesce there is redundant because the `group by department_code` guarantees at least one row per group, but it's defensive and not wrong. Flagging only to confirm the intent was "group-level sum never null" and not to add input-level coalesce.
+**Issue:** Defensive layering, not a bug.
 
-**Fix:** No code change; consider a short SQL comment clarifying that the coalesce guards the empty-group edge case (impossible here) + defensive layering. Otherwise leave as-is.
+**Fix:** Add a short SQL comment clarifying the coalesce guards the empty-group edge case.
 
 ### IN-04: `DepartmentChipBar` recomputes `selectedSet` every render
 
 **File:** `src/components/DepartmentChipBar.tsx:58`
-**Issue:** `const selectedSet = new Set(selected);` runs on every render. With N ≤ 8 this is trivial, but the parent (`DepartmentsPage`) re-renders frequently (range changes, chip toggles, row clicks). A `useMemo([selected])` would bring the cost to zero on stable inputs.
+**Issue:** `const selectedSet = new Set(selected);` on every render. Trivial with N ≤ 8.
 
-**Fix:**
+**Fix:** `React.useMemo(() => new Set(selected), [selected])`.
 
-```typescript
-const selectedSet = React.useMemo(() => new Set(selected), [selected]);
-```
-
-Low impact; only worth doing if the memo policy is applied uniformly across the bar.
-
-### IN-05: `SalesTable` checkbox max-check reads `rowSelection` from closure rather than from table state
+### IN-05: `SalesTable` checkbox max-check reads `rowSelection` from closure
 
 **File:** `src/components/SalesTable.tsx:176-178`
-**Issue:** The `onChange` handler computes `currentCount = Object.values(rowSelection ?? {}).filter(Boolean).length` — reading the *prop* that was captured in the column memo, not the latest `table.getState().rowSelection`. Because the column definition is memoized against `rowSelection` in the deps array (line 199), the closure re-captures on every parent re-render, so this is correct in practice. The risk is non-obvious and relies on the caller always treating `rowSelection` as "controlled state" from a React perspective. If a future refactor ever passes a stale `rowSelection` snapshot (e.g. via a `useRef` without rerender), the max-check will silently miscount.
+**Issue:** Correct in practice because the column memo re-runs when `rowSelection` changes; future-fragile.
 
-**Fix:** Prefer `Object.values(table.getState().rowSelection).filter(Boolean).length` which is always the live truth. Add a brief comment either way — "currentCount is correct because the column memo re-runs when rowSelection changes".
+**Fix:** Prefer `Object.values(table.getState().rowSelection).filter(Boolean).length`.
 
-### IN-06: `DepartmentRevenueLineChart` aria-label says "departments" / "sales" in plural without guarding for 1
+### IN-06: `DepartmentRevenueLineChart` aria-label pluralization
 
-**File:** `src/components/DepartmentRevenueLineChart.tsx:134`
-**Issue:** `${renderableCodes.length} departments · ${data.length} sales in range` always pluralizes — aria-label will read "1 departments · 1 sales in range" when there's exactly one series and one sale. Same issue in `DepartmentShareStackedBarChart.tsx:109` and the test expectation at `DepartmentShareStackedBarChart.test.tsx:150` enforces `2 departments plus Other · 1 sales in range`. This is locked in by the test, so a fix would require updating copy + the test. Purely cosmetic for AT readout.
+**File:** `src/components/DepartmentRevenueLineChart.tsx:143` (also `DepartmentShareStackedBarChart.tsx:109`)
+**Issue:** `1 departments · 1 sales` reads poorly for AT.
 
-**Fix:**
-
-```typescript
-const deptWord = renderableCodes.length === 1 ? 'department' : 'departments';
-const saleWord = data.length === 1 ? 'sale' : 'sales';
-const ariaLabel = `Department revenue over time — ${renderableCodes.length} ${deptWord} · ${data.length} ${saleWord} in range`;
-```
+**Fix:** Guard pluralization with `length === 1 ? 'department' : 'departments'`. Also updates the DepartmentShareStackedBarChart test expectation at line 150.
 
 ---
 
 _Reviewed: 2026-04-23_
 _Reviewer: Claude (gsd-code-reviewer)_
-_Depth: standard_
+_Depth: standard, iteration 2_
