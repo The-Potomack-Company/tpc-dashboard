@@ -320,11 +320,16 @@ export function DepartmentRankingsTable({
                   .join(' ');
 
                 return (
+                  // WR-01: Preserve native <tr> row semantics. Using
+                  // role="button" strips the implicit row role, breaking
+                  // row/column association for screen reader table
+                  // navigation. aria-selected + tabIndex + onClick/onKeyDown
+                  // keeps the interaction without overriding the role — AT
+                  // still announces "row N of M" with column headers.
                   <tr
                     key={row.id}
-                    role="button"
                     tabIndex={0}
-                    aria-pressed={isSelected}
+                    aria-selected={isSelected}
                     onClick={() => onToggleSelection(code)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {

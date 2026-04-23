@@ -160,15 +160,17 @@ describe('Departments page (integration)', () => {
 
   it('T3: when hook returns rows → the rankings table renders them', () => {
     renderPage();
-    // Each row renders as a role="button" element containing the dept code.
+    // WR-01: Rankings data rows use native <tr> semantics (role="row"),
+    // not role="button". The implicit role avoids stripping row/column
+    // association for screen readers.
     expect(
-      screen.getByRole('button', { name: /^ASN/ }),
+      screen.getByRole('row', { name: /^ASN/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /^FRN/ }),
+      screen.getByRole('row', { name: /^FRN/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /^PNT/ }),
+      screen.getByRole('row', { name: /^PNT/ }),
     ).toBeInTheDocument();
   });
 
@@ -199,13 +201,13 @@ describe('Departments page (integration)', () => {
     renderPage();
 
     // Revenue DESC → ASN first.
-    let rows = screen.getAllByRole('button', { name: /^(ASN|FRN)/ });
+    let rows = screen.getAllByRole('row', { name: /^(ASN|FRN)/ });
     expect(rows[0].textContent).toMatch(/^ASN/);
 
     await user.click(
       screen.getByRole('radio', { name: 'Lots above estimate' }),
     );
-    rows = screen.getAllByRole('button', { name: /^(ASN|FRN)/ });
+    rows = screen.getAllByRole('row', { name: /^(ASN|FRN)/ });
     expect(rows[0].textContent).toMatch(/^FRN/);
   });
 
@@ -218,12 +220,12 @@ describe('Departments page (integration)', () => {
       screen.queryByText(/Filtering: ASN/i),
     ).not.toBeInTheDocument();
 
-    const asnRow = screen.getByRole('button', { name: /^ASN/ });
+    const asnRow = screen.getByRole('row', { name: /^ASN/ });
     await user.click(asnRow);
     expect(screen.getByText(/Filtering: ASN/i)).toBeInTheDocument();
 
     // Click same row again → chip disappears.
-    await user.click(screen.getByRole('button', { name: /^ASN/ }));
+    await user.click(screen.getByRole('row', { name: /^ASN/ }));
     expect(
       screen.queryByText(/Filtering: ASN/i),
     ).not.toBeInTheDocument();
@@ -233,7 +235,7 @@ describe('Departments page (integration)', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const asnRow = screen.getByRole('button', { name: /^ASN/ });
+    const asnRow = screen.getByRole('row', { name: /^ASN/ });
     await user.click(asnRow);
     expect(screen.getByText(/Filtering: ASN/i)).toBeInTheDocument();
 
@@ -393,7 +395,7 @@ describe('Departments page (integration)', () => {
     ).toBe('');
 
     // Click ASN row → selectedDept=ASN → both charts receive highlightedDept=ASN.
-    await user.click(screen.getByRole('button', { name: /^ASN/ }));
+    await user.click(screen.getByRole('row', { name: /^ASN/ }));
     expect(
       screen.getByTestId('mock-revenue-line-chart').getAttribute('data-highlighted'),
     ).toBe('ASN');
@@ -402,7 +404,7 @@ describe('Departments page (integration)', () => {
     ).toBe('ASN');
 
     // Click same row again → clears to null → both charts see empty.
-    await user.click(screen.getByRole('button', { name: /^ASN/ }));
+    await user.click(screen.getByRole('row', { name: /^ASN/ }));
     expect(
       screen.getByTestId('mock-revenue-line-chart').getAttribute('data-highlighted'),
     ).toBe('');

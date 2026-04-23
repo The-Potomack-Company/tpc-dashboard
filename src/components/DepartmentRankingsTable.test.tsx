@@ -151,8 +151,9 @@ describe('DepartmentRankingsTable — rendering', () => {
         isError={false}
       />,
     );
-    // Grab all rankings rows (role="button" — clickable toggles)
-    const rows = screen.getAllByRole('button', {
+    // WR-01: Data rows use native <tr> semantics (role="row"), not role="button".
+    // Filter out the header row via name match against dept codes.
+    const rows = screen.getAllByRole('row', {
       name: /^(ASN|FRN|PNT)/,
     });
     // Highest total_revenue is ASN (500k), then FRN (300k), then PNT (120k).
@@ -180,12 +181,12 @@ describe('DepartmentRankingsTable — rendering', () => {
 
     // Default is DESC (revenue metric). First click flips to ASC.
     await user.click(headerButton);
-    let rows = screen.getAllByRole('button', { name: /^(ASN|FRN|PNT)/ });
+    let rows = screen.getAllByRole('row', { name: /^(ASN|FRN|PNT)/ });
     expect(rows[0].textContent).toMatch(/PNT/); // smallest revenue first
 
     // Second click flips back to DESC.
     await user.click(headerButton);
-    rows = screen.getAllByRole('button', { name: /^(ASN|FRN|PNT)/ });
+    rows = screen.getAllByRole('row', { name: /^(ASN|FRN|PNT)/ });
     expect(rows[0].textContent).toMatch(/ASN/);
   });
 });
@@ -210,13 +211,13 @@ describe('DepartmentRankingsTable — filter', () => {
 
     // Only ASN row remains.
     expect(
-      screen.queryAllByRole('button', { name: /^FRN/ }).length,
+      screen.queryAllByRole('row', { name: /^FRN/ }).length,
     ).toBe(0);
     expect(
-      screen.queryAllByRole('button', { name: /^PNT/ }).length,
+      screen.queryAllByRole('row', { name: /^PNT/ }).length,
     ).toBe(0);
     expect(
-      screen.queryAllByRole('button', { name: /^ASN/ }).length,
+      screen.queryAllByRole('row', { name: /^ASN/ }).length,
     ).toBe(1);
 
     // Match count pattern: "{shown} of {total} departments"
@@ -262,7 +263,7 @@ describe('DepartmentRankingsTable — selection', () => {
         isError={false}
       />,
     );
-    const asnRow = screen.getAllByRole('button', { name: /^ASN/ })[0];
+    const asnRow = screen.getAllByRole('row', { name: /^ASN/ })[0];
     fireEvent.click(asnRow);
     expect(onToggleSelection).toHaveBeenCalledWith('ASN');
   });
@@ -278,16 +279,16 @@ describe('DepartmentRankingsTable — selection', () => {
         isError={false}
       />,
     );
-    const asnRow = screen.getAllByRole('button', { name: /^ASN/ })[0];
+    const asnRow = screen.getAllByRole('row', { name: /^ASN/ })[0];
     expect(asnRow.className).toContain('bg-accent/5');
     expect(asnRow.className).toContain('border-l-2');
     expect(asnRow.className).toContain('border-accent');
-    // aria-pressed reflects selection state.
-    expect(asnRow.getAttribute('aria-pressed')).toBe('true');
+    // WR-01: row semantics preserved — aria-selected reflects selection state.
+    expect(asnRow.getAttribute('aria-selected')).toBe('true');
 
-    const frnRow = screen.getAllByRole('button', { name: /^FRN/ })[0];
+    const frnRow = screen.getAllByRole('row', { name: /^FRN/ })[0];
     expect(frnRow.className).not.toContain('bg-accent/5');
-    expect(frnRow.getAttribute('aria-pressed')).toBe('false');
+    expect(frnRow.getAttribute('aria-selected')).toBe('false');
   });
 
   it('T10: Enter on a focused row fires onToggleSelection', () => {
@@ -302,7 +303,7 @@ describe('DepartmentRankingsTable — selection', () => {
         isError={false}
       />,
     );
-    const frnRow = screen.getAllByRole('button', { name: /^FRN/ })[0];
+    const frnRow = screen.getAllByRole('row', { name: /^FRN/ })[0];
     fireEvent.keyDown(frnRow, { key: 'Enter' });
     expect(onToggleSelection).toHaveBeenCalledWith('FRN');
   });
@@ -319,7 +320,7 @@ describe('DepartmentRankingsTable — selection', () => {
         isError={false}
       />,
     );
-    const pntRow = screen.getAllByRole('button', { name: /^PNT/ })[0];
+    const pntRow = screen.getAllByRole('row', { name: /^PNT/ })[0];
     fireEvent.keyDown(pntRow, { key: ' ' });
     expect(onToggleSelection).toHaveBeenCalledWith('PNT');
   });
@@ -345,7 +346,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
       />,
     );
     // Row must render and mention XYZ; it must NOT contain the literal "null".
-    const row = screen.getByRole('button', { name: /^XYZ/ });
+    const row = screen.getByRole('row', { name: /^XYZ/ });
     expect(row.textContent).toContain('XYZ');
     expect(row.textContent).not.toMatch(/\bnull\b/);
     // Sanity — no "null" string leaks anywhere in the table container.
@@ -370,11 +371,11 @@ describe('DepartmentRankingsTable — edge cases', () => {
       />,
     );
     // Em-dash is in the cell for BDEP.
-    const bRow = screen.getByRole('button', { name: /^BDEP/ });
+    const bRow = screen.getByRole('row', { name: /^BDEP/ });
     expect(bRow.textContent).toContain('—');
 
     // Default sort sell_through DESC puts CDEP first, ADEP second, BDEP (null) last.
-    let rowEls = screen.getAllByRole('button', {
+    let rowEls = screen.getAllByRole('row', {
       name: /^(ADEP|BDEP|CDEP)/,
     });
     expect(rowEls[0].textContent).toMatch(/^CDEP/);
@@ -387,7 +388,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
     });
     const headerButton = within(header).getByRole('button');
     await user.click(headerButton);
-    rowEls = screen.getAllByRole('button', {
+    rowEls = screen.getAllByRole('row', {
       name: /^(ADEP|BDEP|CDEP)/,
     });
     expect(rowEls[rowEls.length - 1].textContent).toMatch(/^BDEP/);
@@ -405,7 +406,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
       />,
     );
     // Revenue-sorted: ASN first (500k).
-    let rows = screen.getAllByRole('button', { name: /^(ASN|FRN|PNT)/ });
+    let rows = screen.getAllByRole('row', { name: /^(ASN|FRN|PNT)/ });
     expect(rows[0].textContent).toMatch(/^ASN/);
 
     rerender(
@@ -419,7 +420,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
       />,
     );
     // lots_above_estimate DESC: ASN (22) > FRN (10) > PNT (5) — ASN still first.
-    rows = screen.getAllByRole('button', { name: /^(ASN|FRN|PNT)/ });
+    rows = screen.getAllByRole('row', { name: /^(ASN|FRN|PNT)/ });
     expect(rows[0].textContent).toMatch(/^ASN/);
 
     rerender(
@@ -443,7 +444,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
         isError={false}
       />,
     );
-    rows = screen.getAllByRole('button', { name: /^(ADEP|BDEP)/ });
+    rows = screen.getAllByRole('row', { name: /^(ADEP|BDEP)/ });
     expect(rows[0].textContent).toMatch(/^BDEP/); // BDEP has 999 lots above estimate
   });
 });
