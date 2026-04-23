@@ -172,4 +172,153 @@ describe('SalesPage', () => {
     const heading = screen.getByRole('heading', { level: 1, name: 'Sales' });
     expect(heading).toBeInTheDocument();
   });
+
+  // --- Phase 6 Plan 06-04 ---
+
+  function fiveSales() {
+    return [
+      makeSale({ sale_number: '2024-01', title: 'Alpha' }),
+      makeSale({ sale_number: '2024-02', title: 'Bravo' }),
+      makeSale({ sale_number: '2024-03', title: 'Charlie' }),
+      makeSale({ sale_number: '2024-04', title: 'Delta' }),
+      makeSale({ sale_number: '2024-05', title: 'Echo' }),
+    ];
+  }
+
+  it('T-new-1: no footer visible on initial render (no selection)', () => {
+    useSalesMock.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: fiveSales(),
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderPage();
+    expect(
+      screen.queryByRole('region', { name: /Sale selection actions/i }),
+    ).toBeNull();
+  });
+
+  it('T-new-2: checking 1 row shows footer with disabled Compare', async () => {
+    useSalesMock.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: fiveSales(),
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderPage();
+    const firstCheckbox = screen.getByRole('checkbox', {
+      name: /Select sale 2024-01/i,
+    });
+    fireEvent.click(firstCheckbox);
+
+    await waitFor(() => {
+      const footer = screen.getByRole('region', {
+        name: /Sale selection actions/i,
+      });
+      expect(footer).toBeInTheDocument();
+    });
+
+    const compareBtn = screen.getByRole('button', { name: /Compare \(1\)/ });
+    expect(compareBtn).toBeDisabled();
+  });
+
+  it('T-new-3: checking 2 rows enables Compare — click navigates', async () => {
+    useSalesMock.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: fiveSales(),
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderPage();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-01/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-02/i }),
+    );
+
+    const compareBtn = await screen.findByRole('button', {
+      name: /Compare \(2\)/,
+    });
+    expect(compareBtn).not.toBeDisabled();
+    fireEvent.click(compareBtn);
+    expect(navigateMock).toHaveBeenCalledWith(
+      '/sales/compare?sales=2024-01,2024-02',
+    );
+  });
+
+  it('T-new-4: 5th-row attempt shows Max hint; 5th row NOT selected', async () => {
+    useSalesMock.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: fiveSales(),
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderPage();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-01/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-02/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-03/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-04/i }),
+    );
+    // 5th click should be blocked.
+    const fifthCheckbox = screen.getByRole('checkbox', {
+      name: /Select sale 2024-05/i,
+    });
+    fireEvent.click(fifthCheckbox);
+
+    await waitFor(() => {
+      const status = screen.getByRole('status');
+      expect(status.textContent).toMatch(/Max 4 sales/);
+    });
+
+    expect((fifthCheckbox as HTMLInputElement).checked).toBe(false);
+    // Compare count stays at 4
+    expect(
+      screen.getByRole('button', { name: /Compare \(4\)/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('T-new-5: Clear selection empties selection — footer disappears', async () => {
+    useSalesMock.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: fiveSales(),
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderPage();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-01/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Select sale 2024-02/i }),
+    );
+
+    const clearBtn = await screen.findByRole('button', {
+      name: /Clear selection/,
+    });
+    fireEvent.click(clearBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('region', { name: /Sale selection actions/i }),
+      ).toBeNull();
+    });
+  });
 });

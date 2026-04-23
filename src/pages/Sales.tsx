@@ -24,11 +24,54 @@ import { FilterInput } from '../components/FilterInput';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { SaleSelectionFooter } from '../components/SaleSelectionFooter';
+
+// Phase 6 Plan 06-04 — text copy is locked in 06-UI-SPEC.md § Copywriting
+// Contract. Centralize here so any later tuning is a single-line edit.
+const MAX_HINT_TEXT = 'Max 4 sales — clear one to add a different sale';
+const MAX_HINT_TTL_MS = 3000;
 
 export function SalesPage() {
   const query = useSales();
   const [filter, setFilter] = React.useState('');
   const deferredFilter = React.useDeferredValue(filter);
+
+  // Phase 6 Plan 06-04 — selection state is page-local (not URL, not Zustand).
+  // The footer hint text lives alongside it because the 5th-click event is
+  // handled by SalesTable (bubbled via onMaxExceeded) — we store the hint
+  // here so it can fade via the TTL timer without driving the table to
+  // re-render on every interval tick.
+  const [rowSelection, setRowSelection] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [maxHint, setMaxHint] = React.useState<string | null>(null);
+  const maxHintTimerRef = React.useRef<number | null>(null);
+
+  const selectedSaleNumbers = React.useMemo(
+    () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
+    [rowSelection],
+  );
+
+  const handleMaxExceeded = React.useCallback(() => {
+    setMaxHint(MAX_HINT_TEXT);
+    if (maxHintTimerRef.current != null) {
+      window.clearTimeout(maxHintTimerRef.current);
+    }
+    maxHintTimerRef.current = window.setTimeout(
+      () => setMaxHint(null),
+      MAX_HINT_TTL_MS,
+    );
+  }, []);
+
+  React.useEffect(() => {
+    // Cleanup: clear any pending max-hint timer on unmount so a delayed
+    // setState doesn't fire against an unmounted component.
+    return () => {
+      if (maxHintTimerRef.current != null) {
+        window.clearTimeout(maxHintTimerRef.current);
+      }
+    };
+  }, []);
 
   // Memoize the default [] so the reference is stable across renders
   // when query.data is undefined (loading/error). This keeps the filtered
@@ -128,7 +171,22 @@ export function SalesPage() {
       )}
 
       {query.isSuccess && sales.length > 0 && (
-        <SalesTable sales={sales} filterText={deferredFilter} />
+        <SalesTable
+          sales={sales}
+          filterText={deferredFilter}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          maxSelection={4}
+          onMaxExceeded={handleMaxExceeded}
+        />
+      )}
+
+      {selectedSaleNumbers.length >= 1 && (
+        <SaleSelectionFooter
+          selectedSaleNumbers={selectedSaleNumbers}
+          onClear={() => setRowSelection({})}
+          maxHint={maxHint}
+        />
       )}
     </div>
   );
