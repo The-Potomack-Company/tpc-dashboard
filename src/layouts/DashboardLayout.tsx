@@ -2,9 +2,11 @@
 //
 // Root grid: grid-cols-[4rem_1fr] lg:grid-cols-[15rem_1fr]. Below lg the
 // sidebar is a 64px icon rail; at lg it expands to 240px with labels.
-// Sales becomes an active NavLink to /sales. Other phases remain
-// aria-disabled spans with a Coming soon aside (hidden at md). Every
-// nav entry renders an inline SVG icon for the icon-rail.
+// Sales is an active NavLink to /sales (Phase 3). Trends joined in Phase 5
+// plan 05-07 (/trends). Departments joined in Phase 6 plan 06-06
+// (/departments). Team / Reports / Custom Charts remain aria-disabled
+// spans with a Coming soon aside (hidden at md). Every nav entry renders
+// an inline SVG icon for the icon-rail.
 //
 // Threat model: page only mounts behind ProtectedRoute; displayName +
 // user.email render as React text children (JSX auto-escapes).
@@ -73,12 +75,12 @@ interface NavItem {
   Icon: () => ReactElement;
 }
 
-// Sales is active from Phase 3; Trends joins in Phase 5 (plan 05-07).
-// Phases 6-9 activate the rest.
+// Sales is active from Phase 3; Trends joined in Phase 5 (plan 05-07);
+// Departments joined in Phase 6 (plan 06-06). Phases 7-9 activate the rest.
 const NAV_ITEMS: NavItem[] = [
   { label: "Sales", to: "/sales", Icon: IconTableCells },
   { label: "Trends", to: "/trends", Icon: IconChartBar },
-  { label: "Departments", Icon: IconBuildingLibrary },
+  { label: "Departments", to: "/departments", Icon: IconBuildingLibrary },
   { label: "Team", Icon: IconUsers },
   { label: "Reports", Icon: IconDocumentText },
   { label: "Custom Charts", Icon: IconChartPie },
