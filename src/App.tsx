@@ -4,6 +4,7 @@ import { DashboardPage } from './pages/Dashboard';
 import { SalesPage } from './pages/Sales';
 import { SaleDetailPage } from './pages/SaleDetail';
 import { TrendsPage } from './pages/Trends';
+import { DepartmentsPage } from './pages/Departments';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './layouts/DashboardLayout';
 
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/sales/:saleNumber" element={<SaleDetailPage />} />
           <Route path="/trends" element={<TrendsPage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
