@@ -14,6 +14,8 @@ Give the TPC team a single place to see how their auctions are performing over t
 
 - [x] Team access using existing Supabase auth system as TPC App — **Validated in Phase 1 (single-admin v1; specialist view deferred to v2)**
 - [x] Dashboard-owned schema (sales, sale_departments, departments, scraper_runs, saved_reports) deployed to shared Supabase with admin-only RLS — **Validated in Phase 1**
+- [x] Department comparison views: which departments perform best (by revenue, sell-through, lots above estimate) — **Validated in Phase 6 (rankings table + multi-line revenue + 100% stacked share; 7-flow smoke-check deferred in 06-HUMAN-UAT.md)**
+- [x] Sale comparison: side-by-side or overlay comparison of selected sales — **Validated in Phase 6 (SALE-04/05/06: 2–4 sale side-by-side with adjacent-pair deltas + revenue waterfall)**
 
 ### Active
 
@@ -23,8 +25,6 @@ Give the TPC team a single place to see how their auctions are performing over t
 - [ ] Scheduled scraper that logs into RFC, detects completed sales, and auto-imports new auction profiles
 - [ ] Sale overview landing page: latest sales with key metrics at a glance
 - [ ] Historical trend charts: revenue over time, sell-through rates, department performance across sales
-- [ ] Department comparison views: which departments perform best (by revenue, sell-through, lots above estimate)
-- [ ] Sale comparison: side-by-side or overlay comparison of selected sales
 - [ ] TPC App activity tracking: session counts, items cataloged, specialist workload, export history (reads from existing Supabase tables)
 - [ ] TPC AI Cataloger activity tracking: batch runs, photo uploads, spreadsheet imports, single-item generations (reads from analytics_events table being built in extension v2.0)
 - [ ] Report generation: exportable summaries (PDF or CSV) of sale performance, department trends, team activity
