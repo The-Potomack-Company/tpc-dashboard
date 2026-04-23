@@ -21,6 +21,7 @@
 // flash-of-protected-data mitigated upstream by ProtectedRoute in
 // App.tsx (page only mounts for authenticated admins) + Supabase RLS.
 
+import { useState } from 'react';
 import { useParams } from 'react-router';
 import { useSale } from '../hooks/useSale';
 import { SaleSummaryCard } from '../components/SaleSummaryCard';
@@ -29,6 +30,7 @@ import { ValidationWarningBanner } from '../components/ValidationWarningBanner';
 import { ErrorState } from '../components/ErrorState';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { BackLink } from '../components/BackLink';
+import { RevenueWaterfallChart } from '../components/RevenueWaterfallChart';
 import { SaleNotFound } from './SaleNotFound';
 
 export function SaleDetailPage() {
@@ -36,6 +38,10 @@ export function SaleDetailPage() {
   // Always call useSale so the hook order is stable; it short-circuits
   // via enabled: Boolean(saleNumber) when the param is missing.
   const query = useSale(saleNumber ?? '');
+  // Phase 6 Plan 06-05 (SALE-06): collapsible Revenue Breakdown section.
+  // Per UI-SPEC § Interaction Contract → "Sale Detail: deep-link to
+  // expanded state — Not supported in v1". Each visit starts collapsed.
+  const [isWaterfallExpanded, setIsWaterfallExpanded] = useState(false);
 
   // Back link is rendered on every branch — UI-SPEC requires it always
   // visible on detail surfaces so the user can bail out at any time.
@@ -142,6 +148,81 @@ export function SaleDetailPage() {
         </h2>
         <div className="mt-6">
           <DepartmentTable departments={departments} />
+        </div>
+      </section>
+      {/*
+        Phase 6 Plan 06-05 (SALE-06): Revenue Breakdown collapsible section.
+        Contract: .planning/phases/06-department-analysis-sale-comparison/06-UI-SPEC.md
+          § Revenue Breakdown section on /sales/:saleNumber (lines 628-660)
+          § Copywriting → Revenue Breakdown (lines 384-396)
+          § Interaction Contract → Sale Detail chevron (lines 442-443)
+
+        Card uses ChartCard's surface tokens (p-6 rounded-lg border
+        bg-white) inline rather than composing via <ChartCard> because
+        the collapsed state must render header-only (no body slot) to
+        hit the 44px h-11 height spec. ChartCard always emits
+        `<div className="mt-4 h-80">{children}</div>` which would
+        collapse to 320px of empty space. The inline version lets the
+        section collapse cleanly by simply not rendering the body div.
+
+        Chevron button: native <button> so Enter/Space keyboard
+        semantics come free (UI-SPEC § Interaction Contract line 443).
+        aria-expanded + aria-label both flip on state change, and the
+        SVG rotates 180deg (rotate-180 on expand) per the chevron-down
+        → chevron-up contract (UI-SPEC line 40).
+
+        Deep-link opt-in: NOT supported in v1 (UI-SPEC line 444) — state
+        is purely view-local; useState initializes false on every mount.
+      */}
+      <section className="mt-6" aria-labelledby="revenue-breakdown-title">
+        <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <header className="flex items-center justify-between gap-4">
+            <h2
+              id="revenue-breakdown-title"
+              className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+            >
+              Revenue breakdown
+            </h2>
+            <div className="flex items-center gap-3">
+              {!isWaterfallExpanded && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Tap to see the path from hammer to net
+                </p>
+              )}
+              <button
+                type="button"
+                aria-expanded={isWaterfallExpanded}
+                aria-controls="revenue-waterfall-body"
+                aria-label={
+                  isWaterfallExpanded
+                    ? 'Collapse revenue breakdown'
+                    : 'Expand revenue breakdown'
+                }
+                onClick={() => setIsWaterfallExpanded((v) => !v)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${isWaterfallExpanded ? 'rotate-180' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 7.5L10 12.5L15 7.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </header>
+          {isWaterfallExpanded && (
+            <div id="revenue-waterfall-body" className="mt-4 h-80">
+              <RevenueWaterfallChart sale={sale} />
+            </div>
+          )}
         </div>
       </section>
     </>
