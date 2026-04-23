@@ -3,6 +3,7 @@ import { LoginPage } from './pages/Login';
 import { DashboardPage } from './pages/Dashboard';
 import { SalesPage } from './pages/Sales';
 import { SaleDetailPage } from './pages/SaleDetail';
+import { SaleComparePage } from './pages/SaleCompare';
 import { TrendsPage } from './pages/Trends';
 import { DepartmentsPage } from './pages/Departments';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -16,6 +17,7 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/sales" element={<SalesPage />} />
+          <Route path="/sales/compare" element={<SaleComparePage />} />
           <Route path="/sales/:saleNumber" element={<SaleDetailPage />} />
           <Route path="/trends" element={<TrendsPage />} />
           <Route path="/departments" element={<DepartmentsPage />} />
