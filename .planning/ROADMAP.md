@@ -132,12 +132,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Migrations (3 new RPCs) + BLOCKING db push + types regen + delta/waterfall libs + 4 data hooks (Wave 1)
-- [ ] 06-02-PLAN.md — /departments page skeleton: DeptRankingMetricToggle + DepartmentRankingsTable + page-level cross-filter state (Wave 2)
-- [ ] 06-03-PLAN.md — DepartmentChipBar + DepartmentRevenueLineChart + DepartmentShareStackedBarChart wired into /departments (Wave 2)
-- [ ] 06-04-PLAN.md — SalesTable selection + SaleSelectionFooter + /sales/compare page + ComparisonTable + parseSalesParam (Wave 2)
-- [ ] 06-05-PLAN.md — RevenueWaterfallChart + collapsible Revenue Breakdown section on Sale Detail (Wave 2)
-- [ ] 06-06-PLAN.md — DashboardLayout Departments NavLink activation + human-verify end-to-end checkpoint (Wave 3)
+- [x] 06-01-PLAN.md — Migrations (3 new RPCs) + BLOCKING db push + types regen + delta/waterfall libs + 4 data hooks (Wave 1)
+- [x] 06-02-PLAN.md — /departments page skeleton: DeptRankingMetricToggle + DepartmentRankingsTable + page-level cross-filter state (Wave 2)
+- [x] 06-03-PLAN.md — DepartmentChipBar + DepartmentRevenueLineChart + DepartmentShareStackedBarChart wired into /departments (Wave 2)
+- [x] 06-04-PLAN.md — SalesTable selection + SaleSelectionFooter + /sales/compare page + ComparisonTable + parseSalesParam (Wave 2)
+- [x] 06-05-PLAN.md — RevenueWaterfallChart + collapsible Revenue Breakdown section on Sale Detail (Wave 2)
+- [x] 06-06-PLAN.md — DashboardLayout Departments NavLink activation + human-verify end-to-end checkpoint (Wave 3)
 **UI hint**: yes
 
 ### Phase 7: Team Activity
