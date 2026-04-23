@@ -45,7 +45,16 @@ export interface DepartmentRevenueLineChartProps {
   colorForCode: (code: string) => string;
 }
 
-const EMPTY_ROWS: readonly DepartmentRevenueRow[] = [];
+// WR-02: Freeze the local empty sentinel so (a) naive mutation from a
+// debug/dev session surfaces loudly rather than silently corrupting the
+// referentially stable "empty" identity, and (b) matches the frozen
+// singleton convention that useDepartmentRevenueSeries establishes with
+// its own EMPTY_REVENUE_SERIES. The local constant is still needed for
+// the pre-fetch (query.data === undefined) branch before the hook
+// returns its own frozen empty array.
+const EMPTY_ROWS: readonly DepartmentRevenueRow[] = Object.freeze(
+  [],
+) as readonly DepartmentRevenueRow[];
 
 function headerFormatter(
   _label: string | number | undefined,
