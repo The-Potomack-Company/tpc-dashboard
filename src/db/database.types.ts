@@ -583,6 +583,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      department_rankings: {
+        Args: { range_end: string; range_start: string }
+        Returns: Json
+      }
+      department_revenue_series: {
+        Args: { dept_codes: string[]; range_end: string; range_start: string }
+        Returns: Json
+      }
+      department_share_series: {
+        Args: { range_end: string; range_start: string; top_n: number }
+        Returns: Json
+      }
       import_sale_with_departments: {
         Args: { p_departments: Json; p_sale: Json }
         Returns: string
