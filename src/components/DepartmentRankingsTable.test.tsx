@@ -80,9 +80,11 @@ describe('DepartmentRankingsTable — state branches', () => {
         onRetry={onRetry}
       />,
     );
-    expect(
-      screen.getByRole('alert', { name: /Couldn't load departments/i }),
-    ).toBeInTheDocument();
+    // ErrorState renders <h2 role="alert"> — the default heading role is
+    // suppressed when role="alert" is applied explicitly. Query by alert role.
+    expect(screen.getByRole('alert').textContent).toMatch(
+      /Couldn't load departments/i,
+    );
     fireEvent.click(screen.getByRole('button', { name: /^Retry$/ }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
@@ -353,9 +355,9 @@ describe('DepartmentRankingsTable — edge cases', () => {
   it('null avg_sell_through renders em-dash and sorts last', async () => {
     const user = userEvent.setup();
     const rows: DepartmentRanking[] = [
-      makeRow({ department_code: 'A', avg_sell_through: 0.5 }),
-      makeRow({ department_code: 'B', avg_sell_through: null }),
-      makeRow({ department_code: 'C', avg_sell_through: 0.9 }),
+      makeRow({ department_code: 'ADEP', avg_sell_through: 0.5 }),
+      makeRow({ department_code: 'BDEP', avg_sell_through: null }),
+      makeRow({ department_code: 'CDEP', avg_sell_through: 0.9 }),
     ];
     render(
       <DepartmentRankingsTable
@@ -367,24 +369,28 @@ describe('DepartmentRankingsTable — edge cases', () => {
         isError={false}
       />,
     );
-    // Em-dash is in the cell for B.
-    const bRow = screen.getByRole('button', { name: /^B/ });
+    // Em-dash is in the cell for BDEP.
+    const bRow = screen.getByRole('button', { name: /^BDEP/ });
     expect(bRow.textContent).toContain('—');
 
-    // Default sort sell_through DESC puts C first, A second, B (null) last.
-    let rowEls = screen.getAllByRole('button', { name: /^(A|B|C)/ });
-    expect(rowEls[0].textContent).toMatch(/^C/);
-    expect(rowEls[1].textContent).toMatch(/^A/);
-    expect(rowEls[2].textContent).toMatch(/^B/);
+    // Default sort sell_through DESC puts CDEP first, ADEP second, BDEP (null) last.
+    let rowEls = screen.getAllByRole('button', {
+      name: /^(ADEP|BDEP|CDEP)/,
+    });
+    expect(rowEls[0].textContent).toMatch(/^CDEP/);
+    expect(rowEls[1].textContent).toMatch(/^ADEP/);
+    expect(rowEls[2].textContent).toMatch(/^BDEP/);
 
-    // After toggling to ASC, B (null) still sorts last.
+    // After toggling to ASC, BDEP (null) still sorts last.
     const header = screen.getByRole('columnheader', {
       name: /Avg sell-through/,
     });
     const headerButton = within(header).getByRole('button');
     await user.click(headerButton);
-    rowEls = screen.getAllByRole('button', { name: /^(A|B|C)/ });
-    expect(rowEls[rowEls.length - 1].textContent).toMatch(/^B/);
+    rowEls = screen.getAllByRole('button', {
+      name: /^(ADEP|BDEP|CDEP)/,
+    });
+    expect(rowEls[rowEls.length - 1].textContent).toMatch(/^BDEP/);
   });
 
   it('changing metric prop resets default sort to that metric DESC', () => {
@@ -420,12 +426,12 @@ describe('DepartmentRankingsTable — edge cases', () => {
       <DepartmentRankingsTable
         rows={[
           makeRow({
-            department_code: 'A',
+            department_code: 'ADEP',
             total_revenue: 999,
             lots_above_estimate: 1,
           }),
           makeRow({
-            department_code: 'B',
+            department_code: 'BDEP',
             total_revenue: 1,
             lots_above_estimate: 999,
           }),
@@ -437,7 +443,7 @@ describe('DepartmentRankingsTable — edge cases', () => {
         isError={false}
       />,
     );
-    rows = screen.getAllByRole('button', { name: /^(A|B)/ });
-    expect(rows[0].textContent).toMatch(/^B/); // B has 999 lots above estimate
+    rows = screen.getAllByRole('button', { name: /^(ADEP|BDEP)/ });
+    expect(rows[0].textContent).toMatch(/^BDEP/); // BDEP has 999 lots above estimate
   });
 });
