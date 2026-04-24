@@ -1,36 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: executing
-stopped_at: Plan 02-05 Task 1 complete (README + PROJECT + REQUIREMENTS + STATE updated, SUMMARY written as `partial`). DATA-01 live 457-PDF import deferred pending operator adding SUPABASE_SERVICE_ROLE_KEY to .env.local.
-last_updated: "2026-04-24T14:47:27.324Z"
+milestone: v2.0
+milestone_name: Live Ops
+status: defining_requirements
+stopped_at: Milestone v2.0 started (/gsd-new-milestone). Requirements next.
+last_updated: "2026-04-24T00:00:00.000Z"
 last_activity: 2026-04-24
 progress:
-  total_phases: 10
-  completed_phases: 6
-  total_plans: 31
-  completed_plans: 31
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-06)
+See: .planning/PROJECT.md (updated 2026-04-24)
 
-**Core value:** Give the TPC team a single place to see how their auctions are performing over time
-**Current focus:** Phase 05 — Trend Analysis
+**Core value:** Give the TPC team real-time awareness of team activity (voice app + AI extension) and live auction floor state on one screen
+**Current focus:** Milestone v2.0 Live Ops — defining requirements
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
-Status: Executing Phase 05
-Last activity: 2026-04-24
-
-Progress: [██░░░░░░░░] 20%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-24 — Milestone v2.0 Live Ops started
 
 ## Performance Metrics
 

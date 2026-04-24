@@ -8,6 +8,17 @@ A live-operations dashboard for The Potomack Company. Surfaces three things the 
 
 Give the TPC team real-time awareness of team activity and live auctions — one screen that shows who's cataloging what, what the extension is processing, and (during a live sale) current lot + bidding state as it unfolds.
 
+## Current Milestone: v2.0 Live Ops
+
+**Goal:** Give the TPC team real-time awareness of team activity (voice app + AI extension) and live auction floor state on one screen.
+
+**Target features:**
+
+- **TPC App activity tracking** — read-only charts/reports from existing app tables (`profiles`, `sessions`, `items`, `photos`, `export_history`): session volume by specialist, item throughput, `ai_status` health, export pipeline, photo coverage, house-vs-sale split
+- **TPC AI Cataloger extension analytics** — read-only charts/reports from the extension's `analytics_events` table (5 event types: `catalog_single`, `catalog_batch`, `portal_upload`, `spreadsheet_transform`, `data_import`): event volume by type/day, batch performance, errors, user usage, live event feed
+- **Live RFC sale tracking** — Playwright-driven scrape of an active auction during a sale: current lot + bid state, bidding issues/anomalies (exact signals shaped with sale monitors during phase discuss), dashboard-owned tables for lot-level events
+- **Vercel deploy** — carried forward from v1.0 INFR-01 (not shipped in v1.0)
+
 ## Requirements
 
 ### Validated (carried from v1.0)
@@ -16,12 +27,14 @@ Give the TPC team real-time awareness of team activity and live auctions — one
 - [x] Shared Supabase project with admin-only RLS scaffolding, private.is_admin() helper — **Validated in v1.0 Phase 1**
 - [x] Vite + React 19 + TS + Tailwind v4 stack, matching TPC App — **Validated in v1.0 Phase 1**
 
-### Active (v2.0 scope — to be formalized via /gsd-new-milestone)
+### Active (v2.0 Live Ops)
 
-- [ ] **TPC App activity tracking** — read session count, items cataloged, specialist workload, export history from TPC App's Supabase tables (profiles, sessions, items, export_history, photos)
-- [ ] **TPC AI Cataloger extension analytics** — consume the extension v2.0 `analytics_events` stream (5 event types: single catalog, batch catalog, portal upload, spreadsheet transform, app data import)
-- [ ] **Live RFC sale tracking** — real-time scrape of an active auction: current lot, active bid, clearance pace, lot-over-time throughput. Runs during a live sale via Playwright; surfaces to dashboard in near-real-time
-- [ ] Vercel deploy (carried forward from v1.0 INFR-01)
+Formalized requirements are in `.planning/REQUIREMENTS.md`. Summary of target capabilities:
+
+- [ ] **TPC App activity tracking** — session volume by specialist, item throughput, `ai_status` health, export pipeline, photo coverage, house-vs-sale split (reads `profiles`, `sessions`, `items`, `photos`, `export_history`)
+- [ ] **TPC AI Cataloger extension analytics** — event volume by type, batch performance, errors, user usage, live event feed (reads `analytics_events`)
+- [ ] **Live RFC sale tracking** — current lot + bid state, bidding issues/anomalies, Playwright scrape during active sales, dashboard-owned lot-event tables
+- [ ] **Vercel deploy** — carried forward from v1.0 INFR-01
 
 ### Out of Scope
 
@@ -86,4 +99,4 @@ Give the TPC team real-time awareness of team activity and live auctions — one
 - **v2.0 (this milestone)**: Pivoted to live-ops focus — team activity (voice app + extension) + live RFC sale tracking.
 
 ---
-*Last updated: 2026-04-24 after v1.0 → v2.0 pivot (pre-/gsd-new-milestone; v2 scope will be formalized in the next step)*
+*Last updated: 2026-04-24 — v2.0 Live Ops milestone started (`/gsd-new-milestone`). Requirements next.*
