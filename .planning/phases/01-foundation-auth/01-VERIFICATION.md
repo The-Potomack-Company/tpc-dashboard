@@ -4,10 +4,12 @@ verified: 2026-04-21T18:00:00Z
 status: human_needed
 score: 4/5 must-haves verified
 overrides_applied: 0
+pivot_note: "Phase 1 is RETAINED for v2.0 — auth, routing, layout, deploy config remain foundation. Deploy-smoke UAT stays pending (deploy is still needed for v2)."
 human_verification:
   - test: "Vercel deploy: create Vercel project, set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY, deploy, confirm /login loads without console errors, confirm admin can log in on deployed URL"
     expected: "Deployed URL returns /login page without console errors when visited unauthenticated; admin credentials sign in successfully"
     why_human: "INFR-01 requires an actual Vercel project to be created and deployed. The codebase is deploy-ready (build passes, env vars documented) but the deployment itself is a user-action with external service access."
+    status: pending
 ---
 
 # Phase 1: Foundation & Auth Verification Report
