@@ -142,7 +142,20 @@ A web-based analytics dashboard for The Potomack Company that consolidates aucti
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### Service-role Supabase admin client (INFR-06)
+
+The Supabase service-role key bypasses Row-Level Security. It MUST NEVER appear in the frontend bundle.
+
+**Rules:**
+
+1. **Module location:** The admin client lives at `scraper/lib/supabase-admin.ts`. Scripts under `scripts/` may import it (via `../scraper/lib/supabase-admin`). Code under `src/` MAY NOT import it.
+2. **Env-var split:**
+   - Frontend (`src/`) reads Supabase config via `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`. The `VITE_` prefix is Vite's convention for bundle-exposed env vars.
+   - Scraper + scripts (`scraper/`, `scripts/`) read via `process.env.SUPABASE_URL` and `process.env.SUPABASE_SERVICE_ROLE_KEY`. No `VITE_` prefix. Never `import.meta.env`.
+3. **Prebuild guard:** The root `package.json` script `prebuild` runs `node scripts/check-no-service-role-in-src.mjs` before every `npm run build`. The script walks `src/` + checks `index.html` and `vite.config.ts` for any occurrence of `SUPABASE_SERVICE_ROLE_KEY` and fails the build if found.
+4. **No npm workspace:** `scraper/` is a sibling directory with its own `package.json`, `node_modules`, and `tsconfig.json`. It does NOT extend `tsconfig.app.json`. Types are shared via file-path import (`scraper/lib/supabase-admin.ts` imports from `../../src/db/database.types.ts`). The one-way physical path makes a reverse-direction leak visible in code review.
+
+**If you need the admin client from a new location:** put your new code in `scripts/` or `scraper/`, not in `src/`. If that's not possible, escalate — there's a reason the rule exists.
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
