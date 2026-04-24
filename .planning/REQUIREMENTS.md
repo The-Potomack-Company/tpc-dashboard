@@ -158,66 +158,76 @@ Explicitly excluded. Documented to prevent scope creep.
 
 Which phases cover which requirements. Filled in by the roadmapper during roadmap creation.
 
+v2.0 phase numbering is reset to 1 for this milestone (v1.0 phases archived under `.planning/milestones/v1.0-phases/`).
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFR-01 | TBD | Pending |
-| INFR-02 | TBD | Pending |
-| INFR-03 | TBD | Pending |
-| INFR-04 | TBD | Pending |
-| INFR-05 | TBD | Pending |
-| INFR-06 | TBD | Pending |
-| APP-01 | TBD | Pending |
-| APP-02 | TBD | Pending |
-| APP-03 | TBD | Pending |
-| APP-04 | TBD | Pending |
-| APP-05 | TBD | Pending |
-| APP-06 | TBD | Pending |
-| APP-07 | TBD | Pending |
-| APP-08 | TBD | Pending |
-| APP-09 | TBD | Pending |
-| APP-10 | TBD | Pending |
-| APP-11 | TBD | Pending |
-| APP-12 | TBD | Pending |
-| EXT-01 | TBD | Pending |
-| EXT-02 | TBD | Pending |
-| EXT-03 | TBD | Pending |
-| EXT-04 | TBD | Pending |
-| EXT-05 | TBD | Pending |
-| EXT-06 | TBD | Pending |
-| EXT-07 | TBD | Pending |
-| EXT-08 | TBD | Pending |
-| EXT-09 | TBD | Pending |
-| EXT-10 | TBD | Pending |
-| LIVE-01 | TBD | Pending |
-| LIVE-02 | TBD | Pending |
-| LIVE-03 | TBD | Pending |
-| LIVE-04 | TBD | Pending |
-| LIVE-05 | TBD | Pending |
-| LIVE-06 | TBD | Pending |
-| LIVE-07 | TBD | Pending |
-| LIVE-08 | TBD | Pending |
-| LIVE-09 | TBD | Pending |
-| LIVE-10 | TBD | Pending |
-| LIVE-11 | TBD | Pending |
-| LIVE-12 | TBD | Pending |
-| SCRP-06 | TBD | Pending |
-| SCRP-07 | TBD | Pending |
-| SCRP-08 | TBD | Pending |
-| SCRP-09 | TBD | Pending |
-| SCRP-10 | TBD | Pending |
-| SCRP-11 | TBD | Pending |
-| SCRP-12 | TBD | Pending |
-| SCRP-13 | TBD | Pending |
-| SCRP-14 | TBD | Pending |
-| SCRP-15 | TBD | Pending |
-| SCRP-16 | TBD | Pending |
+| INFR-01 | Phase 6 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Pending |
+| INFR-04 | Phase 1 | Pending |
+| INFR-05 | Phase 1 | Pending |
+| INFR-06 | Phase 1 | Pending |
+| APP-01 | Phase 3 | Pending |
+| APP-02 | Phase 3 | Pending |
+| APP-03 | Phase 3 | Pending |
+| APP-04 | Phase 3 | Pending |
+| APP-05 | Phase 3 | Pending |
+| APP-06 | Phase 3 | Pending |
+| APP-07 | Phase 3 | Pending |
+| APP-08 | Phase 3 | Pending |
+| APP-09 | Phase 3 | Pending |
+| APP-10 | Phase 3 | Pending |
+| APP-11 | Phase 3 | Pending |
+| APP-12 | Phase 3 | Pending |
+| EXT-01 | Phase 2 | Pending |
+| EXT-02 | Phase 2 | Pending |
+| EXT-03 | Phase 2 | Pending |
+| EXT-04 | Phase 2 | Pending |
+| EXT-05 | Phase 2 | Pending |
+| EXT-06 | Phase 2 | Pending |
+| EXT-07 | Phase 2 | Pending |
+| EXT-08 | Phase 2 | Pending |
+| EXT-09 | Phase 2 | Pending |
+| EXT-10 | Phase 2 | Pending |
+| LIVE-01 | Phase 5 | Pending |
+| LIVE-02 | Phase 5 | Pending |
+| LIVE-03 | Phase 5 | Pending |
+| LIVE-04 | Phase 5 | Pending |
+| LIVE-05 | Phase 5 | Pending |
+| LIVE-06 | Phase 5 | Pending |
+| LIVE-07 | Phase 5 | Pending |
+| LIVE-08 | Phase 5 | Pending |
+| LIVE-09 | Phase 5 | Pending |
+| LIVE-10 | Phase 5 | Pending |
+| LIVE-11 | Phase 5 | Pending |
+| LIVE-12 | Phase 5 | Pending |
+| SCRP-06 | Phase 4 | Pending |
+| SCRP-07 | Phase 4 | Pending |
+| SCRP-08 | Phase 4 | Pending |
+| SCRP-09 | Phase 4 | Pending |
+| SCRP-10 | Phase 4 | Pending |
+| SCRP-11 | Phase 4 | Pending |
+| SCRP-12 | Phase 4 | Pending |
+| SCRP-13 | Phase 4 | Pending |
+| SCRP-14 | Phase 4 | Pending |
+| SCRP-15 | Phase 4 | Pending |
+| SCRP-16 | Phase 4 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 51 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 51 ⚠️ (roadmapper will close this)
+- Mapped to phases: 51 ✓
+- Unmapped: 0 ✓
+
+Per-phase distribution:
+- Phase 1 (Infrastructure & Shared UI Kit): 5 requirements — INFR-02..06
+- Phase 2 (Extension Analytics): 10 requirements — EXT-01..10
+- Phase 3 (TPC App Activity): 12 requirements — APP-01..12
+- Phase 4 (Live RFC Scraper Infrastructure): 11 requirements — SCRP-06..16
+- Phase 5 (Live Sale UI): 12 requirements — LIVE-01..12
+- Phase 6 (Vercel Production Deploy): 1 requirement — INFR-01
 
 ---
 
 *Requirements defined: 2026-04-24 — v2.0 Live Ops*
-*Last updated: 2026-04-24 (pre-roadmap)*
+*Last updated: 2026-04-24 (roadmap created; traceability filled in)*
