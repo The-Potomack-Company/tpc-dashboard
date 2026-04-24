@@ -1300,22 +1300,22 @@ Claims here are flagged for the planner and discuss-phase to confirm before impl
 | A7 | The TPC App shared Supabase project's Postgres instance permits `CREATE POLICY` execution via the Supabase CLI `db push` pipeline (no additional auth setup needed). Based on v1.0 Phase 1 having shipped 6 RLS policies via the same pipeline [CITED: 20260421000006_rls_helper_functions.sql and referenced migrations]. | § "Verbatim SQL sketch" | If there's a permissions change: `db push` would fail with a privilege error. Mitigated by running a dry-run push first. |
 | A8 | Windows `bash` environment in this repo is Git Bash (not WSL, not MSYS2). Based on the env block showing `Shell: bash` + `OS: Windows 11 Home`. | § "Service-Role Admin-Client Module" → Windows portability | If WSL: the shell grep still works, but path separators differ. Mitigation: Option C (Node script) is truly cross-platform. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact v1.0 version strings to repair.** Unknown until Step 1 discovery runs. Plan should not hard-code version lists.
-   - Recommendation: Plan Task includes a "discovery print" step that emits the list and requires operator confirmation before running `migration repair`.
+   - RESOLVED: Deferred to Wave 0 discovery step in Plan 01-01 Task 1 — versions are discovered at runtime via `scripts/discover-drift.ts` against the linked Supabase project, then Task 2 iterates the discovered list calling `supabase migration repair --status reverted <version>`. Not pre-declared in any plan artifact.
 
 2. **Does the extension's live `analytics_events` already have any applied rows from real users?** Extension 29-VERIFICATION.md confirms the table is live as of 2026-04-21 and Phases 30/31 completed, meaning the extension is emitting events. Our admin SELECT policy must work against *real* rows in D-24 verification.
-   - Recommendation: D-24 test sequence inserts a test row via anon client and immediately asserts admin SELECT returns ≥1 row. Clean up by deleting via admin client post-verification.
+   - RESOLVED: D-24 test sequence in `scripts/verify-analytics-rls.ts` (Plan 01-03 Task 2) inserts a fixture row via anon client carrying a `__rls_verify__: true` marker, asserts admin SELECT sees it, then cleans up via service-role DELETE. Verification is correct against real data; fixture marker makes accidental retention discoverable.
 
 3. **Where does `SUPABASE_URL` live for the admin client?** `VITE_SUPABASE_URL` is in dashboard `.env.local`. `scraper/.env` needs the same URL (so the admin client talks to the same project) but without the `VITE_` prefix.
-   - Recommendation: `scraper/.env.example` lists both `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Developer copies the URL from `.env.local` manually. The `scraper/README.md` documents this.
+   - RESOLVED: Plan 01-02 provisions `scraper/.env.example` listing `SUPABASE_URL` (no `VITE_` prefix) and `SUPABASE_SERVICE_ROLE_KEY`. `scraper/README.md` documents the manual copy-from-`.env.local` step. The admin client reads both vars via `process.env`.
 
 4. **Is `grep -r SUPABASE_SERVICE_ROLE_KEY src/` really the right target?** `src/` is `.ts`/`.tsx` only. What about `index.html`, `vite.config.ts`, `eslint.config.js`?
-   - Recommendation: prebuild guard walks `src/` + checks `index.html`, `vite.config.ts` explicitly. These are the only other files shipped to the bundle or dev server.
+   - RESOLVED: Plan 01-02 Task 2 implements the prebuild guard as a Node walker (`scripts/check-no-service-role-in-src.mjs`) that scans `src/` recursively AND explicitly checks `index.html` and `vite.config.ts`. These are the only additional files that reach the dev server or the production bundle. `eslint.config.js` is build-time only (not bundled) and is excluded.
 
 5. **Should `/kit` also render a mock `<PayloadViewerModal>` state with real extension-shaped payload?** Improves Phase 2 confidence.
-   - Recommendation: Yes — include a sample `catalog_batch` event payload shape (pulled from the extension migration 001 schema). Claude's discretion per D-11 scope.
+   - RESOLVED: Yes. Plan 01-05 `<PayloadViewerModal>` demo in the `/kit` route renders a sample `catalog_batch` event payload shape (pulled verbatim from extension migration 001 schema). Claude's discretion exercised per D-11.
 
 ## Validation Architecture
 
