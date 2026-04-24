@@ -35,10 +35,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Unauthenticated users are redirected to login and cannot access any data endpoints
   4. Database schema exists with all dashboard-owned tables (sales, sale_departments, departments, scraper_runs, saved_reports) and does not modify any TPC App tables
   5. All financial aggregation queries use PostgreSQL DECIMAL arithmetic, not JavaScript
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: TBD
+- [x] 01-01-PLAN.md — Scaffold Vite + React 19 + TS + Tailwind v4 + Vitest + ESLint + directory skeleton
+- [x] 01-02-PLAN.md — Supabase migrations (5 dashboard tables + RLS + seed), db push, regen types
+- [x] 01-03-PLAN.md — Supabase client + authStore + main.tsx composition + Wave 0 tests (client/store/schema)
+- [x] 01-04-PLAN.md — Login/ProtectedRoute/AccessDenied/DashboardLayout/routes + Wave 0 UI tests
+- [x] 01-05-PLAN.md — README, REQUIREMENTS/STATE updates, manual QA checklist, Vercel deploy
 **UI hint**: yes
 
 ### Phase 2: PDF Import Pipeline
@@ -51,10 +55,14 @@ Plans:
   3. Department record sums match the "All Departments" totals for every imported sale (cross-validation passes)
   4. Re-running the import on the same PDFs skips all duplicates and produces no errors
   5. The departments reference table contains all known department codes (ASN, PNT, SIL, CER, FRN, etc.) with display names
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [x] 02-01-PLAN.md — Migrations (validation_warning + auto_discovered) + import_sale_with_departments RPC + BLOCKING db push + types regen
+- [x] 02-02-PLAN.md — Install pdf-parse/tsx/dotenv + scripts/ scaffolding + numeric/sale/dept parsers + Zod schemas + isolated supabase-admin + parse-pdf orchestrator + Wave 0 unit tests
+- [x] 02-03-PLAN.md — cross-validate.ts (DATA-05 tolerance) + import-sale.ts (idempotent + auto-discover) + Wave 0 integration tests
+- [x] 02-04-PLAN.md — scripts/import-pdfs.ts CLI (argparse + scraper_runs lifecycle + progress + summary + T-05 banner) + integration test
+- [x] 02-05-PLAN.md — README + PROJECT.md path correction + STATE.md + manual-QA checkpoint (full 457 run + 10-sale spot-check + re-run idempotency) + REQUIREMENTS/ROADMAP finalization
 
 ### Phase 3: Sale Views
 **Goal**: Users can browse all imported sales and drill into any individual sale to see its complete auction profile with department breakdown
@@ -69,7 +77,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01: TBD
+- [x] 03-01: TBD
 **UI hint**: yes
 
 ### Phase 4: KPI Landing Page
@@ -80,14 +88,17 @@ Plans:
   1. Landing page displays KPI scorecards for total revenue, average sell-through rate, total lots sold, and total sales count
   2. Each scorecard shows period-over-period change with directional arrow and percentage
   3. Landing page shows the most recent sales with key metrics visible at a glance
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [x] 04-01-PLAN.md — Migration + kpi_summary RPC + db:push + types regen (Wave 1)
+- [x] 04-02-PLAN.md — period.ts + formatDelta + kpi-schema (Wave 2)
+- [x] 04-03-PLAN.md — useKpiSummary + 6 components + tests (Wave 3)
+- [x] 04-04-PLAN.md — Dashboard page composition + integration test (Wave 4)
 **UI hint**: yes
 
 ### Phase 5: Trend Analysis
-**Goal**: Users can visualize how auction performance changes over time across multiple dimensions
+**Goal**: Users can visualize how auction performance changes over time across multiple dimensions — net revenue per sale with a rolling-3 trend overlay, sell-through per sale, estimate accuracy bands (below/within/above), bidder participation dual-axis, and a department performance heat map — all filterable via a shared L12M-default DateRangeFilter with presets + custom range and tooltips showing exact values on hover.
 **Depends on**: Phase 3
 **Requirements**: TRND-01, TRND-02, TRND-03, TRND-04, TRND-05, TRND-06, INTR-03
 **Success Criteria** (what must be TRUE):
@@ -96,10 +107,16 @@ Plans:
   3. User can filter all trend views by date range using presets (YTD, last 12 months, last 2 years, all time) or a custom range picker
   4. User can view a department performance heat map (rows = departments, columns = sales, color intensity = sell-through or revenue)
   5. Charts display tooltips with exact values on hover
-**Plans**: TBD
+**Plans**: 7 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [x] 05-01-PLAN.md — Install recharts + chart-colors.ts + period.ts Range extension + ChartTooltip + ChartSkeleton + ChartCard primitives (Wave 1)
+- [x] 05-02-PLAN.md — DateRangeFilter (5 presets + Custom disclosure) + MetricToggle (Wave 2, parallel with 05-03)
+- [x] 05-03-PLAN.md — useSalesInRange + useDepartmentGrid TanStack Query hooks (Wave 2, parallel with 05-02)
+- [x] 05-04-PLAN.md — rolling-avg helper + NetRevenueTrendChart (TRND-01) + SellThroughTrendChart (TRND-02) (Wave 3)
+- [x] 05-05-PLAN.md — estimate-accuracy helper + EstimateAccuracyChart (TRND-05) + BidderParticipationChart (TRND-06) (Wave 3)
+- [x] 05-06-PLAN.md — heat-map-bucket helper + DepartmentHeatMap (TRND-04) (Wave 3)
+- [x] 05-07-PLAN.md — Trends page composition + /trends route + DashboardLayout Trends NavLink activation + human-verify checkpoint (Wave 4)
 **UI hint**: yes
 
 ### Phase 6: Department Analysis & Sale Comparison
@@ -112,10 +129,15 @@ Plans:
   3. User can view department share of sale as a stacked 100% bar chart
   4. User can compare 2-4 sales side-by-side with all metrics in columns, with color-coded deltas showing improvement or decline
   5. User can view a revenue waterfall chart for any sale showing the path from hammer price to net revenue
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 06-01: TBD
+- [x] 06-01-PLAN.md — Migrations (3 new RPCs) + BLOCKING db push + types regen + delta/waterfall libs + 4 data hooks (Wave 1)
+- [x] 06-02-PLAN.md — /departments page skeleton: DeptRankingMetricToggle + DepartmentRankingsTable + page-level cross-filter state (Wave 2)
+- [x] 06-03-PLAN.md — DepartmentChipBar + DepartmentRevenueLineChart + DepartmentShareStackedBarChart wired into /departments (Wave 2)
+- [x] 06-04-PLAN.md — SalesTable selection + SaleSelectionFooter + /sales/compare page + ComparisonTable + parseSalesParam (Wave 2)
+- [x] 06-05-PLAN.md — RevenueWaterfallChart + collapsible Revenue Breakdown section on Sale Detail (Wave 2)
+- [x] 06-06-PLAN.md — DashboardLayout Departments NavLink activation + human-verify end-to-end checkpoint (Wave 3)
 **UI hint**: yes
 
 ### Phase 7: Team Activity
@@ -185,12 +207,12 @@ Note: Phases 4, 5, and 7 can run in parallel after Phase 3. Phase 9 can run afte
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 0/? | Not started | - |
-| 2. PDF Import Pipeline | 0/? | Not started | - |
+| 1. Foundation & Auth | 0/5 | Planned | - |
+| 2. PDF Import Pipeline | 0/5 | Planned | - |
 | 3. Sale Views | 0/? | Not started | - |
 | 4. KPI Landing Page | 0/? | Not started | - |
-| 5. Trend Analysis | 0/? | Not started | - |
-| 6. Department Analysis & Sale Comparison | 0/? | Not started | - |
+| 5. Trend Analysis | 0/7 | Planned | - |
+| 6. Department Analysis & Sale Comparison | 0/6 | Planned | - |
 | 7. Team Activity | 0/? | Not started | - |
 | 8. Reporting & Export | 0/? | Not started | - |
 | 9. Custom Charts | 0/? | Not started | - |

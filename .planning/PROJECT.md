@@ -12,7 +12,10 @@ Give the TPC team a single place to see how their auctions are performing over t
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Team access using existing Supabase auth system as TPC App — **Validated in Phase 1 (single-admin v1; specialist view deferred to v2)**
+- [x] Dashboard-owned schema (sales, sale_departments, departments, scraper_runs, saved_reports) deployed to shared Supabase with admin-only RLS — **Validated in Phase 1**
+- [x] Department comparison views: which departments perform best (by revenue, sell-through, lots above estimate) — **Validated in Phase 6 (rankings table + multi-line revenue + 100% stacked share; 7-flow smoke-check deferred in 06-HUMAN-UAT.md)**
+- [x] Sale comparison: side-by-side or overlay comparison of selected sales — **Validated in Phase 6 (SALE-04/05/06: 2–4 sale side-by-side with adjacent-pair deltas + revenue waterfall)**
 
 ### Active
 
@@ -22,8 +25,6 @@ Give the TPC team a single place to see how their auctions are performing over t
 - [ ] Scheduled scraper that logs into RFC, detects completed sales, and auto-imports new auction profiles
 - [ ] Sale overview landing page: latest sales with key metrics at a glance
 - [ ] Historical trend charts: revenue over time, sell-through rates, department performance across sales
-- [ ] Department comparison views: which departments perform best (by revenue, sell-through, lots above estimate)
-- [ ] Sale comparison: side-by-side or overlay comparison of selected sales
 - [ ] TPC App activity tracking: session counts, items cataloged, specialist workload, export history (reads from existing Supabase tables)
 - [ ] TPC AI Cataloger activity tracking: batch runs, photo uploads, spreadsheet imports, single-item generations (reads from analytics_events table being built in extension v2.0)
 - [ ] Report generation: exportable summaries (PDF or CSV) of sale performance, department trends, team activity
@@ -44,7 +45,7 @@ Give the TPC team a single place to see how their auctions are performing over t
 
 - **TPC App** (TPC Speech Cataloger): PWA at ~/TPC_App, deployed on Vercel. Supabase database with tables: profiles, sessions, items, export_history, photos. Auth via Supabase with admin/specialist roles.
 - **TPC AI Cataloger**: Chrome extension at ~/Projects/TPC_AI_Cataloger. v2.0 analytics pipeline (Phases 28-31) will add analytics_events table to shared Supabase with 5 workflow event types (W1-W5): single catalog, batch catalog, portal upload, spreadsheet transform, app data import.
-- **RFC Auction Profiles**: 457 PDFs in ~/Desktop/rfc_profiles/. Each is a multi-page report for one sale, with page 1 being the "All Departments" summary and subsequent pages being per-department breakdowns. Departments include: AMER, ASD, ASN, ASNP, BKS, CER, CLK, DEC, DRW, ENT, FRN, GEN, GLS, MAP, MDF, MUS, PER, PND, PNT, SPT, SIL, TXTL, and others.
+- **RFC Auction Profiles**: 457 PDFs in ~/Projects/rfc_profiles/rfc_profiles/. Each is a multi-page report for one sale, with page 1 being the "All Departments" summary and subsequent pages being per-department breakdowns. Departments include: AMER, ASD, ASN, ASNP, BKS, CER, CLK, DEC, DRW, ENT, FRN, GEN, GLS, MAP, MDF, MUS, PER, PND, PNT, SPT, SIL, TXTL, and others.
 - **Supabase**: Shared project already set up, connected to TPC App, will be connected to Cataloger extension. Dashboard reads from same project.
 - **RFC Access**: Web scraping only (no API). Needs login credentials for automated profile retrieval.
 
@@ -83,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after initialization*
+*Last updated: 2026-04-21 after Phase 2 docs pass (import pipeline built; live 457-PDF run deferred pending SUPABASE_SERVICE_ROLE_KEY)*
