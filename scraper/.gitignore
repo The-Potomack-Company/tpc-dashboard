@@ -1,0 +1,5 @@
+# Scraper workspace — dependencies and secrets never committed.
+node_modules/
+.env
+.env.local
+dist/
