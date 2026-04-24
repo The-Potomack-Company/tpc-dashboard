@@ -38,7 +38,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `useDateRange` reflects filter state in the URL (refresh/back/forward preserves the range) and `useTimezone` formats all example timestamps in Eastern Time via `date-fns-tz`.
   4. An admin-only SELECT RLS policy is live on `public.analytics_events` — an admin dashboard user can SELECT rows, a non-admin gets zero rows, and the extension's existing `anon INSERT` policy still writes successfully (verified with a test insert).
   5. A service-role Supabase admin-client module exists outside `src/` (e.g. under `scraper/lib/` or `server/lib/`), is documented in CLAUDE.md Conventions, and a `grep -r SUPABASE_SERVICE_ROLE_KEY src/` returns nothing.
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 01-01-PLAN.md — INFR-02 schema drift repair: discovery script, migration-repair loop, drop migration, [BLOCKING] supabase db push applying both Phase 1 migrations, types regen, RLS verification execution
+- [ ] 01-02-PLAN.md — INFR-06 admin-client + scraper/ workspace scaffold + cross-platform prebuild grep guard + CLAUDE.md Conventions entry
+- [ ] 01-03-PLAN.md — INFR-05 analytics_events migration (mirrors extension migration 001) + admin SELECT RLS + three-client verification script + static migration-shape check
+- [ ] 01-04-PLAN.md — INFR-04 date-fns + date-fns-tz deps, useTimezone hook (ET formatters with DST tests), useDateRange hook (URL-state, single-closure-write pattern)
+- [ ] 01-05-PLAN.md — INFR-03 UI primitives: recharts install + Sparkline + KpiCard + PayloadViewerModal + DateRangeFilter (consumes useDateRange) with colocated Vitest suites
+- [ ] 01-06-PLAN.md — INFR-03 /kit demo route gated by import.meta.env.DEV, post-build tree-shake verifier, operator visual-verify checkpoint
 
 ### Phase 2: Extension Analytics (`/extension`)
 **Goal**: Admin can open `/extension` and understand, at a glance, how the TPC AI Cataloger Chrome extension is being used — volume by event type, error rates, per-user usage, recent errors with payloads, and a live event feed — filtered by date range, user, and extension version.
@@ -109,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure & Shared UI Kit | 0/TBD | Not started | - |
+| 1. Infrastructure & Shared UI Kit | 0/6 | Not started | - |
 | 2. Extension Analytics (`/extension`) | 0/TBD | Not started | - |
 | 3. TPC App Activity (`/activity`) | 0/TBD | Not started | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
