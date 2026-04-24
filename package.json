@@ -10,19 +10,14 @@
     "test": "vitest --run",
     "preview": "vite preview",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts",
-    "import:pdfs": "tsx scripts/import-pdfs.ts"
+    "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
     "@tanstack/react-query": "^5.99.2",
-    "@tanstack/react-table": "^8.21.3",
-    "@tanstack/react-virtual": "^3.13.24",
-    "pdf-parse": "^2.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.13.1",
-    "recharts": "^3.8.1",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
@@ -37,7 +32,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "dotenv": "^17.4.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
