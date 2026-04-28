@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. A service-role Supabase admin-client module exists outside `src/` (e.g. under `scraper/lib/` or `server/lib/`), is documented in CLAUDE.md Conventions, and a `grep -r SUPABASE_SERVICE_ROLE_KEY src/` returns nothing.
 **Plans**: 6 plans
 Plans:
-- [ ] 01-01-PLAN.md — INFR-02 schema drift repair: discovery script, migration-repair loop, drop migration, [BLOCKING] supabase db push applying both Phase 1 migrations, types regen, RLS verification execution
+- [x] 01-01-PLAN.md — INFR-02 schema drift repair: discovery script, migration-repair loop, drop migration, [BLOCKING] supabase db push applying both Phase 1 migrations, types regen, RLS verification execution
 - [x] 01-02-PLAN.md — INFR-06 admin-client + scraper/ workspace scaffold + cross-platform prebuild grep guard + CLAUDE.md Conventions entry
 - [x] 01-03-PLAN.md — INFR-05 analytics_events migration (mirrors extension migration 001) + admin SELECT RLS + three-client verification script + static migration-shape check
 - [x] 01-04-PLAN.md — INFR-04 date-fns + date-fns-tz deps, useTimezone hook (ET formatters with DST tests), useDateRange hook (URL-state, single-closure-write pattern)
