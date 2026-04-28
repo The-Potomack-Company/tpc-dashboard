@@ -19,7 +19,7 @@ v2.0 pivots the dashboard from historical auction analytics (v1.0, retired) to a
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Infrastructure & Shared UI Kit** — Repair schema drift, ship shared UI primitives/hooks, establish RLS + admin-client conventions every downstream phase reuses
+- [x] **Phase 1: Infrastructure & Shared UI Kit** — Repair schema drift, ship shared UI primitives/hooks, establish RLS + admin-client conventions every downstream phase reuses
 - [ ] **Phase 2: Extension Analytics (`/extension`)** — Ship the `/extension` route reading `analytics_events` with charts, filters, per-user/error tables, payload viewer, and live feed
 - [ ] **Phase 3: TPC App Activity (`/activity`)** — Ship the `/activity` route across `profiles` / `sessions` / `items` / `photos` / `export_history` with KPI strip, specialist/mode filters, session detail + photo coverage
 - [ ] **Phase 4: Live RFC Scraper Infrastructure** — Build dashboard-owned live tables (post sale-monitor discuss), Playwright scraper deployed to Railway, heartbeat + anomaly detection
@@ -45,7 +45,7 @@ Plans:
 - [x] 01-03-PLAN.md — INFR-05 analytics_events migration (mirrors extension migration 001) + admin SELECT RLS + three-client verification script + static migration-shape check
 - [x] 01-04-PLAN.md — INFR-04 date-fns + date-fns-tz deps, useTimezone hook (ET formatters with DST tests), useDateRange hook (URL-state, single-closure-write pattern)
 - [x] 01-05-PLAN.md — INFR-03 UI primitives: recharts install + Sparkline + KpiCard + PayloadViewerModal + DateRangeFilter (consumes useDateRange) with colocated Vitest suites
-- [ ] 01-06-PLAN.md — INFR-03 /kit demo route gated by import.meta.env.DEV, post-build tree-shake verifier, operator visual-verify checkpoint
+- [x] 01-06-PLAN.md — INFR-03 /kit demo route gated by import.meta.env.DEV, post-build tree-shake verifier, operator visual-verify checkpoint
 
 ### Phase 2: Extension Analytics (`/extension`)
 **Goal**: Admin can open `/extension` and understand, at a glance, how the TPC AI Cataloger Chrome extension is being used — volume by event type, error rates, per-user usage, recent errors with payloads, and a live event feed — filtered by date range, user, and extension version.
@@ -116,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure & Shared UI Kit | 5/6 | In progress | - |
+| 1. Infrastructure & Shared UI Kit | 6/6 | Complete | 2026-04-28 |
 | 2. Extension Analytics (`/extension`) | 0/TBD | Not started | - |
 | 3. TPC App Activity (`/activity`) | 0/TBD | Not started | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |

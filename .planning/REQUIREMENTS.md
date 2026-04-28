@@ -27,7 +27,7 @@ Requirements for the v2.0 Live Ops milestone. Each maps to a roadmap phase in `.
 
 - [ ] **INFR-01**: Dashboard frontend is deployed to Vercel with production environment variables set (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), accessible at a production URL — *carried forward from v1.0 (not shipped)*
 - [ ] **INFR-02**: Repo `supabase/migrations/` reconciles with the linked Supabase `schema_migrations` table — no drift errors on `supabase db push`, no v1.0-retired tables left orphaned, no v1.0 migrations referencing dropped objects
-- [ ] **INFR-03**: A shared UI-kit module exports `<DateRangeFilter>`, `<Sparkline>`, `<KpiCard>`, and `<PayloadViewerModal>` components with typed props and Tailwind v4 styling, consumed by Capability A, B, and C views
+- [x] **INFR-03**: A shared UI-kit module exports `<DateRangeFilter>`, `<Sparkline>`, `<KpiCard>`, and `<PayloadViewerModal>` components with typed props and Tailwind v4 styling, consumed by Capability A, B, and C views — *validated v2.0 Phase 1 plans 01-05 (primitives) + 01-06 (/kit demo + tree-shake verifier)*
 - [ ] **INFR-04**: Shared client hooks `useDateRange` and `useTimezone` expose URL-state date-range filtering (Today / 7d / 30d / custom) and fixed Eastern-Time formatting via `date-fns` + `date-fns-tz`
 - [ ] **INFR-05**: An admin-only SELECT RLS policy is added to `public.analytics_events` without modifying the extension's existing `anon INSERT` policy; `private.is_admin()` gates read access
 - [ ] **INFR-06**: A convention is established for a service-role Supabase admin client (used by the scraper), placed outside `src/` so the service-role key cannot leak into the frontend bundle; documented in the repo
@@ -164,7 +164,7 @@ v2.0 phase numbering is reset to 1 for this milestone (v1.0 phases archived unde
 |-------------|-------|--------|
 | INFR-01 | Phase 6 | Pending |
 | INFR-02 | Phase 1 | Pending |
-| INFR-03 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Complete (plans 01-05 + 01-06) |
 | INFR-04 | Phase 1 | Pending |
 | INFR-05 | Phase 1 | Pending |
 | INFR-06 | Phase 1 | Pending |

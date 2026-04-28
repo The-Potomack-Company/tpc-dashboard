@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Live Ops
-status: in-progress
-stopped_at: Plan 01-05 complete — UI-kit primitives shipped
-last_updated: "2026-04-28T19:00:00Z"
-last_activity: 2026-04-28 — Plan 01-05 complete (Sparkline / KpiCard / PayloadViewerModal / DateRangeFilter, 33 new Vitest specs)
+status: phase-1-complete
+stopped_at: Phase 1 complete — INFR-02..06 all closed; ready to plan Phase 2 (/extension)
+last_updated: "2026-04-28T22:00:00Z"
+last_activity: 2026-04-28 — Plan 01-06 complete (/kit dev demo route + post-build tree-shake verifier; INFR-03 closed, Phase 1 closed)
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
-  percent: 14
+  completed_plans: 6
+  percent: 17
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Give the TPC team real-time awareness of team activity (voice app + AI extension) and live auction floor state on one screen
-**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) plans 01-01..01-05 complete; plan 01-06 (/kit demo + tree-shake verifier) remaining
+**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) **complete**; ready to plan Phase 2 (/extension — Extension Analytics)
 
 ## Current Position
 
-Phase: 1 of 6 (Infrastructure & Shared UI Kit)
-Plan: 5 of 6 complete (01-06 next)
-Status: In progress — UI-kit primitives shipped, /kit demo route pending
-Last activity: 2026-04-28 — Plan 01-05 complete (Sparkline / KpiCard / PayloadViewerModal / DateRangeFilter, 33 new Vitest specs across 4 colocated suites; recharts pinned at ^3.8.1)
+Phase: 1 of 6 (Infrastructure & Shared UI Kit) — **COMPLETE**
+Plan: 6 of 6 complete (Phase 1 done)
+Status: Phase 1 complete — ready to plan Phase 2 (/extension)
+Last activity: 2026-04-28 — Plan 01-06 complete (/kit dev demo gated by import.meta.env.DEV + top-level-await; post-build dist/-grep verifier proves zero kit references in production bundle; operator visual-verify approved). INFR-03 closed; Phase 1 fully shipped (INFR-02..06).
 
-Progress: [█░░░░░░░░░] 14%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
@@ -76,6 +76,8 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 - [Phase 1 / 01-05]: PayloadViewerModal copy test pattern — `userEvent.setup({ writeToClipboard: false })` MUST come before `Object.defineProperty(navigator, 'clipboard', ...)` because (a) JSDom 28+ exposes navigator.clipboard as read-only getter and (b) userEvent v14's clipboard fake otherwise masks the stub.
 - [Phase 1 / 01-05]: KpiCard delta direction → color is semantic-neutral (`up=text-green-600`, `down=text-red-600`, `flat=text-gray-500`). Caller chooses direction based on metric semantics; KpiCard never inspects what the metric means.
 - [Phase 1 / 01-05]: DateRangeFilter is fully URL-driven (no controlled props). Drop it under any router-wrapped tree and the URL becomes single source of truth via `useDateRange`.
+- [Phase 1 / 01-06]: D-11 tree-shaking guarantee proven CI-grade. Pattern: `const KitPage = import.meta.env.DEV ? (await import('./pages/Kit')).KitPage : null;` at module scope. Vite substitutes the literal `false` in production; Rollup drops the dynamic-import branch. Post-build verifier `scripts/verify-no-kit-in-dist.mjs` greps `dist/` for `KitPage`, `routes/kit`, `"/kit"` — exits 1 on any leak. Reusable for future dev-only routes.
+- [Phase 1 closeout]: INFR-03 fully closed by plans 01-05 (primitives) + 01-06 (demo + tree-shake guarantee). All 5 ROADMAP Phase 1 Success Criteria satisfied: schema-drift repair (01-01), service-role admin-client convention + prebuild guard (01-02), analytics_events admin-SELECT RLS verified three-client (01-03 + 01-01), useDateRange + useTimezone hooks (01-04), shared UI-kit primitives + /kit demo (01-05 + 01-06).
 
 ### Pending Todos
 
@@ -90,6 +92,6 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 
 ## Session Continuity
 
-Last session: 2026-04-28T19:00:00Z
-Stopped at: Plan 01-05 complete — UI-kit primitives shipped (recharts pinned, 4 components + 33 specs)
-Resume file: .planning/phases/01-infrastructure-shared-ui-kit/01-06-PLAN.md (when authored)
+Last session: 2026-04-28T22:00:00Z
+Stopped at: Phase 1 complete — Plan 01-06 (/kit dev demo + tree-shake verifier) shipped; INFR-03 closed; ready to plan Phase 2 (/extension)
+Resume file: .planning/phases/02-extension-analytics/ (to be created via /gsd:plan-phase or /gsd:execute-phase 2)
