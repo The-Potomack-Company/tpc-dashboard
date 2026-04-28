@@ -39,26 +39,7 @@ create table if not exists public.analytics_events (
   items_content         jsonb
 );
 
--- CHECK constraint — guarded to avoid duplicate-constraint error when
--- extension migration 001 already installed it (RESEARCH Pitfall 1).
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'analytics_events_event_type_check'
-      and conrelid = 'public.analytics_events'::regclass
-  ) then
-    alter table public.analytics_events
-      add constraint analytics_events_event_type_check
-      check (event_type in (
-        'catalog_single',
-        'catalog_batch',
-        'portal_upload',
-        'spreadsheet_transform',
-        'data_import'
-      ));
-  end if;
-end$$;
+-- event_type vocabulary is owned by the TPC AI Cataloger extension (the writer); dashboard does not install a CHECK (D-22).
 
 -- Enable RLS (idempotent).
 alter table public.analytics_events enable row level security;

@@ -25,14 +25,6 @@ const CHECKS = [
   { label: 'column extension_version text not null', re: /\bextension_version\s+text\s+not\s+null/i },
   { label: 'column created_at timestamptz not null default now()', re: /\bcreated_at\s+timestamptz\s+not\s+null\s+default\s+now\(\)/i },
   { label: 'column items_content jsonb', re: /\bitems_content\s+jsonb/i },
-  // CHECK constraint values (exactly 5)
-  { label: "CHECK enum 'catalog_single'", re: /'catalog_single'/ },
-  { label: "CHECK enum 'catalog_batch'", re: /'catalog_batch'/ },
-  { label: "CHECK enum 'portal_upload'", re: /'portal_upload'/ },
-  { label: "CHECK enum 'spreadsheet_transform'", re: /'spreadsheet_transform'/ },
-  { label: "CHECK enum 'data_import'", re: /'data_import'/ },
-  // DO-block guard for the CHECK constraint (Pitfall 1)
-  { label: 'DO $$...END$$ guarded CHECK constraint ADD', re: /do\s+\$\$\s*[\s\S]+?analytics_events_event_type_check[\s\S]+?end\s*\$\$\s*;/im },
   // Enable RLS
   { label: 'enable row level security', re: /alter\s+table\s+public\.analytics_events\s+enable\s+row\s+level\s+security/i },
   // Anon INSERT policy (drop-then-create for idempotency)
@@ -48,9 +40,15 @@ const CHECKS = [
   { label: 'create index if not exists analytics_events_event_type_created_at_idx', re: /create\s+index\s+if\s+not\s+exists\s+analytics_events_event_type_created_at_idx\s+on\s+public\.analytics_events\s*\(\s*event_type\s*,\s*created_at\s+desc\s*\)/i },
 ];
 
-// Forbidden content (A1 — migrations 002/003/004 NOT applied)
+// Forbidden content
+// D-22: dashboard does NOT install a CHECK constraint on event_type.
+// Vocabulary is owned by the TPC AI Cataloger extension (the writer).
+// The CHECK was removed after live shared-prod data revealed event_type
+// values (e.g. 'catalog_item') that post-date the mirrored extension
+// migration 001 snapshot — see scripts/enumerate-event-types.ts diagnostic.
 const FORBIDDEN = [
-  { label: 'Must NOT contain catalog_item in CHECK enum (migration 003 not applied)', re: /'catalog_item'/ },
+  { label: 'Must NOT install CHECK constraint analytics_events_event_type_check (D-22)', re: /analytics_events_event_type_check/i },
+  { label: 'Must NOT install CHECK on event_type (D-22 — extension owns vocabulary)', re: /check\s*\(\s*event_type\s+in\s*\(/i },
   { label: 'Must NOT contain started_at column (migration 002 not applied)', re: /\bstarted_at\s+timestamptz/i },
   { label: 'Must NOT contain ended_at column (migration 004 not applied)', re: /\bended_at\s+timestamptz/i },
   // Scope to the `create policy "analytics_admin_select" ... ;` statement only.
