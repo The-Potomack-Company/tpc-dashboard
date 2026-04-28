@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Live Ops
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-04-24T17:48:11.889Z"
-last_activity: 2026-04-24 — v2.0 roadmap created (6 phases, phase numbers reset to 1 for this milestone)
+status: in-progress
+stopped_at: Plan 01-05 complete — UI-kit primitives shipped
+last_updated: "2026-04-28T19:00:00Z"
+last_activity: 2026-04-28 — Plan 01-05 complete (Sparkline / KpiCard / PayloadViewerModal / DateRangeFilter, 33 new Vitest specs)
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 6
+  completed_plans: 5
+  percent: 14
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Give the TPC team real-time awareness of team activity (voice app + AI extension) and live auction floor state on one screen
-**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) ready to plan
+**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) plans 01-01..01-05 complete; plan 01-06 (/kit demo + tree-shake verifier) remaining
 
 ## Current Position
 
 Phase: 1 of 6 (Infrastructure & Shared UI Kit)
-Plan: Not started
-Status: Ready to plan Phase 1
-Last activity: 2026-04-24 — v2.0 roadmap created (6 phases, phase numbers reset to 1 for this milestone)
+Plan: 5 of 6 complete (01-06 next)
+Status: In progress — UI-kit primitives shipped, /kit demo route pending
+Last activity: 2026-04-28 — Plan 01-05 complete (Sparkline / KpiCard / PayloadViewerModal / DateRangeFilter, 33 new Vitest specs across 4 colocated suites; recharts pinned at ^3.8.1)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 14%
 
 ## Performance Metrics
 
@@ -72,6 +72,10 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 - [Phase 2 (v1.0)]: Per-sale atomicity was enforced via a security-definer Postgres RPC with EXECUTE granted to `service_role` only. Pattern is reusable for the v2.0 scraper's atomic lot-tick RPC (SCRP-10).
 - [Roadmap v2.0]: Phase numbering reset to 1 for this milestone. v1.0 phase directories archived under `.planning/milestones/v1.0-phases/`.
 - [Roadmap v2.0]: 6 phases derived from 51 v2.0 requirements (fine granularity). Phase order: Infra/UI kit → Extension Analytics → TPC App Activity → Live Scraper Infra → Live Sale UI → Vercel deploy. Extension first (smallest cross-repo slice); scraper before live UI; sale-monitor discuss gates the live schema (SCRP-15).
+- [Phase 1 / 01-05]: Recharts ResponsiveContainer cannot render under JSDom (zero clientWidth/Height). Established test pattern: `vi.mock('recharts', ...)` replaces ResponsiveContainer with a div that injects explicit width/height into its chart child via `cloneElement`. Reusable for any future Recharts component test (Phase 2 charts, Phase 3 charts, Phase 5 sparklines).
+- [Phase 1 / 01-05]: PayloadViewerModal copy test pattern — `userEvent.setup({ writeToClipboard: false })` MUST come before `Object.defineProperty(navigator, 'clipboard', ...)` because (a) JSDom 28+ exposes navigator.clipboard as read-only getter and (b) userEvent v14's clipboard fake otherwise masks the stub.
+- [Phase 1 / 01-05]: KpiCard delta direction → color is semantic-neutral (`up=text-green-600`, `down=text-red-600`, `flat=text-gray-500`). Caller chooses direction based on metric semantics; KpiCard never inspects what the metric means.
+- [Phase 1 / 01-05]: DateRangeFilter is fully URL-driven (no controlled props). Drop it under any router-wrapped tree and the URL becomes single source of truth via `useDateRange`.
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 
 ## Session Continuity
 
-Last session: 2026-04-24T17:48:11.887Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-infrastructure-shared-ui-kit/01-CONTEXT.md
+Last session: 2026-04-28T19:00:00Z
+Stopped at: Plan 01-05 complete — UI-kit primitives shipped (recharts pinned, 4 components + 33 specs)
+Resume file: .planning/phases/01-infrastructure-shared-ui-kit/01-06-PLAN.md (when authored)

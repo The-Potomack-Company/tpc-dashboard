@@ -44,7 +44,7 @@ Plans:
 - [x] 01-02-PLAN.md — INFR-06 admin-client + scraper/ workspace scaffold + cross-platform prebuild grep guard + CLAUDE.md Conventions entry
 - [x] 01-03-PLAN.md — INFR-05 analytics_events migration (mirrors extension migration 001) + admin SELECT RLS + three-client verification script + static migration-shape check
 - [x] 01-04-PLAN.md — INFR-04 date-fns + date-fns-tz deps, useTimezone hook (ET formatters with DST tests), useDateRange hook (URL-state, single-closure-write pattern)
-- [ ] 01-05-PLAN.md — INFR-03 UI primitives: recharts install + Sparkline + KpiCard + PayloadViewerModal + DateRangeFilter (consumes useDateRange) with colocated Vitest suites
+- [x] 01-05-PLAN.md — INFR-03 UI primitives: recharts install + Sparkline + KpiCard + PayloadViewerModal + DateRangeFilter (consumes useDateRange) with colocated Vitest suites
 - [ ] 01-06-PLAN.md — INFR-03 /kit demo route gated by import.meta.env.DEV, post-build tree-shake verifier, operator visual-verify checkpoint
 
 ### Phase 2: Extension Analytics (`/extension`)
@@ -116,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure & Shared UI Kit | 0/6 | Not started | - |
+| 1. Infrastructure & Shared UI Kit | 5/6 | In progress | - |
 | 2. Extension Analytics (`/extension`) | 0/TBD | Not started | - |
 | 3. TPC App Activity (`/activity`) | 0/TBD | Not started | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
