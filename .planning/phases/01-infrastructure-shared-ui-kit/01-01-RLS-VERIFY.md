@@ -1,9 +1,9 @@
-# Plan 01-01 Task 7 — Three-Client RLS Verification (PARTIAL: 4/5 pass, 1 BLOCKED)
+# Plan 01-01 Task 7 — Three-Client RLS Verification (RESOLVED: 5/5 pass)
 
 **Generated:** 2026-04-28
-**Continuation agent:** third resume (post-`05fb850` CHECK-drop fix)
+**Continuation agent:** third resume (post-`05fb850` CHECK-drop fix); resolution appended after operator credential fix.
 **Verifier:** `scripts/verify-analytics-rls.ts` (authored in plan 01-03; bug-fixed in this run — see § "Verifier Bugs Fixed")
-**Outcome:** 4 of 5 D-24 properties verified PASS against the live shared-prod analytics_events table. Property (b) BLOCKED on a credential-not-policy issue.
+**Outcome:** All 5 D-24 properties verified PASS against the live shared-prod `analytics_events` table after non-admin credential was corrected. Initial run was 4/5 PASS + 1 BLOCKED on a case-sensitivity typo in `TEST_NONADMIN_PASSWORD` — see § "Resolution" at end.
 
 ## Verifier output (verbatim)
 
@@ -121,3 +121,20 @@ No additional schema mutations. Migration tracker still shows 16/16 Phase 1 migr
 - `scripts/enumerate-event-types.ts` — diagnostic from prior commit (still present at HEAD; will be deleted in commit 6 once property (b) clears)
 - `supabase/migrations/20260424120500_create_analytics_events.sql` — migration whose RLS policies are verified by 4/5 properties
 - `scraper/.env` — must be updated by operator before property (b) can run (path A)
+
+## Resolution (2026-04-28)
+
+Operator chose Path A. Root cause: case-sensitivity typo — actual non-admin password is `Tester`, not `TESTER`. After correcting `TEST_NONADMIN_PASSWORD` in `scraper/.env`, the verifier was re-run:
+
+```
+=== PHASE 1 INFR-05 D-24 VERIFICATION ===
+(a) admin SELECT: pass (returned 1 rows)
+(b) non-admin SELECT: pass (0 rows)
+(c) anon INSERT: pass (status=201)
+(d) admin SELECT round-trip: pass (saw id=a18767a7-fcd7-4b56-90e3-90e780f3f399)
+(e) cleanup: pass
+
+All 5 steps passed.
+```
+
+Exit code: **0** (full pass). All five D-24 properties now verified live against shared-prod. Property (b) confirms the non-admin authenticated session sees zero rows from `analytics_events` — the `analytics_admin_select` policy correctly gates SELECT on `private.is_admin()` returning `false` for `role=specialist`. Plan 01-01 Task 7 fully complete.
