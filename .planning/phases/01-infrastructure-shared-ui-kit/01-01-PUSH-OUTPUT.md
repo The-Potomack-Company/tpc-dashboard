@@ -183,3 +183,96 @@ Per the destructive_action_safety guard ("If the live push errors out mid-apply 
 - Created: `.planning/phases/01-infrastructure-shared-ui-kit/01-01-PUSH-OUTPUT.md` (this file)
 
 No source files modified. The drop migration applied to remote but is already committed in the tree (`7be7448`'s base contained it). The analytics_events migration is unchanged in both tree and remote.
+
+---
+
+## Re-Push After CHECK Drop (2026-04-28)
+
+**Continuation agent:** third resume (post-`f69c59e`).
+**Operator-chosen path:** B (drop CHECK from analytics_events migration).
+**Outcome:** SUCCESS — analytics_events migration applied cleanly; full Local/Remote parity restored across all 16 Phase 1 migrations.
+
+### Pre-Push State
+
+The drop migration `20260424120000` was already tracker-recorded in the prior continuation (its statements ran successfully as no-ops — see § 3.1). Only `20260424120500` remained local-only after its CHECK-violation rollback. The dry-run for this re-push therefore showed exactly 1 migration to apply:
+
+```
+$ npx supabase db push --dry-run
+Initialising login role...
+DRY RUN: migrations will *not* be pushed to the database.
+Connecting to remote database...
+Would push these migrations:
+ • 20260424120500_create_analytics_events.sql
+Finished supabase db push.
+```
+
+This matches expected state and is within the operator-approved scope (the original 2-migration approval is satisfied by `20260424120000` already-applied + this `20260424120500` push).
+
+### Live Push
+
+```
+$ yes | npx supabase db push --include-all
+Initialising login role...
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ • 20260424120500_create_analytics_events.sql
+
+ [Y/n] y
+Applying migration 20260424120500_create_analytics_events.sql...
+NOTICE (42P07): relation "analytics_events" already exists, skipping
+NOTICE (00000): policy "analytics_admin_select" for relation "public.analytics_events" does not exist, skipping
+NOTICE (42P07): relation "analytics_events_event_type_created_at_idx" already exists, skipping
+Finished supabase db push.
+```
+
+**Per-statement analysis:**
+
+| Statement                                      | Outcome                                                                                                                |
+|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `create table if not exists ... analytics_events` | NOTICE 42P07 — table already exists (extension created it). No-op as designed.                                       |
+| `alter table ... enable row level security`    | Silent success (RLS already enabled by extension; idempotent re-enable).                                              |
+| `drop policy if exists "analytics_insert_anon"` | Silent success (the extension's live policy was dropped, ready for recreate).                                         |
+| `create policy "analytics_insert_anon"`        | Silent success — installed our mirrored copy (anon INSERT, with check (true)).                                        |
+| `drop policy if exists "analytics_admin_select"` | NOTICE — "does not exist, skipping" (new policy, never existed before).                                              |
+| `create policy "analytics_admin_select"`       | Silent success — admin SELECT policy installed (TO authenticated, USING `(select private.is_admin())`).               |
+| `grant insert on ... to anon`                  | Silent success (idempotent re-grant).                                                                                  |
+| `grant select on ... to authenticated`         | Silent success (idempotent re-grant).                                                                                  |
+| `create index if not exists ...`               | NOTICE 42P07 — index already exists (extension created it). No-op as designed.                                        |
+
+The CHECK-installer DO-block is GONE per Path B; no CHECK-related statement runs. This is the deliberate D-22 outcome: dashboard does not maintain a CHECK on event_type.
+
+### Post-Push Migration List (full parity)
+
+```
+   Local          | Remote         | Time (UTC)
+  ----------------|----------------|---------------------
+   20260318000000 | 20260318000000 | 2026-03-18 00:00:00
+   20260318000001 | 20260318000001 | 2026-03-18 00:00:01
+   20260318000002 | 20260318000002 | 2026-03-18 00:00:02
+   20260318000003 | 20260318000003 | 2026-03-18 00:00:03
+   20260318000004 | 20260318000004 | 2026-03-18 00:00:04
+   20260318000005 | 20260318000005 | 2026-03-18 00:00:05
+   20260318000006 | 20260318000006 | 2026-03-18 00:00:06
+   20260320000000 | 20260320000000 | 2026-03-20 00:00:00
+   20260320100000 | 20260320100000 | 2026-03-20 10:00:00
+   20260320200000 | 20260320200000 | 2026-03-20 20:00:00
+   20260330000000 | 20260330000000 | 2026-03-30 00:00:00
+   20260331000000 | 20260331000000 | 2026-03-31 00:00:00
+   20260421000000 | 20260421000000 | 2026-04-21 00:00:00
+   20260421000006 | 20260421000006 | 2026-04-21 00:00:06
+   20260424120000 | 20260424120000 | 2026-04-24 12:00:00
+   20260424120500 | 20260424120500 | 2026-04-24 12:05:00
+```
+
+**ALL 16 migrations have both Local and Remote columns populated. Zero rows with empty Local. Zero rows with empty Remote. ROADMAP Phase 1 SC1 ("zero drift errors, zero orphaned v1.0 objects") is satisfied at the tracker layer.**
+
+### What This Run Modified
+
+- Local migration files: `supabase/migrations/20260424120500_create_analytics_events.sql` — CHECK block removed (commit `05fb850`).
+- Local verifier: `scripts/verify-migration-shape.mjs` — REQUIRED CHECK assertions removed; FORBIDDEN inverse assertions added (commit `05fb850`).
+- Remote schema: `public.analytics_events` now has the `analytics_admin_select` policy installed (TO authenticated, USING `private.is_admin()`); the `analytics_insert_anon` policy was dropped+recreated (functionally identical — same WITH CHECK clause); explicit grants reapplied. Tracker recorded `20260424120500` as applied.
+- This artifact: appended this section.
+
+### Tasks 6 and 7 Status
+
+Tasks 6 (regenerate types) and 7 (RLS verification) follow this push and are recorded in their own commits and the SUMMARY.md.
