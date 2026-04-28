@@ -16,16 +16,20 @@ export type Database = {
     Tables: {
       analytics_events: {
         Row: {
+          app_source: string | null
           cancelled: boolean | null
           category_id: string | null
           columns_mapped: number | null
           created_at: string
           detection_method: string | null
+          ended_at: string | null
+          engine_ended_at: string | null
+          engine_started_at: string | null
           error_count: number | null
           error_message: string | null
           event_type: string
           execution_time_ms: number | null
-          extension_version: string
+          extension_version: string | null
           field_mode: string | null
           field_selection: string | null
           generated_description: string | null
@@ -33,12 +37,15 @@ export type Database = {
           id: string
           import_mode: string | null
           input_rows: number | null
+          item_index: number | null
+          item_status: string | null
           items_content: Json | null
           output_rows: number | null
           photo_count: number | null
           receipt_number: string | null
           session_id: string | null
           skipped_count: number | null
+          started_at: string | null
           success_count: number | null
           total_groups: number | null
           total_items: number | null
@@ -46,16 +53,20 @@ export type Database = {
           user_email: string | null
         }
         Insert: {
+          app_source?: string | null
           cancelled?: boolean | null
           category_id?: string | null
           columns_mapped?: number | null
           created_at?: string
           detection_method?: string | null
+          ended_at?: string | null
+          engine_ended_at?: string | null
+          engine_started_at?: string | null
           error_count?: number | null
           error_message?: string | null
           event_type: string
           execution_time_ms?: number | null
-          extension_version: string
+          extension_version?: string | null
           field_mode?: string | null
           field_selection?: string | null
           generated_description?: string | null
@@ -63,12 +74,15 @@ export type Database = {
           id?: string
           import_mode?: string | null
           input_rows?: number | null
+          item_index?: number | null
+          item_status?: string | null
           items_content?: Json | null
           output_rows?: number | null
           photo_count?: number | null
           receipt_number?: string | null
           session_id?: string | null
           skipped_count?: number | null
+          started_at?: string | null
           success_count?: number | null
           total_groups?: number | null
           total_items?: number | null
@@ -76,16 +90,20 @@ export type Database = {
           user_email?: string | null
         }
         Update: {
+          app_source?: string | null
           cancelled?: boolean | null
           category_id?: string | null
           columns_mapped?: number | null
           created_at?: string
           detection_method?: string | null
+          ended_at?: string | null
+          engine_ended_at?: string | null
+          engine_started_at?: string | null
           error_count?: number | null
           error_message?: string | null
           event_type?: string
           execution_time_ms?: number | null
-          extension_version?: string
+          extension_version?: string | null
           field_mode?: string | null
           field_selection?: string | null
           generated_description?: string | null
@@ -93,12 +111,15 @@ export type Database = {
           id?: string
           import_mode?: string | null
           input_rows?: number | null
+          item_index?: number | null
+          item_status?: string | null
           items_content?: Json | null
           output_rows?: number | null
           photo_count?: number | null
           receipt_number?: string | null
           session_id?: string | null
           skipped_count?: number | null
+          started_at?: string | null
           success_count?: number | null
           total_groups?: number | null
           total_items?: number | null
@@ -325,6 +346,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ui_interactions: {
+        Row: {
+          app_source: string
+          created_at: string
+          element_id: string | null
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          page_path: string | null
+          session_id: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_source?: string
+          created_at?: string
+          element_id?: string | null
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_source?: string
+          created_at?: string
+          element_id?: string | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ui_interactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
