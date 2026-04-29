@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Live Ops
-status: phase-1-complete
-stopped_at: Phase 1 complete — INFR-02..06 all closed; ready to plan Phase 2 (/extension)
-last_updated: "2026-04-28T22:00:00Z"
-last_activity: 2026-04-28 — Plan 01-06 complete (/kit dev demo route + post-build tree-shake verifier; INFR-03 closed, Phase 1 closed)
+status: phase-2-context-gathered
+stopped_at: Phase 2 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 2
+last_updated: "2026-04-29T00:00:00Z"
+last_activity: 2026-04-29 — Phase 2 discuss-phase complete (5 areas: data scoping, live feed mechanism, query architecture, empty/partial state UX, admin/dev surface split)
 progress:
   total_phases: 6
   completed_phases: 1
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-24)
 
 ## Current Position
 
-Phase: 1 of 6 (Infrastructure & Shared UI Kit) — **COMPLETE**
-Plan: 6 of 6 complete (Phase 1 done)
-Status: Phase 1 complete — ready to plan Phase 2 (/extension)
-Last activity: 2026-04-28 — Plan 01-06 complete (/kit dev demo gated by import.meta.env.DEV + top-level-await; post-build dist/-grep verifier proves zero kit references in production bundle; operator visual-verify approved). INFR-03 closed; Phase 1 fully shipped (INFR-02..06).
+Phase: 2 of 6 (Extension Analytics — `/extension`) — **Context gathered**
+Plan: 0 of TBD (planning next)
+Status: Phase 2 context captured — ready for /gsd-plan-phase 2
+Last activity: 2026-04-29 — Phase 2 discuss-phase. CONTEXT.md locks: strict `app_source = 'tpc-extension'` filter on every query; 5-event vocabulary (catalog_item excluded from top-level charts); TanStack `refetchInterval` at 10 s for the live feed (Pause = stop refetch, Resume = jump to latest); 4 aggregation RPCs + raw SELECTs; URL-driven filter facades (`useUserFilter` + `useVersionFilter`); full-page empty gate via `useExtensionGate` + per-card empty/loading/error states; admin/dev surface split via `src/lib/devAccess.ts` email allowlist (`josh@potomackco.com`) gating an inline collapsed `<DeveloperPanel>` for EXT-06/EXT-09/EXT-10.
 
 Progress: [██░░░░░░░░] 17%
 
@@ -78,6 +78,13 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 - [Phase 1 / 01-05]: DateRangeFilter is fully URL-driven (no controlled props). Drop it under any router-wrapped tree and the URL becomes single source of truth via `useDateRange`.
 - [Phase 1 / 01-06]: D-11 tree-shaking guarantee proven CI-grade. Pattern: `const KitPage = import.meta.env.DEV ? (await import('./pages/Kit')).KitPage : null;` at module scope. Vite substitutes the literal `false` in production; Rollup drops the dynamic-import branch. Post-build verifier `scripts/verify-no-kit-in-dist.mjs` greps `dist/` for `KitPage`, `routes/kit`, `"/kit"` — exits 1 on any leak. Reusable for future dev-only routes.
 - [Phase 1 closeout]: INFR-03 fully closed by plans 01-05 (primitives) + 01-06 (demo + tree-shake guarantee). All 5 ROADMAP Phase 1 Success Criteria satisfied: schema-drift repair (01-01), service-role admin-client convention + prebuild guard (01-02), analytics_events admin-SELECT RLS verified three-client (01-03 + 01-01), useDateRange + useTimezone hooks (01-04), shared UI-kit primitives + /kit demo (01-05 + 01-06).
+- [Phase 2 context]: Strict scoping `app_source = 'tpc-extension'` on every query — table is now multi-app (extension + TPC_App share via app_source discriminator); legacy NULL-source rows intentionally excluded.
+- [Phase 2 context]: 5-event vocabulary at top level (catalog_single, catalog_batch, portal_upload, spreadsheet_transform, data_import). The 6th event type catalog_item (W2 child rows) is excluded from EXT-01/EXT-02/EXT-03/EXT-04 to avoid double-counting batch activity.
+- [Phase 2 context]: Live feed = TanStack `refetchInterval: 10000`, NOT Supabase Realtime (mirrors Phase 4 SCRP-16 invalidate-driven precedent for high-volume INSERT tables). Pause sets refetchInterval=false; Resume re-enables + immediately refetches to latest 50.
+- [Phase 2 context]: Page issues many TanStack queries (one per chart). Server-side bucketing via 4 new Postgres RPCs (`get_event_volume_daily`, `get_kpi_totals`, `get_error_rate_by_type`, `get_per_user_summary`) using `date_trunc(... AT TIME ZONE 'America/New_York')`. Non-aggregating queries (recent errors, live feed) use raw `.from().select()`.
+- [Phase 2 context]: Filters are URL-driven, no Zustand. Reuses Phase 1 `useDateRange`; adds `useUserFilter` (`?users=`) and `useVersionFilter` (`?versions=`).
+- [Phase 2 context]: Admin/dev surface split — email allowlist via `src/lib/devAccess.ts` exporting `isDevAccount(email)`. Initial allowlist: `['josh@potomackco.com']`. Inline collapsed `<DeveloperPanel>` at the bottom of `/extension` houses EXT-06 payload viewer triggers, EXT-09 extension_version filter + dominant-version badge, and EXT-10 cancellation-rate KPIs. Admin row click on EXT-05 / EXT-08 is a no-op; dev row click opens the payload viewer.
+- [Phase 2 context]: Empty-state strategy — `useExtensionGate()` hook with `staleTime: Infinity` does a single `LIMIT 1` lifetime probe; when zero, the page renders a single full-page `<EmptyState>` ("waiting on TPC AI Cataloger v2.0"). When lifetime ≠ 0 but selected range is empty, charts/cards show per-card empty messages.
 
 ### Pending Todos
 
@@ -92,6 +99,6 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 
 ## Session Continuity
 
-Last session: 2026-04-28T22:00:00Z
-Stopped at: Phase 1 complete — Plan 01-06 (/kit dev demo + tree-shake verifier) shipped; INFR-03 closed; ready to plan Phase 2 (/extension)
-Resume file: .planning/phases/02-extension-analytics/ (to be created via /gsd:plan-phase or /gsd:execute-phase 2)
+Last session: 2026-04-29T00:00:00Z
+Stopped at: Phase 2 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 2
+Resume file: .planning/phases/02-extension-analytics-extension/02-CONTEXT.md
