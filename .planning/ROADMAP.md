@@ -58,7 +58,35 @@ Plans:
   4. Admin can watch a live event feed that tails `analytics_events` in near-real-time (5–10 s refetch or Realtime), shows the latest 50 events newest-first, has a working Pause button, and opens the payload viewer on row click.
   5. Admin can filter by extension version and see a dominant-version badge; admin sees cancellation-rate KPIs for `catalog_batch` (W2) and `portal_upload` (W3).
   6. If the extension's `analytics_events` table is not yet populated in the shared Supabase project, the `/extension` page renders a graceful "No events yet — waiting on extension v2.0" empty state instead of erroring.
-**Plans**: TBD
+**Plans**: 9 plans (5 waves)
+Plans:
+
+**Wave 1** *(no dependencies — runs first; Plan 02-01 contains a [BLOCKING] schema-push checkpoint)*
+- [ ] 02-01-PLAN.md — SQL migration: 6 RPCs (events volume / KPI totals / error rate / per-user / dominant version / cancellation rates) + supabase db push [BLOCKING] + types regen + static D-01 invariant verifier
+- [ ] 02-02-PLAN.md — URL filter hooks (useUserFilter, useVersionFilter), src/lib/devAccess (isDevAccount allowlist), src/lib/format extension (formatTimestampShort)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 02-03-PLAN.md — services/extension/queries.ts + 10 TanStack Query hooks (gate, eventVolume, kpiTotals, errorRate, perUserSummary, recentErrors, dominantVersion, cancellationRates, distinctVersions, liveFeed)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 02-04-PLAN.md — admin chart components: EventVolumeChart (EXT-01) + KpiStrip (EXT-02) + ErrorRateChart (EXT-03)
+- [ ] 02-05-PLAN.md — install @tanstack/react-table v8.21.3; UserMultiSelect, PerUserTable (EXT-04), RecentErrorsTable (EXT-05 + EXT-06 dev-gated payload viewer)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 02-06-PLAN.md — LiveEventFeed (EXT-08) — polled feed card with Pause/Resume + dev-gated row click
+- [ ] 02-07-PLAN.md — DeveloperPanel (D-15 render-gated) + ExtensionVersionFilter + DominantVersionBadge + CancellationRateKpis (EXT-09 + EXT-10)
+
+**Wave 5** *(blocked on Wave 4 completion; Plan 02-09 contains a [BLOCKING] operator manual smoke checkpoint)*
+- [ ] 02-08-PLAN.md — page assembly: src/pages/Extension.tsx (empty-gate branch + section composition), App.tsx route, DashboardLayout NAV_ITEMS first entry
+- [ ] 02-09-PLAN.md — integration smoke test (real components + stubbed Supabase) + operator manual smoke checkpoint + 02-VERIFICATION.md
+
+**Cross-cutting constraints** *(must_haves.truths shared across 2+ plans):*
+- `app_source = 'tpc-extension'` invariant on every query (D-01) — enforced in 02-01 SQL, 02-03 services/hooks, 02-07 inline-free
+- 5-event vocabulary (`catalog_single`, `catalog_batch`, `portal_upload`, `spreadsheet_transform`, `data_import`); `catalog_item` excluded from EXT-01..04 (D-02) — 02-01, 02-03, 02-04
+- `<ErrorState>` locked contract `{ heading, body, onRetry }` — required by 02-04, 02-05, 02-06, 02-07; sibling Retry button forbidden
+- Dev-gating via `isDevAccount(profile?.email)` — render-conditional (NOT display-hidden); used by 02-05 (RecentErrorsTable), 02-06 (LiveEventFeed), 02-07 (DeveloperPanel)
+- D-05 previous-period math (`prev_from := p_from - (p_to - p_from), prev_to := p_from`) — applied identically in `get_kpi_totals` (02-01) and `get_cancellation_rates` (02-01)
+
 **UI hint**: yes
 
 ### Phase 3: TPC App Activity (`/activity`)
@@ -117,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure & Shared UI Kit | 6/6 | Complete | 2026-04-28 |
-| 2. Extension Analytics (`/extension`) | 0/TBD | Not started | - |
+| 2. Extension Analytics (`/extension`) | 0/9 | Not started | - |
 | 3. TPC App Activity (`/activity`) | 0/TBD | Not started | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
 | 5. Live Sale UI (`/live`) | 0/TBD | Not started | - |

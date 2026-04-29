@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Live Ops
-status: phase-2-context-gathered
-stopped_at: Phase 2 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 2
+status: phase-2-planned
+stopped_at: Phase 2 planned — 9 PLANs in 5 waves verified by gsd-plan-checker (iteration 2/3, all 8 issues resolved); ready for /gsd-execute-phase 2
 last_updated: "2026-04-29T00:00:00Z"
-last_activity: 2026-04-29 — Phase 2 discuss-phase complete (5 areas: data scoping, live feed mechanism, query architecture, empty/partial state UX, admin/dev surface split)
+last_activity: 2026-04-29 — Phase 2 plan-phase complete. 9 plans across 5 waves. Wave 1 (02-01 SQL+RPCs+[BLOCKING] db push, 02-02 URL hooks+devAccess+format). Wave 2 (02-03 services/hooks). Wave 3 (02-04 admin charts, 02-05 tables+UserMultiSelect). Wave 4 (02-06 LiveFeed, 02-07 DeveloperPanel). Wave 5 (02-08 page assembly+route, 02-09 smoke+[BLOCKING] operator checkpoint). All 10 EXT-IDs covered; all 21 D-NN locked decisions referenced in plans.
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 6
+  total_plans: 15
   completed_plans: 6
   percent: 17
 ---
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Give the TPC team real-time awareness of team activity (voice app + AI extension) and live auction floor state on one screen
-**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) **complete**; ready to plan Phase 2 (/extension — Extension Analytics)
+**Current focus:** Milestone v2.0 Live Ops — Phase 1 (Infrastructure & Shared UI Kit) **complete**; Phase 2 (/extension — Extension Analytics) **planned** (9 PLANs in 5 waves); ready to execute.
 
 ## Current Position
 
-Phase: 2 of 6 (Extension Analytics — `/extension`) — **Context gathered**
-Plan: 0 of TBD (planning next)
-Status: Phase 2 context captured — ready for /gsd-plan-phase 2
-Last activity: 2026-04-29 — Phase 2 discuss-phase. CONTEXT.md locks: strict `app_source = 'tpc-extension'` filter on every query; 5-event vocabulary (catalog_item excluded from top-level charts); TanStack `refetchInterval` at 10 s for the live feed (Pause = stop refetch, Resume = jump to latest); 4 aggregation RPCs + raw SELECTs; URL-driven filter facades (`useUserFilter` + `useVersionFilter`); full-page empty gate via `useExtensionGate` + per-card empty/loading/error states; admin/dev surface split via `src/lib/devAccess.ts` email allowlist (`josh@potomackco.com`) gating an inline collapsed `<DeveloperPanel>` for EXT-06/EXT-09/EXT-10.
+Phase: 2 of 6 (Extension Analytics — `/extension`) — **Planned**
+Plan: 0 of 9 (execution next)
+Status: Phase 2 planning complete — ready for /gsd-execute-phase 2
+Last activity: 2026-04-29 — Phase 2 plan-phase. 9 PLAN.md files written (one per plan, 5 waves). Plan-checker iteration 2/3 returned VERIFICATION PASSED after 1 revision cycle (resolved 2 BLOCKERs: cancellation rate `previous_rate` extension to honor D-05; non-destructive App.tsx route insertion preserving `/login`, KitPage ternary, `*` wildcard. Plus 6 WARNINGs: shared sibling-hooks smoke test, centralized `useDistinctVersions`, locked `<ErrorState>` `{heading, body, onRetry}` contract, verified `KpiDelta` export, end-to-end filter-change smoke, no production-write smoke instructions). Cross-cutting must_haves include the D-01 `app_source = 'tpc-extension'` invariant on every query; D-02 5-event vocabulary excluding `catalog_item`; D-15 render-conditional `<DeveloperPanel>`; D-19 page-level empty gate.
 
 Progress: [██░░░░░░░░] 17%
 

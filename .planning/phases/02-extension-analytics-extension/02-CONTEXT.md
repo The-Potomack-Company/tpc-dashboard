@@ -102,7 +102,7 @@ Covers requirements: **EXT-01, EXT-02, EXT-03, EXT-04, EXT-05, EXT-06, EXT-07, E
 - `src/hooks/useDateRange.ts` — EXT-07 date-range URL contract
 - `src/hooks/useTimezone.ts` — ET-only formatters; SQL bucketing in D-13 must align with this hook
 - `src/components/EmptyState.tsx` — D-19 full-page empty state, D-20 per-card empty
-- `src/components/ErrorState.tsx` — D-21 per-card error
+- `src/components/ErrorState.tsx` — D-21 per-card error. **LOCKED CONTRACT** (verified by reading the source 2026-04-29 during checker revision): props are `{ heading: string (required); body: string (required, plain string NOT children); onRetry: () => void (required) }`. The component renders its own Retry button internally — DO NOT add a sibling `<button>Retry</button>` in callers; DO NOT use children syntax. All Phase 2 plans 02-04, 02-05, 02-06, 02-07 use this contract verbatim.
 - `src/components/TableSkeleton.tsx` — D-21 per-card loading for tables
 - `src/components/SortIndicator.tsx`, `src/components/FilterInput.tsx` — opportunistic reuse for EXT-04 / EXT-05 tables
 - `src/layouts/DashboardLayout.tsx` — `NAV_ITEMS` is empty; Phase 2 adds the `/extension` entry
