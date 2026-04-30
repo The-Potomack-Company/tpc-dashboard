@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/check-no-service-role-in-src.mjs",
+    "prebuild": "node scripts/check-no-service-role-in-src.mjs && node scripts/verify-extension-app-source-scope.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest --run",
