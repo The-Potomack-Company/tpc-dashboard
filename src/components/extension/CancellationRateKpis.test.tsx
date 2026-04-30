@@ -12,10 +12,8 @@ vi.mock('../../hooks/extension/useCancellationRates', () => ({
   useCancellationRates: () => useCancelMock(),
 }));
 
-import {
-  CancellationRateKpis,
-  computeFlippedDelta,
-} from './CancellationRateKpis';
+import { CancellationRateKpis } from './CancellationRateKpis';
+import { computeFlippedDelta } from './computeFlippedDelta';
 
 beforeEach(() => {
   useCancelMock.mockReset();
