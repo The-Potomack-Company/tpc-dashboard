@@ -69,8 +69,8 @@ Plans:
 - [x] 02-03-PLAN.md — services/extension/queries.ts + 10 TanStack Query hooks (gate, eventVolume, kpiTotals, errorRate, perUserSummary, recentErrors, dominantVersion, cancellationRates, distinctVersions, liveFeed)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 02-04-PLAN.md — admin chart components: EventVolumeChart (EXT-01) + KpiStrip (EXT-02) + ErrorRateChart (EXT-03)
-- [ ] 02-05-PLAN.md — install @tanstack/react-table v8.21.3; UserMultiSelect, PerUserTable (EXT-04), RecentErrorsTable (EXT-05 + EXT-06 dev-gated payload viewer)
+- [x] 02-04-PLAN.md — admin chart components: EventVolumeChart (EXT-01) + KpiStrip (EXT-02) + ErrorRateChart (EXT-03)
+- [x] 02-05-PLAN.md — install @tanstack/react-table v8.21.3; UserMultiSelect, PerUserTable (EXT-04), RecentErrorsTable (EXT-05 + EXT-06 dev-gated payload viewer)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 02-06-PLAN.md — LiveEventFeed (EXT-08) — polled feed card with Pause/Resume + dev-gated row click
