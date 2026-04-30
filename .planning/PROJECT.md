@@ -32,7 +32,7 @@ Give the TPC team real-time awareness of team activity and live auctions — one
 Formalized requirements are in `.planning/REQUIREMENTS.md`. Summary of target capabilities:
 
 - [ ] **TPC App activity tracking** — session volume by specialist, item throughput, `ai_status` health, export pipeline, photo coverage, house-vs-sale split (reads `profiles`, `sessions`, `items`, `photos`, `export_history`)
-- [ ] **TPC AI Cataloger extension analytics** — event volume by type, batch performance, errors, user usage, live event feed (reads `analytics_events`)
+- [x] **TPC AI Cataloger extension analytics** — event volume by type, batch performance, errors, user usage, live event feed (reads `analytics_events`) — **Implemented in v2.0 Phase 2 (`/extension` route, EXT-01..EXT-10); operator UAT pending in `02-09-HUMAN-UAT.md`**
 - [ ] **Live RFC sale tracking** — current lot + bid state, bidding issues/anomalies, Playwright scrape during active sales, dashboard-owned lot-event tables
 - [ ] **Vercel deploy** — carried forward from v1.0 INFR-01
 
