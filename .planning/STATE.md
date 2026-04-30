@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Live Ops
-status: executing
-stopped_at: Phase 2 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 2
-last_updated: "2026-04-30T13:23:50.332Z"
-last_activity: 2026-04-30 -- Phase 02 execution started
+status: phase-3-discussed
+stopped_at: Phase 3 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 3
+last_updated: "2026-04-30T00:00:00Z"
+last_activity: 2026-04-30 — Phase 3 context gathered. 5 areas discussed (Session Detail surface, Photo signed-URL strategy, Filter scope right-now-vs-range, Stuck Items affordance, Admin/dev surface split with ui_interactions panel). 37 D-NN decisions locked. Key new decisions: nested route /activity/sessions/:id preserving filters; src/hooks/useSignedPhotoUrl.ts with TTL=3600s + staleTime=50min + refetchOnWindowFocus for 2-hour tab-resume Success Criterion #5; range applies to created_at aggregates only ('right-now' widgets ignore range); /activity/stuck dedicated route with server-side get_stuck_items RPC (2h threshold hard-coded); DeveloperPanel mirroring Phase 2 D-15/D-16 with Failed-AI breakdown and ui_interactions panel (top page_paths + top element_ids + walkthrough funnel + recent events feed) all hard-filtered to app_source='tpc-app'.
 progress:
   total_phases: 6
   completed_phases: 1
@@ -85,6 +85,13 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 - [Phase 2 context]: Filters are URL-driven, no Zustand. Reuses Phase 1 `useDateRange`; adds `useUserFilter` (`?users=`) and `useVersionFilter` (`?versions=`).
 - [Phase 2 context]: Admin/dev surface split — email allowlist via `src/lib/devAccess.ts` exporting `isDevAccount(email)`. Initial allowlist: `['josh@potomackco.com']`. Inline collapsed `<DeveloperPanel>` at the bottom of `/extension` houses EXT-06 payload viewer triggers, EXT-09 extension_version filter + dominant-version badge, and EXT-10 cancellation-rate KPIs. Admin row click on EXT-05 / EXT-08 is a no-op; dev row click opens the payload viewer.
 - [Phase 2 context]: Empty-state strategy — `useExtensionGate()` hook with `staleTime: Infinity` does a single `LIMIT 1` lifetime probe; when zero, the page renders a single full-page `<EmptyState>` ("waiting on TPC AI Cataloger v2.0"). When lifetime ≠ 0 but selected range is empty, charts/cards show per-card empty messages.
+- [Phase 3 context]: Session Detail is a nested route `/activity/sessions/:id` (NOT a drawer or modal); preserves `?range=`/`?specialists=`/`?mode=` URL state across navigation; TanStack Table v8 item list; Photo Coverage panel (numeric only) above items; thumbnails render lazily on per-item row expansion (no mass thumbnail grid).
+- [Phase 3 context]: Photo signed-URL strategy — new shared `src/hooks/useSignedPhotoUrl.ts`, lazy on item-row expansion, TTL=3600s + staleTime=50min + `refetchOnWindowFocus: true` (overrides global QueryClient default), `thumbnail_path` only. Tab-resume after 2h triggers focus event → query refetch → no broken-thumbnail flash. Photos with `upload_status='failed'` MUST NOT call `createSignedUrl`. Solves Success Criterion #5 without infra changes.
+- [Phase 3 context]: Filter scope master rule — date range applies to `created_at`-based aggregates only (AI status donut APP-04, Export Pipeline APP-05, House-vs-Sale APP-12). "Right-now" widgets ignore range: Today KPI strip (APP-01) is anchored to today, Active Sessions (APP-02) is always-current, 14-day items chart (APP-03) is fixed-window, Stuck Items (APP-11) uses its own >2h rule. Specialist + mode filters apply to BOTH categories. Mode filter targets `sessions.mode` (canonical), not `items.mode`.
+- [Phase 3 context]: Stuck Items affordance — dedicated route `/activity/stuck` (bookmarkable triage page). Alert card on `/activity` shows count + age-of-oldest + severity tone (yellow N≥5, red oldest>6h) + CTA. Quiet success state at N=0 prevents layout reflow. Server-side RPC `get_stuck_items(p_specialists text[], p_mode text)` with 2h threshold hard-coded inside the RPC (NOT a parameter, so card and page can never drift).
+- [Phase 3 context]: Admin/dev surface split mirrors Phase 2 D-15/D-16 — same `isDevAccount(profile.email)` gate from `src/lib/devAccess.ts` (Phase 2 plan 02-02 ships it), render-conditional discipline. Dev surface adds: Raw Item Inspector inside Session Detail per-item disclosure, photo storage-path debugging, `/activity/stuck` deep-diagnostics columns, and `<DeveloperPanel>` at bottom of `/activity` housing Failed-AI Breakdown + `ui_interactions` panel.
+- [Phase 3 context]: `ui_interactions` data source (TPC App migration `20260424000001_create_ui_interactions.sql`) hard-filtered to `app_source='tpc-app'` on every query (mirrors Phase 2 D-01 invariant). Sub-panels: top page_paths (`get_ui_top_pages`), top element_ids (`get_ui_top_elements`), walkthrough funnel (`get_walkthrough_funnel`, ignores date range), recent events feed (10s `refetchInterval`, mirrors Phase 2 EXT-08).
+- [Phase 3 context]: All Phase 3 RPCs follow Phase 2 D-12/D-13 server-aggregation pattern — per-chart RPCs, server-side `date_trunc(... AT TIME ZONE 'America/New_York')` bucketing, shared filter signature `(p_from timestamptz, p_to timestamptz, p_specialists text[], p_mode text)`. Non-aggregating queries (Active Sessions list, Session Detail items, Stuck Items page rows) use raw `.from().select()` with embedded joins via PostgREST. Codebase layout: `src/services/activity/queries.ts` + `src/hooks/activity/`.
 
 ### Pending Todos
 
@@ -99,6 +106,6 @@ Recent decisions affecting current work (v1.0 carryovers retained; v2.0 decision
 
 ## Session Continuity
 
-Last session: 2026-04-29T00:00:00Z
-Stopped at: Phase 2 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 2
-Resume file: .planning/phases/02-extension-analytics-extension/02-CONTEXT.md
+Last session: 2026-04-30T00:00:00Z
+Stopped at: Phase 3 context gathered — CONTEXT.md + DISCUSSION-LOG.md committed; ready for /gsd-plan-phase 3
+Resume file: .planning/phases/03-tpc-app-activity-activity/03-CONTEXT.md
