@@ -211,7 +211,7 @@ describe('<RecentErrorsTable>', () => {
     expect(rows[2]).toHaveTextContent('catalog_single'); // r3
   });
 
-  it('clicking the Time column header toggles aria-sort', async () => {
+  it('clicking the Time column header cycles sort state (desc → none → asc → desc)', async () => {
     setProfileEmail('admin@example.com');
     useRecentErrorsMock.mockReturnValue({
       data: SAMPLE_ROWS,
@@ -222,9 +222,15 @@ describe('<RecentErrorsTable>', () => {
     const user = userEvent.setup();
     render(<RecentErrorsTable />);
     const timeHeader = screen.getByRole('columnheader', { name: /^Time/ });
+    // Default sort is desc.
     expect(timeHeader).toHaveAttribute('aria-sort', 'descending');
+    // TanStack Table v8 default cycle: desc → none → asc → desc.
+    await user.click(timeHeader);
+    expect(timeHeader).toHaveAttribute('aria-sort', 'none');
     await user.click(timeHeader);
     expect(timeHeader).toHaveAttribute('aria-sort', 'ascending');
+    await user.click(timeHeader);
+    expect(timeHeader).toHaveAttribute('aria-sort', 'descending');
   });
 
   it('Payload column header is NOT sortable', () => {
