@@ -78,7 +78,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion; Plan 02-09 contains a [BLOCKING] operator manual smoke checkpoint)*
 - [x] 02-08-PLAN.md — page assembly: src/pages/Extension.tsx (empty-gate branch + section composition), App.tsx route, DashboardLayout NAV_ITEMS first entry
-- [ ] 02-09-PLAN.md — integration smoke test (real components + stubbed Supabase) + operator manual smoke checkpoint + 02-VERIFICATION.md
+- [x] 02-09-PLAN.md — integration smoke test (real components + stubbed Supabase) + operator manual smoke checkpoint + 02-VERIFICATION.md
 
 **Cross-cutting constraints** *(must_haves.truths shared across 2+ plans):*
 - `app_source = 'tpc-extension'` invariant on every query (D-01) — enforced in 02-01 SQL, 02-03 services/hooks, 02-07 inline-free
