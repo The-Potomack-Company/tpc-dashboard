@@ -73,8 +73,8 @@ Plans:
 - [x] 02-05-PLAN.md — install @tanstack/react-table v8.21.3; UserMultiSelect, PerUserTable (EXT-04), RecentErrorsTable (EXT-05 + EXT-06 dev-gated payload viewer)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 02-06-PLAN.md — LiveEventFeed (EXT-08) — polled feed card with Pause/Resume + dev-gated row click
-- [ ] 02-07-PLAN.md — DeveloperPanel (D-15 render-gated) + ExtensionVersionFilter + DominantVersionBadge + CancellationRateKpis (EXT-09 + EXT-10)
+- [x] 02-06-PLAN.md — LiveEventFeed (EXT-08) — polled feed card with Pause/Resume + dev-gated row click
+- [x] 02-07-PLAN.md — DeveloperPanel (D-15 render-gated) + ExtensionVersionFilter + DominantVersionBadge + CancellationRateKpis (EXT-09 + EXT-10)
 
 **Wave 5** *(blocked on Wave 4 completion; Plan 02-09 contains a [BLOCKING] operator manual smoke checkpoint)*
 - [ ] 02-08-PLAN.md — page assembly: src/pages/Extension.tsx (empty-gate branch + section composition), App.tsx route, DashboardLayout NAV_ITEMS first entry
