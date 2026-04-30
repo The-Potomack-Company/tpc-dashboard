@@ -2,7 +2,7 @@
 phase: 3
 slug: tpc-app-activity-activity
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-04-30
 ---
@@ -108,11 +108,11 @@ created: 2026-04-30
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [ ] `wave_0_complete: true` set in frontmatter (flips after Wave 0 tests are actually written during execution)
 
-**Approval:** pending
+**Approval:** approved 2026-04-30 (planner — sampling architecture verified; `nyquist_compliant: true` set; wave_0 flag flips at execution time once test scaffolding lands)
