@@ -129,7 +129,7 @@ describe('<ExtensionVersionFilter>', () => {
 
   it('Test 6: option list comes from useDistinctVersions (no inline supabase calls)', async () => {
     useVersionFilterMock.mockReturnValue({ versions: [], setVersions: vi.fn() });
-    useDistinctVersionsMock.mockReturnValueOnce({
+    useDistinctVersionsMock.mockReturnValue({
       data: ['3.0.0', '2.5.1', '2.0.0'],
       isLoading: false,
       error: null,
@@ -148,7 +148,7 @@ describe('<ExtensionVersionFilter>', () => {
       versions: ['9.9.9'],
       setVersions: vi.fn(),
     });
-    useDistinctVersionsMock.mockReturnValueOnce({
+    useDistinctVersionsMock.mockReturnValue({
       data: ['2.0.2', '2.0.1'],
       isLoading: false,
       error: null,
@@ -163,7 +163,7 @@ describe('<ExtensionVersionFilter>', () => {
 
   it('Test 6c: empty option list shows "No versions available"', async () => {
     useVersionFilterMock.mockReturnValue({ versions: [], setVersions: vi.fn() });
-    useDistinctVersionsMock.mockReturnValueOnce({
+    useDistinctVersionsMock.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
