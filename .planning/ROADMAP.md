@@ -77,7 +77,7 @@ Plans:
 - [x] 02-07-PLAN.md — DeveloperPanel (D-15 render-gated) + ExtensionVersionFilter + DominantVersionBadge + CancellationRateKpis (EXT-09 + EXT-10)
 
 **Wave 5** *(blocked on Wave 4 completion; Plan 02-09 contains a [BLOCKING] operator manual smoke checkpoint)*
-- [ ] 02-08-PLAN.md — page assembly: src/pages/Extension.tsx (empty-gate branch + section composition), App.tsx route, DashboardLayout NAV_ITEMS first entry
+- [x] 02-08-PLAN.md — page assembly: src/pages/Extension.tsx (empty-gate branch + section composition), App.tsx route, DashboardLayout NAV_ITEMS first entry
 - [ ] 02-09-PLAN.md — integration smoke test (real components + stubbed Supabase) + operator manual smoke checkpoint + 02-VERIFICATION.md
 
 **Cross-cutting constraints** *(must_haves.truths shared across 2+ plans):*
