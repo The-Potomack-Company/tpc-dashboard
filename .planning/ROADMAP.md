@@ -62,8 +62,8 @@ Plans:
 Plans:
 
 **Wave 1** *(no dependencies — runs first; Plan 02-01 contains a [BLOCKING] schema-push checkpoint)*
-- [ ] 02-01-PLAN.md — SQL migration: 6 RPCs (events volume / KPI totals / error rate / per-user / dominant version / cancellation rates) + supabase db push [BLOCKING] + types regen + static D-01 invariant verifier
-- [ ] 02-02-PLAN.md — URL filter hooks (useUserFilter, useVersionFilter), src/lib/devAccess (isDevAccount allowlist), src/lib/format extension (formatTimestampShort)
+- [x] 02-01-PLAN.md — SQL migration: 6 RPCs (events volume / KPI totals / error rate / per-user / dominant version / cancellation rates) + supabase db push [BLOCKING] + types regen + static D-01 invariant verifier
+- [x] 02-02-PLAN.md — URL filter hooks (useUserFilter, useVersionFilter), src/lib/devAccess (isDevAccount allowlist), src/lib/format extension (formatTimestampShort)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 02-03-PLAN.md — services/extension/queries.ts + 10 TanStack Query hooks (gate, eventVolume, kpiTotals, errorRate, perUserSummary, recentErrors, dominantVersion, cancellationRates, distinctVersions, liveFeed)
