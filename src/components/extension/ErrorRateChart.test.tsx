@@ -139,10 +139,11 @@ describe('<ErrorRateChart>', () => {
       refetch: vi.fn(),
     });
     const { container } = render(<ErrorRateChart />);
-    // The Recharts Bar `fill` prop renders to the underlying <rect>'s fill
-    // attribute. At least one rectangle should have fill="#9ca3af".
-    const rects = container.querySelectorAll('rect[fill="#9ca3af"]');
-    expect(rects.length).toBeGreaterThan(0);
+    // The Recharts Bar `fill` prop is applied to the underlying <path>
+    // element (Recharts renders rectangles as path elements). At least one
+    // path should have fill="#9ca3af".
+    const fills = container.querySelectorAll('path[fill="#9ca3af"]');
+    expect(fills.length).toBeGreaterThan(0);
     // High-rate text (>= 5%) uses fill-red-600 class on the label <text>.
     // catalog_batch is 6%, spreadsheet_transform is 12% → 2 high-rate labels.
     const highTexts = container.querySelectorAll('text.fill-red-600');
