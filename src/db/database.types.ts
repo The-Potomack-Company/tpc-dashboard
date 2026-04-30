@@ -17,6 +17,7 @@ export type Database = {
       analytics_events: {
         Row: {
           app_source: string | null
+          app_version: string | null
           cancelled: boolean | null
           category_id: string | null
           columns_mapped: number | null
@@ -54,6 +55,7 @@ export type Database = {
         }
         Insert: {
           app_source?: string | null
+          app_version?: string | null
           cancelled?: boolean | null
           category_id?: string | null
           columns_mapped?: number | null
@@ -91,6 +93,7 @@ export type Database = {
         }
         Update: {
           app_source?: string | null
+          app_version?: string | null
           cancelled?: boolean | null
           category_id?: string | null
           columns_mapped?: number | null
@@ -350,6 +353,7 @@ export type Database = {
       ui_interactions: {
         Row: {
           app_source: string
+          app_version: string | null
           created_at: string
           element_id: string | null
           id: string
@@ -362,6 +366,7 @@ export type Database = {
         }
         Insert: {
           app_source?: string
+          app_version?: string | null
           created_at?: string
           element_id?: string | null
           id?: string
@@ -374,6 +379,7 @@ export type Database = {
         }
         Update: {
           app_source?: string
+          app_version?: string | null
           created_at?: string
           element_id?: string | null
           id?: string
@@ -399,7 +405,94 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_cancellation_rates: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          cancelled_count: number
+          event_type: string
+          previous_rate: number
+          rate: number
+          total_count: number
+        }[]
+      }
+      get_dominant_version: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          event_count: number
+          extension_version: string
+        }[]
+      }
+      get_error_rate_by_type: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          errors: number
+          event_type: string
+          rate: number
+          total: number
+        }[]
+      }
+      get_event_volume_daily: {
+        Args: {
+          p_bucket?: string
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          bucket_start: string
+          event_count: number
+          event_type: string
+        }[]
+      }
+      get_kpi_totals: {
+        Args: {
+          p_bucket?: string
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          current_count: number
+          event_type: string
+          previous_count: number
+          sparkline: Json
+        }[]
+      }
+      get_per_user_summary: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          catalog_batch: number
+          catalog_single: number
+          data_import: number
+          last_seen_at: string
+          portal_upload: number
+          spreadsheet_transform: number
+          total_errors: number
+          user_email_label: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
