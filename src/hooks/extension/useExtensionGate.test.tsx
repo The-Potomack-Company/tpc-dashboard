@@ -53,7 +53,9 @@ describe('useExtensionGate', () => {
     const err = new Error('gate fail');
     fetchGateMock.mockRejectedValue(err);
     const { result } = renderHook(() => useExtensionGate(), { wrapper: makeWrapper() });
-    await waitFor(() => expect(result.current.error).toBeTruthy());
+    // The hook explicitly sets retry: 1 per D-19, so we wait long enough for
+    // the retry + final error to surface (default exponential backoff ~1s).
+    await waitFor(() => expect(result.current.error).toBeTruthy(), { timeout: 5000 });
     expect(result.current.error).toBe(err);
     // While error is present, isEmpty should NOT be true (gate is in error state, not empty state)
     expect(result.current.isEmpty).toBe(false);
