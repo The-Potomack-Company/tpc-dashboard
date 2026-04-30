@@ -99,7 +99,39 @@ Plans:
   3. Admin sees a 14-day items-per-specialist stacked bar, an AI-status donut with a visually distinct "failed" slice, an Export Pipeline horizontal stacked bar, a House-vs-Sale split, and a Stuck-Items alert card (items with `ai_status IN ('processing','queued')` older than 2 hours, linked to a filtered list).
   4. Admin can click any session row and open Session Detail (route or drawer) showing session metadata + an item list with receipt_number, title, ai_status, and photo count — all read-only, no writes to TPC App tables.
   5. Inside Session Detail, admin sees a Photo Coverage panel (≥1 photo vs 0 photos), a `photos.upload_status` breakdown, a callout if any photos are in `failed` state, and photo thumbnails render correctly on first load and after a 2-hour tab-resume (signed-URL strategy proven).
-**Plans**: TBD
+**Plans**: 9 plans (5 waves)
+Plans:
+
+**Wave 1** *(no dependencies — runs in parallel; Plan 03-01 contains a [BLOCKING] schema-push checkpoint)*
+- [ ] 03-01-PLAN.md — SQL migration: 13 RPCs (today/active/14d/ai-status/export-pipeline/house-sale/stuck/failed-ai/session-detail/photo-coverage/ui-top-pages/ui-top-elements/walkthrough-funnel) + supabase db push [BLOCKING] + types regen + 6 static verifiers (app-source / bucket-tz / stuck-threshold / mode-filter / rpc-shape / table-readonly)
+- [ ] 03-02-PLAN.md — URL filter hooks (useSpecialistFilter, useModeFilter), load-bearing useSignedPhotoUrl with refetch-on-focus override, src/lib/severity (severity classifier), src/lib/chartPalette (4 chart palettes including 'completed' status), src/lib/format extension (formatAge), 2 prebuild verifiers (photos-ttl, filter-scope JSDoc)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 03-03-PLAN.md — services/activity/queries.ts (17 builders) + 15+ TanStack Query hooks across activity feature (all RPC wrappers + raw selects + live-tail useUiRecentEventsFeed mirroring Phase 2 useLiveFeed)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 03-04-PLAN.md — right-now admin surfaces: TodayKpiStrip (APP-01) + ActiveSessionsTable (APP-02) + StuckItemsAlertCard (APP-11)
+- [ ] 03-05-PLAN.md — chart admin surfaces: ItemsPerSpecialistChart (APP-03 fixed-window) + AiStatusDonut (APP-04) + HouseSaleSplit (APP-12) + ExportPipelineChart (APP-05)
+- [ ] 03-06-PLAN.md — top-level shared filter controls (SpecialistMultiSelect, ModeToggle) + Session Detail surface (SessionMetadataCard, PhotoCoveragePanel, ThumbnailTile, SessionItemDisclosure, RawItemInspector, SessionItemList) + StuckItemsTable
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 03-07-PLAN.md — render-conditional DeveloperPanel (D-26) + FailedAiBreakdown + UiInteractionsPanel composing 4 sub-sub-panels (UiTopPagesTable, UiTopElementsTable, WalkthroughFunnel, UiRecentEventsFeed mirroring Phase 2 LiveEventFeed)
+
+**Wave 5** *(blocked on Wave 4 completion; Plan 03-09 contains a [BLOCKING] operator manual smoke checkpoint)*
+- [ ] 03-08-PLAN.md — page assembly: src/pages/Activity.tsx (D-01 layout order) + src/pages/SessionDetail.tsx (D-03 nested filter preservation) + src/pages/StuckItems.tsx (D-23 independent context) + App.tsx routes + DashboardLayout NAV_ITEMS Activity entry
+- [ ] 03-09-PLAN.md — integration smoke tests (real components + stubbed Supabase) for all 3 pages + operator manual smoke checkpoint + 03-09-HUMAN-UAT.md + 03-VERIFICATION.md
+
+**Cross-cutting constraints** *(must_haves.truths shared across 2+ plans):*
+- `app_source = 'tpc-app'` invariant on every `ui_interactions` query (D-33) — enforced in 03-01 SQL, 03-03 services/hooks, 03-07 inline-free
+- Mode filter ALWAYS targets `sessions.mode` — NEVER `items.mode` (D-20) — enforced statically in 03-01 verifier; honored by 03-03 services
+- Stuck threshold (`interval '2 hours'`) hard-coded inside `get_stuck_items` body — NEVER a parameter (D-24) — enforced statically in 03-01 verifier; consumed by 03-04 alert card and 03-08 stuck page
+- Photo signed URLs: TTL=3600s + staleTime=50min + refetchOnWindowFocus=true (D-08, D-11) — enforced statically in 03-02 verifier; consumed by 03-06 ThumbnailTile
+- D-13 invariant: failed-upload photos NEVER call createSignedUrl — enforced via `enabled` flag on useSignedPhotoUrl, asserted in 03-02 unit test + 03-09 smoke test
+- Filter scope discipline (D-14..D-21): right-now / range-driven / fixed-window / live-tail / one-shot classification — enforced via `@filterScope` JSDoc tag on every src/hooks/activity/*.ts (verifier from 03-02)
+- Render-conditional dev gate via `isDevAccount(profile?.email)` (D-26) — render-conditional (NOT display-hidden); enforced inside DeveloperPanel itself (03-07)
+- `<ErrorState>` locked contract `{ heading, body, onRetry }` — required by 03-04, 03-05, 03-06, 03-07; sibling Retry button forbidden
+- Phase Boundary read-only — NO INSERT/UPDATE/DELETE/ALTER on TPC App tables — enforced statically in 03-01 verifier
+
 **UI hint**: yes
 
 ### Phase 4: Live RFC Scraper Infrastructure
@@ -146,7 +178,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Infrastructure & Shared UI Kit | 6/6 | Complete | 2026-04-28 |
 | 2. Extension Analytics (`/extension`) | 0/9 | Not started | - |
-| 3. TPC App Activity (`/activity`) | 0/TBD | Not started | - |
+| 3. TPC App Activity (`/activity`) | 0/9 | Not started | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
 | 5. Live Sale UI (`/live`) | 0/TBD | Not started | - |
 | 6. Vercel Production Deploy | 0/TBD | Not started | - |
