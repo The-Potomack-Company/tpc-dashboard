@@ -57,7 +57,7 @@ function pivotForRecharts(rows: VolumeRow[]): WideRow[] {
   for (const r of rows) {
     if (!EVENT_TYPE_ORDER.includes(r.event_type as EventTypeLiteral)) continue;
     const wide = byBucket.get(r.bucket_start) ?? { bucket: r.bucket_start };
-    (wide as Record<string, unknown>)[r.event_type] = Number(r.event_count);
+    (wide as unknown as Record<string, unknown>)[r.event_type] = Number(r.event_count);
     byBucket.set(r.bucket_start, wide);
   }
   return [...byBucket.values()].sort((a, b) => a.bucket.localeCompare(b.bucket));

@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import {
   BarChart,
   Bar,
@@ -38,22 +39,29 @@ function rowsForChart(rows: ErrorRateRow[] | undefined): ChartRow[] {
   }));
 }
 
-interface RateLabelProps {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  value?: number;
+// Recharts' LabelList content function receives positional props (x/y/width/height/value)
+// as `string | number | undefined`. We coerce to numbers for positioning math; the value
+// itself comes from the chart's `dataKey="rate_pct"` so it's always a number at runtime.
+interface LabelContentProps {
+  x?: string | number;
+  y?: string | number;
+  width?: string | number;
+  height?: string | number;
+  value?: string | number;
 }
 
-function renderRateLabel(props: RateLabelProps) {
+function renderRateLabel(props: LabelContentProps) {
   const { x, y, width, height, value } = props;
+  const xn = Number(x ?? 0);
+  const yn = Number(y ?? 0);
+  const wn = Number(width ?? 0);
+  const hn = Number(height ?? 0);
   const v = Number(value ?? 0);
   const isHigh = v >= HIGH_RATE_THRESHOLD * 100;
   return (
     <text
-      x={(x ?? 0) + (width ?? 0) + 4}
-      y={(y ?? 0) + (height ?? 0) / 2}
+      x={xn + wn + 4}
+      y={yn + hn / 2}
       dominantBaseline="middle"
       className={`text-sm ${isHigh ? 'fill-red-600' : 'fill-gray-700'}`}
     >
@@ -110,9 +118,12 @@ export function ErrorRateChart() {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis type="number" tickFormatter={(v: number) => `${v}%`} domain={[0, 'dataMax']} />
         <YAxis type="category" dataKey="event_type" width={140} />
-        <Tooltip formatter={(v: number) => formatPercent(v)} />
+        <Tooltip formatter={(v) => formatPercent(Number(v))} />
         <Bar dataKey="rate_pct" fill={BAR_FILL} isAnimationActive={false}>
-          <LabelList dataKey="rate_pct" content={renderRateLabel} />
+          <LabelList
+            dataKey="rate_pct"
+            content={renderRateLabel as unknown as (props: unknown) => ReactElement}
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
