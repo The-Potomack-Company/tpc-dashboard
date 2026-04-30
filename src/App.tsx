@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router';
 import { LoginPage } from './pages/Login';
 import { HomePage } from './pages/Home';
+import { ExtensionPage } from './pages/Extension';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './layouts/DashboardLayout';
 
@@ -24,6 +25,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/extension" element={<ExtensionPage />} />
           {KitPage && <Route path="/kit" element={<KitPage />} />}
         </Route>
       </Route>
