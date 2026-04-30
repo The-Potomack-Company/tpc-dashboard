@@ -41,28 +41,26 @@ patterns-established:
   - "Multi-line static SQL grep verifier: read migration → strip line comments → run named regex checks → emit one [verify-...] error per failure → exit 1 on any. Mirror style established by scripts/verify-migration-shape.mjs."
   - "prebuild chain extension: append `&& node scripts/verify-<name>.mjs` to npm prebuild rather than overwriting; future Phase 2/3/4 verifiers stack the same way."
 
-requirements-completed: []  # Pending — Task 2 is BLOCKING; EXT-01..EXT-10 cannot be marked complete until the migration is applied to the live shared project AND all downstream plans (02-03..02-09) consume the RPCs.
+requirements-completed: []  # Plan 02-01 ships the SQL surface; EXT-01..EXT-10 are marked complete only when consuming UI/hook plans (02-03..02-09) wire the RPCs into rendered surfaces.
 
-duration: ~5min (partial — Tasks 1 + 3 done; Task 2 paused at BLOCKING checkpoint)
-completed: pending-checkpoint-resolution
+duration: ~6min (Tasks 1 + 3 by executor; Task 2 by orchestrator after operator authorization)
+completed: 2026-04-30
 ---
 
 # Phase 2 Plan 01: Aggregation RPCs Summary
 
-**6 PostgreSQL aggregation RPCs (Pattern 1 + 2 + Q5 verbatim, plus get_dominant_version and get_cancellation_rates with previous_rate) committed to the migration tree; static D-01/D-02/D-13 verifier wired into npm prebuild. Awaiting human-action checkpoint for `npm run db:push` + `npm run db:types`.**
+**6 PostgreSQL aggregation RPCs (Pattern 1 + 2 + Q5 verbatim, plus get_dominant_version and get_cancellation_rates with previous_rate) committed to the migration tree, applied to the live shared Supabase project, and reflected in regenerated `database.types.ts`. Static D-01/D-02/D-13 verifier wired into npm prebuild.**
 
 ## Status
 
-**PARTIAL** — paused at Task 2, the [BLOCKING] human-action checkpoint. Tasks 1 and 3 are complete and committed atomically; Task 2 (`supabase db push` against the linked shared project + types regen) is operator-gated and was NOT attempted by the executor per plan frontmatter `autonomous: false` and the orchestrator's checkpoint contract.
+**COMPLETE** — All 3 tasks done. Tasks 1 and 3 by executor agent in worktree; Task 2 (`supabase db push` + `supabase gen types`) by orchestrator after explicit operator authorization, including a tracker repair for 4 phantom v1-dashboard migration entries (`20260424000000`-`20260424000003` marked reverted, no SQL run).
 
 ## Performance
 
-- **Duration so far:** ~5 min (Tasks 1 + 3 only)
+- **Duration:** ~6 min total (executor: Tasks 1 + 3; orchestrator: Task 2 after checkpoint resolution)
 - **Started:** 2026-04-30T13:25:52Z
-- **Paused at checkpoint:** 2026-04-30T13:30:10Z (approx)
-- **Tasks completed:** 2 of 3 (Task 1, Task 3)
-- **Tasks pending:** 1 (Task 2 — BLOCKING checkpoint)
-- **Files created/modified:** 3
+- **Tasks completed:** 3 of 3
+- **Files created/modified:** 4 (migration, verifier, package.json, regenerated types)
 
 ## Accomplishments
 
@@ -85,7 +83,7 @@ completed: pending-checkpoint-resolution
 ## Task Commits
 
 1. **Task 1: Author the 6 RPC functions in a single timestamped migration file** — `9fec0c9` (feat)
-2. **Task 2: Push the migration to the linked Supabase project + regenerate database types** — PENDING (BLOCKING checkpoint, operator action required)
+2. **Task 2: Push the migration to the linked Supabase project + regenerate database types** — `7a52bea` (chore: regenerate database types after extension RPC migration). Performed by orchestrator after operator-authorized `npx supabase migration repair --status reverted 20260424000000 20260424000001 20260424000002 20260424000003` (tracker-only) followed by `npm run db:push` and `npm run db:types`. db:push output ended with "Finished supabase db push." with all 6 prior migrations either applied or skipped as already-existing; the new `20260429120000_create_extension_rpcs.sql` applied cleanly. Note: Supabase gen types emits Function returns as non-nullable even when SQL can return NULL — `previous_rate` shows as `number` but runtime can be null when prev_total = 0 (D-05 NULLIF semantics). Consumers in Plan 02-04 cancellation KPIs must null-check explicitly.
 3. **Task 3: Add a static SQL grep verifier enforcing the D-01 / D-02 / D-13 invariants** — `07029f6` (feat)
 
 ## Files Created/Modified
@@ -93,6 +91,7 @@ completed: pending-checkpoint-resolution
 - `supabase/migrations/20260429120000_create_extension_rpcs.sql` — created. 437 lines. 6 `create or replace function public.get_*` blocks; each `language sql stable security invoker`; each followed by a matching `grant execute on function ...`.
 - `scripts/verify-extension-app-source-scope.mjs` — created. 113 lines. ESM Node script with six static SQL grep checks; mirrors the style of `scripts/check-no-service-role-in-src.mjs` and `scripts/verify-migration-shape.mjs`.
 - `package.json` — modified. `prebuild` script changed from `node scripts/check-no-service-role-in-src.mjs` to `node scripts/check-no-service-role-in-src.mjs && node scripts/verify-extension-app-source-scope.mjs`.
+- `src/db/database.types.ts` — modified. Regenerated by `supabase gen types --lang=typescript --schema public --linked` (commit `7a52bea`). Adds 6 entries under `Database['public']['Functions']`: get_event_volume_daily, get_kpi_totals, get_error_rate_by_type, get_per_user_summary, get_dominant_version, get_cancellation_rates. Net diff: +94 / -1 lines.
 
 ## Decisions Made
 
@@ -119,32 +118,24 @@ None new. The plan's threat model (T-02-01..T-02-06) is fully covered by:
 - T-02-05 (Information Disclosure via items_content) — RPCs do NOT return `items_content`; payload viewer goes through a separate dev-gated raw select (Plan 02-05).
 - T-02-06 (PostgREST schema cache lag) — accepted per plan; documented in Task 2 verification step 4.
 
-## Awaiting (Task 2 BLOCKING checkpoint)
+## Checkpoint Resolution (Task 2 BLOCKING — resolved)
 
-The user must run, from the repo root, on a machine with the Supabase CLI authenticated against the shared linked project:
+Operator authorized the orchestrator to run the destructive shared-project commands. Sequence:
 
-```
-npm run db:push
-npm run db:types
-```
+1. `npm run db:push` failed: 4 phantom migration entries on remote (`20260424000000`-`20260424000003`) from the deleted v1 dashboard had no local files. CLI suggested `migration repair --status reverted ...`.
+2. Operator authorized the repair: `npx supabase migration repair --status reverted 20260424000000 20260424000001 20260424000002 20260424000003` — tracker-only; no SQL ran against the database. Output: `Repaired migration history: [...] => reverted`.
+3. Retry `npm run db:push`: applied 6 migrations (3 TPC-App-shim no-ops, 2 Phase 1 idempotent skips, 1 new Phase 2 RPCs migration). Ended with `Finished supabase db push.` and zero errors.
+4. `npm run db:types` regenerated `src/db/database.types.ts`. Verified 6 new entries under `Database['public']['Functions']` via grep; verified `get_cancellation_rates.Returns` includes 5 columns (`cancelled_count`, `event_type`, `previous_rate`, `rate`, `total_count`).
+5. Committed types regeneration as `7a52bea`.
 
-Expected outcomes:
-1. `db:push` applies `20260429120000_create_extension_rpcs.sql` to the live linked project; output ends with "Finished supabase db push." and zero errors.
-2. `db:types` rewrites `src/db/database.types.ts` with `Database['public']['Functions']` entries for all 6 RPCs. `get_cancellation_rates` Returns block must list `previous_rate: number | null` (5 columns total).
-3. `grep -E "get_(event_volume_daily|kpi_totals|error_rate_by_type|per_user_summary|dominant_version|cancellation_rates):" src/db/database.types.ts` must return 6 matching lines.
-
-Forbidden alternatives (per STATE.md Phase 1 v1.0 decision and CONTEXT canonical_refs): `supabase db pull`, `supabase db reset --linked`. Only `db push` and `gen types` are safe against the shared project.
-
-After the user runs the two commands, the resume signal is "pushed" plus a paste of `git diff --stat src/db/database.types.ts`. The downstream plans (02-03 services-hooks onward) depend on the regenerated types for strong-typed RPC signatures; without them, plan 02-03 cannot type-check.
+Forbidden alternatives (per STATE.md Phase 1 v1.0 decision and CONTEXT canonical_refs): `supabase db pull`, `supabase db reset --linked` — neither was used.
 
 ## Next Phase Readiness
 
-- The migration is committed and verifier-validated. The file is safe for `db push`; the static verifier guarantees the D-01 / D-02 / D-13 invariants are intact.
-- Plan 02-02 (Wave 1 sibling, URL hooks + devAccess + format) runs in parallel; it does NOT depend on this plan.
-- Plans 02-03 and onward (Waves 2+) DO depend on:
-  - The migration being applied to the live DB (so PostgREST exposes the RPCs).
-  - `src/db/database.types.ts` being regenerated (so `supabase.rpc('get_kpi_totals', ...)` is strongly typed).
-  Both of those happen in Task 2.
+- Migration committed, applied to live shared Supabase project, verifier-validated.
+- `src/db/database.types.ts` regenerated — Plan 02-03 services/hooks have strongly-typed RPC signatures available.
+- Plan 02-02 (Wave 1 sibling) merged in parallel; foundation modules ready for Wave 2 hooks to consume.
+- All Wave 2+ blockers cleared.
 
 ## Self-Check: PASSED
 
@@ -152,12 +143,15 @@ Verified:
 - Migration file present: `supabase/migrations/20260429120000_create_extension_rpcs.sql` — FOUND
 - Verifier file present: `scripts/verify-extension-app-source-scope.mjs` — FOUND
 - Task 1 commit: `9fec0c9` — FOUND in git log
+- Task 2 commit: `7a52bea` — FOUND in git log (types regen)
 - Task 3 commit: `07029f6` — FOUND in git log
 - prebuild script chain: confirmed in package.json (both verifiers)
-- Full `npm run build` exit 0 (prebuild → tsc -b → vite build)
-- Static verifier exits 0 against the migration; exits 1 with D-01 error when `app_source = 'tpc-extension'` is corrupted (negative-case verified)
+- Full `npm run build` exit 0 (prebuild → tsc -b → vite build) — verified post-merge with regenerated types
+- Static verifier exits 0 against the migration; exits 1 with D-01 error when `app_source = 'tpc-extension'` is corrupted (negative-case verified during executor work)
+- `db:push` applied migration to live linked project; `db:types` regenerated `database.types.ts` with all 6 RPC entries
+- Post-merge full test suite: 16 files / 108 tests passed (no regressions)
 
 ---
 *Phase: 02-extension-analytics-extension*
 *Plan: 01*
-*Status: paused at Task 2 BLOCKING checkpoint — awaiting operator-driven `npm run db:push` + `npm run db:types`*
+*Status: COMPLETE*
