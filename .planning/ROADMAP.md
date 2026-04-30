@@ -66,7 +66,7 @@ Plans:
 - [x] 02-02-PLAN.md — URL filter hooks (useUserFilter, useVersionFilter), src/lib/devAccess (isDevAccount allowlist), src/lib/format extension (formatTimestampShort)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-03-PLAN.md — services/extension/queries.ts + 10 TanStack Query hooks (gate, eventVolume, kpiTotals, errorRate, perUserSummary, recentErrors, dominantVersion, cancellationRates, distinctVersions, liveFeed)
+- [x] 02-03-PLAN.md — services/extension/queries.ts + 10 TanStack Query hooks (gate, eventVolume, kpiTotals, errorRate, perUserSummary, recentErrors, dominantVersion, cancellationRates, distinctVersions, liveFeed)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 02-04-PLAN.md — admin chart components: EventVolumeChart (EXT-01) + KpiStrip (EXT-02) + ErrorRateChart (EXT-03)
