@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/check-no-service-role-in-src.mjs && node scripts/verify-extension-app-source-scope.mjs",
+    "prebuild": "node scripts/check-no-service-role-in-src.mjs && node scripts/verify-extension-app-source-scope.mjs && node scripts/verify-activity-rpc-shape.mjs && node scripts/verify-activity-app-source-scope.mjs && node scripts/verify-activity-bucket-tz.mjs && node scripts/verify-activity-stuck-threshold-hardcoded.mjs && node scripts/verify-activity-mode-filter-on-sessions.mjs && node scripts/verify-activity-table-readonly.mjs && node scripts/verify-activity-photos-ttl.mjs && node scripts/verify-activity-filter-scope.mjs && node scripts/verify-activity-error-state-contract.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest --run",
