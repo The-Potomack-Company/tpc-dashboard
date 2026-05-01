@@ -405,6 +405,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_sessions: {
+        Args: { p_mode?: string; p_specialists?: string[] }
+        Returns: {
+          assigned_to_display_name: string
+          assigned_to_id: string
+          created_at: string
+          item_count: number
+          mode: string
+          name: string
+          session_id: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      get_ai_status_distribution: {
+        Args: {
+          p_from: string
+          p_mode?: string
+          p_specialists?: string[]
+          p_to: string
+        }
+        Returns: {
+          ai_status: string
+          item_count: number
+        }[]
+      }
       get_cancellation_rates: {
         Args: {
           p_from: string
@@ -460,6 +486,55 @@ export type Database = {
           event_type: string
         }[]
       }
+      get_export_pipeline: {
+        Args: {
+          p_from: string
+          p_mode?: string
+          p_specialists?: string[]
+          p_to: string
+        }
+        Returns: {
+          session_count: number
+          status: string
+        }[]
+      }
+      get_failed_ai_breakdown: {
+        Args: {
+          p_from: string
+          p_mode?: string
+          p_specialists?: string[]
+          p_to: string
+        }
+        Returns: {
+          dim_key: string
+          dim_label: string
+          dimension: string
+          item_count: number
+        }[]
+      }
+      get_house_sale_split: {
+        Args: {
+          p_from: string
+          p_mode?: string
+          p_specialists?: string[]
+          p_to: string
+        }
+        Returns: {
+          mode: string
+          n_items: number
+          n_sessions: number
+        }[]
+      }
+      get_items_per_specialist_14d: {
+        Args: { p_mode?: string; p_specialists?: string[] }
+        Returns: {
+          bucket_start: string
+          item_count: number
+          specialist_display_name: string
+          specialist_email: string
+          specialist_id: string
+        }[]
+      }
       get_kpi_totals: {
         Args: {
           p_bucket?: string
@@ -491,6 +566,90 @@ export type Database = {
           spreadsheet_transform: number
           total_errors: number
           user_email_label: string
+        }[]
+      }
+      get_photo_coverage: {
+        Args: { p_session_id: string }
+        Returns: {
+          items_total: number
+          items_with_photos: number
+          items_without_photos: number
+          status_failed: number
+          status_pending: number
+          status_uploaded: number
+          status_uploading: number
+        }[]
+      }
+      get_session_detail: {
+        Args: { p_session_id: string }
+        Returns: {
+          assigned_to_display_name: string
+          assigned_to_id: string
+          created_at: string
+          created_by_display_name: string
+          created_by_id: string
+          mode: string
+          name: string
+          notes: string
+          review_notes: string
+          session_id: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      get_stuck_items: {
+        Args: { p_mode?: string; p_specialists?: string[] }
+        Returns: {
+          age_seconds: number
+          ai_status: string
+          category: string
+          created_at: string
+          estimate: string
+          item_id: string
+          photo_paths: string[]
+          receipt_number: string
+          session_id: string
+          session_name: string
+          specialist_display_name: string
+          specialist_id: string
+          title: string
+        }[]
+      }
+      get_today_kpis: {
+        Args: { p_mode?: string; p_specialists?: string[] }
+        Returns: {
+          exports_today: number
+          exports_yday: number
+          items_done_today: number
+          items_done_yday: number
+          items_today: number
+          items_total_today: number
+          items_total_yday: number
+          items_yday: number
+          sessions_today: number
+          sessions_yday: number
+        }[]
+      }
+      get_ui_top_elements: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          click_count: number
+          element_id: string
+        }[]
+      }
+      get_ui_top_pages: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          page_path: string
+          view_count: number
+        }[]
+      }
+      get_walkthrough_funnel: {
+        Args: never
+        Returns: {
+          distinct_users: number
+          step_name: string
+          step_order: number
         }[]
       }
     }
