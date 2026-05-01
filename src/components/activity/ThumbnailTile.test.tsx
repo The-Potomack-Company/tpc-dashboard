@@ -18,7 +18,7 @@ const createSignedUrlMock = vi.fn();
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     storage: {
-      from: (_bucket: string) => ({
+      from: () => ({
         createSignedUrl: createSignedUrlMock,
       }),
     },
