@@ -179,8 +179,15 @@ describe('useSignedPhotoUrl', () => {
       () => useSignedPhotoUrl({ path: 'p1' }),
       { wrapper: Wrapper },
     );
-    await waitFor(() => expect(result.current.isError).toBe(true));
+    // Hook configures retry: 1 (D-11) — so two attempts run before settling
+    // to error. Bump waitFor timeout to absorb the TanStack-Query retry
+    // backoff window deterministically without flake.
+    await waitFor(() => expect(result.current.isError).toBe(true), {
+      timeout: 3000,
+    });
     expect((result.current.error as Error).message).toBe('storage failure');
+    // Two attempts: initial + one retry per D-11.
+    expect(createSignedUrlMock).toHaveBeenCalledTimes(2);
   });
 
   it('Test 7: two calls with the same path share the same TanStack Query cache entry', async () => {
