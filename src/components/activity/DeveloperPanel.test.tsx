@@ -89,15 +89,19 @@ describe('<DeveloperPanel> — chrome and content', () => {
     expect(body).toContainElement(screen.getByTestId('failed-ai-breakdown-stub'));
   });
 
-  it('Test 6: NO localStorage persistence — every fresh mount = collapsed state', () => {
+  it('Test 6: NO localStorage persistence — every fresh mount = collapsed state, even after a previous mount expanded it', async () => {
     authMock.mockReturnValue({ profile: { email: 'josh@potomackco.com' } });
-    // Pre-populate localStorage with a "would persist" value to ensure it is ignored.
-    localStorage.setItem('activity-developer-panel-expanded', 'true');
+    // First mount: expand the panel.
+    const first = render(<DeveloperPanel />);
+    const firstToggle = screen.getByRole('button', { name: 'Expand developer panel' });
+    await userEvent.click(firstToggle);
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
+    first.unmount();
+    // Second fresh mount: must start collapsed (no persistence read on mount).
     render(<DeveloperPanel />);
-    const toggle = screen.getByRole('button', { name: 'Expand developer panel' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    const secondToggle = screen.getByRole('button', { name: 'Expand developer panel' });
+    expect(secondToggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByTestId('failed-ai-breakdown-stub')).not.toBeInTheDocument();
-    localStorage.removeItem('activity-developer-panel-expanded');
   });
 
   it('Test 7: chevron rotates 90deg when expanded (rotate-90 class applied to the chevron svg)', async () => {
