@@ -55,7 +55,7 @@ describe('<UiTopPagesTable>', () => {
     expect(within(rows[1]).getByText('700')).toBeInTheDocument();
   });
 
-  it('Test 4c: clicking the Views header toggles ascending sort (smallest first)', async () => {
+  it('Test 4c: clicking the Views header toggles to ascending sort (smallest first) — TanStack v8 default cycle desc→asc→none', async () => {
     useUiTopPagesMock.mockReturnValue({
       data: SAMPLE_ROWS,
       isLoading: false,
@@ -64,8 +64,7 @@ describe('<UiTopPagesTable>', () => {
     });
     render(<UiTopPagesTable />);
     const viewsHeader = screen.getAllByRole('columnheader')[1];
-    // Two clicks to flip from desc → asc.
-    await userEvent.click(viewsHeader);
+    // Single click flips initial desc → asc (smallest count first).
     await userEvent.click(viewsHeader);
     const rows = screen.getAllByRole('row');
     expect(within(rows[1]).getByText('/photos/2')).toBeInTheDocument();
