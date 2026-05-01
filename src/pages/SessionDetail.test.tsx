@@ -280,9 +280,10 @@ describe('SessionDetailPage', () => {
       wrapper: makeWrapper(['/activity/sessions/abc-123']),
     });
 
-    expect(
-      screen.getByRole('alert', { name: /Couldn't load session details/i }),
-    ).toBeInTheDocument();
+    // ErrorState renders an h2 with role="alert" containing the heading text.
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert.textContent).toMatch(/Couldn't load session details/i);
     const retry = screen.getByRole('button', { name: /Retry/i });
     retry.click();
     expect(refetch).toHaveBeenCalled();
