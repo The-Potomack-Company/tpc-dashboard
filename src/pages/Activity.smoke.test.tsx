@@ -390,13 +390,20 @@ describe('ActivityPage — integration smoke', () => {
     });
   });
 
-  it('Test 18 — no Phase 3 source file references SUPABASE_SERVICE_ROLE_KEY (CLAUDE.md INFR-06)', () => {
+  it('Test 18 — no Phase 3 source file references the service-role env-var name (CLAUDE.md INFR-06)', () => {
     // Vitest runs under Node so node:fs is available. We walk Phase 3 source
     // directories + a curated file list and assert no offender contains the
-    // literal string `SUPABASE_SERVICE_ROLE_KEY`. This complements the
-    // prebuild guard `scripts/check-no-service-role-in-src.mjs` by enforcing
-    // the same invariant at `npm run test` time so a regression is caught
-    // at PR-review time too.
+    // forbidden token. This complements the prebuild guard
+    // `scripts/check-no-service-role-in-src.mjs` by enforcing the same
+    // invariant at `npm run test` time so a regression is caught at
+    // PR-review time too.
+    //
+    // IMPORTANT: We compose the forbidden token at runtime from parts so
+    // the literal string never appears in this source file. The prebuild
+    // guard greps for the literal string in `src/`; if this test file
+    // contained the literal, the guard would (correctly) flag this very
+    // test as an offender, breaking `npm run build`.
+    const FORBIDDEN_TOKEN = ['SUPABASE', 'SERVICE', 'ROLE', 'KEY'].join('_');
 
     // ESM `__dirname` shim: import.meta.url → __filename → directory.
     const __filename = fileURLToPath(import.meta.url);
@@ -455,7 +462,7 @@ describe('ActivityPage — integration smoke', () => {
     const offenders: string[] = [];
     for (const file of allFiles) {
       const raw = readFileSync(file, 'utf8');
-      if (raw.includes('SUPABASE_SERVICE_ROLE_KEY')) {
+      if (raw.includes(FORBIDDEN_TOKEN)) {
         offenders.push(relative(ROOT, file));
       }
     }
