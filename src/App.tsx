@@ -2,6 +2,9 @@ import { Routes, Route, Navigate } from 'react-router';
 import { LoginPage } from './pages/Login';
 import { HomePage } from './pages/Home';
 import { ExtensionPage } from './pages/Extension';
+import { ActivityPage } from './pages/Activity';
+import { SessionDetailPage } from './pages/SessionDetail';
+import { StuckItemsPage } from './pages/StuckItems';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './layouts/DashboardLayout';
 
@@ -26,6 +29,12 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/extension" element={<ExtensionPage />} />
+          <Route path="/activity" element={<ActivityPage />} />
+          <Route
+            path="/activity/sessions/:id"
+            element={<SessionDetailPage />}
+          />
+          <Route path="/activity/stuck" element={<StuckItemsPage />} />
           {KitPage && <Route path="/kit" element={<KitPage />} />}
         </Route>
       </Route>
