@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest --run",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
     "db:push": "supabase db push",
     "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts"
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query-devtools": "^5.99.2",
     "@testing-library/jest-dom": "^6.9.1",

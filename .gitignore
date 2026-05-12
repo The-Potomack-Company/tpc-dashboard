@@ -41,3 +41,7 @@ proxy/.dev.vars
 proxy/.wrangler/
 
 .vercel
+
+# Playwright test results
+test-results/
+playwright-report/
