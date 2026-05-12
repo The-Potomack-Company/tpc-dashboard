@@ -177,11 +177,15 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure & Shared UI Kit | 6/6 | Complete | 2026-04-28 |
-| 2. Extension Analytics (`/extension`) | 0/9 | Not started | - |
-| 3. TPC App Activity (`/activity`) | 0/9 | Not started | - |
+| 2. Extension Analytics (`/extension`) | 9/9 | In Progress (human_needed) | - |
+| 3. TPC App Activity (`/activity`) | 9/9 | In Progress (human_needed) | - |
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
 | 5. Live Sale UI (`/live`) | 0/TBD | Not started | - |
 | 6. Vercel Production Deploy | 0/TBD | Not started | - |
+
+**Phase 2 status note (reconciled 2026-05-12):** All 9 plans have SUMMARY.md and 02-VERIFICATION.md reports `human_needed` status — 6/6 ROADMAP success criteria verified programmatically (254/254 tests pass, all prebuild verifiers green), but 10 operator UAT steps remain pending in `phases/02-extension-analytics-extension/02-09-HUMAN-UAT.md` (live-feed timing, payload viewer with real data, dev-panel DOM verification, production-cleanliness SQL, URL filter sharing). Phase will flip to Complete after operator UAT against the live shared Supabase project.
+
+**Phase 3 status note:** All 9 plans have SUMMARY.md and 03-VERIFICATION.md reports `human_needed` status — 5/5 ROADMAP success criteria verified programmatically (598/598 tests pass, 11 prebuild verifiers green), but 7 manual UAT items remain pending in `phases/03-tpc-app-activity-activity/03-09-HUMAN-UAT.md` (including load-bearing 2-hour tab-resume photo refresh test).
 
 ---
 
