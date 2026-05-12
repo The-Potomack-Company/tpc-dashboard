@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Phase 1 / INFR-03 — shared UI kit.
+// Phase 1 / INFR-03 — shared UI kit (Phase 7 unified-design migration).
 // Minimal native <dialog>-based payload viewer (D-14). Used by /extension
 // Recent Errors table (EXT-06) and potentially /live anomaly payloads (LIVE-07).
 // Deliberately minimal: no syntax highlighting, no tree viewer, no external deps.
+//
+// Phase 7: surfaces use .tpc-card treatment, controls use tpc-btn-secondary,
+// the payload <pre> uses bg-2 + ink + font-mono.
 
 export interface PayloadViewerModalProps {
   payload: unknown;
@@ -21,7 +24,6 @@ export function PayloadViewerModal({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [copied, setCopied] = useState(false);
 
-  // Sync `open` prop → native dialog methods.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -32,7 +34,6 @@ export function PayloadViewerModal({
     }
   }, [open]);
 
-  // Propagate native <dialog>'s close event (Escape key, dialog.close()) to onClose.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -41,8 +42,6 @@ export function PayloadViewerModal({
     return () => dialog.removeEventListener('close', handler);
   }, [onClose]);
 
-  // Backdrop click: when user clicks the <dialog> element itself (outside the
-  // inner content wrapper), close.
   function handleDialogClick(e: React.MouseEvent<HTMLDialogElement>) {
     if (e.target === e.currentTarget) onClose();
   }
@@ -62,18 +61,18 @@ export function PayloadViewerModal({
   return (
     <dialog
       ref={dialogRef}
-      className="rounded-lg border border-gray-200 bg-white p-0 shadow-xl backdrop:bg-black/40"
+      className="tpc-card p-0 shadow-xl backdrop:bg-black/40"
       data-testid="payload-modal"
       onClick={handleDialogClick}
     >
       <div className="flex max-h-[80vh] w-[min(800px,90vw)] flex-col">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between border-b border-rule px-4 py-2">
+          <h2 className="text-sm font-semibold text-ink">{title}</h2>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleCopy}
-              className="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="tpc-btn tpc-btn-secondary"
               data-testid="payload-modal-copy"
             >
               {copied ? 'Copied!' : 'Copy'}
@@ -81,7 +80,7 @@ export function PayloadViewerModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="tpc-btn tpc-btn-secondary"
               data-testid="payload-modal-close"
               aria-label="Close"
             >
@@ -90,7 +89,7 @@ export function PayloadViewerModal({
           </div>
         </div>
         <pre
-          className="m-0 max-h-[70vh] overflow-auto bg-gray-50 p-4 font-mono text-xs text-gray-800"
+          className="m-0 max-h-[70vh] overflow-auto bg-bg-2 p-4 font-mono text-xs text-ink"
           data-testid="payload-modal-body"
         >
           {pretty}

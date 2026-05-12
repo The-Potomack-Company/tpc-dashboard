@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDateRange, type DateRangePreset } from '../../hooks/useDateRange';
 
-// Phase 1 / INFR-03 — shared UI kit.
+// Phase 1 / INFR-03 — shared UI kit (Phase 7 unified-design migration).
 // Segmented preset buttons + custom-range popover (D-15, D-18). Reads and
 // writes URL via useDateRange — no controlled props, keeps callers from
 // needing to wire the URL manually.
+//
+// Phase 7: surfaces, borders, and text shift to design tokens. The active
+// preset uses accent + accent-ink (was bg-gray-900 + text-white). Custom
+// popover inputs adopt the .tpc-input treatment; primary action becomes a
+// `tpc-btn tpc-btn-primary`, cancel becomes `tpc-btn tpc-btn-secondary`.
 
 interface DateRangeFilterProps {
   className?: string;
@@ -31,7 +36,6 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
   const [draftTo, setDraftTo] = useState<string>(formatISODate(to));
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Reset drafts when popover opens to mirror current range.
   useEffect(() => {
     if (popoverOpen) {
       setDraftFrom(formatISODate(from));
@@ -39,7 +43,6 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
     }
   }, [popoverOpen, from, to]);
 
-  // Close popover when user clicks outside or presses Escape.
   useEffect(() => {
     if (!popoverOpen) return;
     function handleDocClick(e: MouseEvent) {
@@ -83,7 +86,7 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
       className={'relative inline-flex flex-col gap-0 ' + (className ?? '')}
       data-testid="date-range-filter"
     >
-      <div className="inline-flex overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm">
+      <div className="inline-flex overflow-hidden rounded-md border border-rule-2 bg-bg shadow-sm">
         {PRESET_BUTTONS.map(({ value, label }) => {
           const active = value === range;
           return (
@@ -94,10 +97,10 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
               aria-pressed={active}
               data-testid={`date-range-preset-${value}`}
               className={
-                'border-r border-gray-300 px-3 py-1.5 text-sm font-medium last:border-r-0 ' +
+                'border-r border-rule-2 px-3 py-1.5 text-sm font-medium last:border-r-0 transition-colors ' +
                 (active
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50')
+                  ? 'bg-accent text-accent-ink'
+                  : 'bg-bg text-ink hover:bg-bg-2')
               }
             >
               {label}
@@ -109,27 +112,27 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
       {popoverOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-2 rounded-md border border-gray-200 bg-white p-3 shadow-lg"
+          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-2 rounded-md border border-rule bg-bg p-3 shadow-lg"
           data-testid="date-range-popover"
         >
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-2">
             From
             <input
               type="date"
               value={draftFrom}
               onChange={(e) => setDraftFrom(e.target.value)}
               data-testid="date-range-from"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              className="tpc-input"
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-2">
             To
             <input
               type="date"
               value={draftTo}
               onChange={(e) => setDraftTo(e.target.value)}
               data-testid="date-range-to"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              className="tpc-input"
             />
           </label>
           <div className="flex justify-end gap-2 pt-1">
@@ -137,7 +140,7 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
               type="button"
               onClick={handleCancel}
               data-testid="date-range-cancel"
-              className="rounded border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="tpc-btn tpc-btn-secondary"
             >
               Cancel
             </button>
@@ -145,7 +148,7 @@ export function DateRangeFilter({ className }: DateRangeFilterProps) {
               type="button"
               onClick={handleApply}
               data-testid="date-range-apply"
-              className="rounded bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800"
+              className="tpc-btn tpc-btn-primary"
             >
               Apply
             </button>
