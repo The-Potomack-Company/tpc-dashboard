@@ -71,10 +71,20 @@ vi.mock('../lib/supabase', () => ({
 // Auth-store stub — non-dev admin email so DeveloperPanel renders null.
 // The store's `profile` type technically doesn't expose `email` directly, but
 // DeveloperPanel reads it via an inline cast (see DeveloperPanel.tsx line 47).
+//
+// Phase 8: ExtensionPage now also reads `isDev` from the auth store. Wrapped
+// in `current` so individual tests can flip between admin (default) and dev
+// without re-mocking the module.
 // -----------------------------------------------------------------------------
+const authStub = vi.hoisted(() => ({
+  current: {
+    profile: { email: 'admin@example.com' as string | null },
+    isDev: false,
+  },
+}));
 vi.mock('../stores/authStore', () => ({
   useAuthStore: (selector: (s: unknown) => unknown) =>
-    selector({ profile: { email: 'admin@example.com' } }),
+    selector(authStub.current),
 }));
 
 // -----------------------------------------------------------------------------
@@ -148,13 +158,18 @@ describe('ExtensionPage — integration smoke', () => {
       rpcData: [],
       selectData: [],
     });
+    // Default auth: admin (non-dev). Individual tests can override.
+    authStub.current = {
+      profile: { email: 'admin@example.com' },
+      isDev: false,
+    };
   });
 
   afterEach(() => {
     supabaseStub.current = makeSupabaseStub({});
   });
 
-  it('mounts all sections without errors when gate has rows', async () => {
+  it('admin (default) mounts operational sections without errors; perf widgets gated out per Phase 8', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<ExtensionPage />, { wrapper: makeWrapper() });
@@ -164,13 +179,15 @@ describe('ExtensionPage — integration smoke', () => {
       expect(screen.queryByTestId('extension-page-loading')).not.toBeInTheDocument();
     });
 
-    // All admin-surface cards present (matches UI-SPEC § Layout Specifications).
+    // Operational widgets — admin still sees these.
     expect(screen.getByTestId('ext-01-card')).toBeInTheDocument();
     expect(screen.getByTestId('ext-02-strip')).toBeInTheDocument();
-    expect(screen.getByTestId('ext-03-card')).toBeInTheDocument();
     expect(screen.getByTestId('ext-04-card')).toBeInTheDocument();
-    expect(screen.getByTestId('ext-05-card')).toBeInTheDocument();
     expect(screen.getByTestId('ext-08-feed')).toBeInTheDocument();
+
+    // Phase 8 trim — failure-rate chart + recent errors are dev-only.
+    expect(screen.queryByTestId('ext-03-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ext-05-card')).not.toBeInTheDocument();
 
     // DeveloperPanel returns null for the admin email — testid absent.
     expect(screen.queryByTestId('developer-panel')).not.toBeInTheDocument();
@@ -179,6 +196,23 @@ describe('ExtensionPage — integration smoke', () => {
     // violations, prop-type errors that unit tests with stub children miss).
     expect(consoleSpy).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it('dev mounts ALL sections including ErrorRateChart + RecentErrorsTable (Phase 8 regression guard)', async () => {
+    authStub.current = {
+      profile: { email: 'josh@potomackco.com' },
+      isDev: true,
+    };
+    render(<ExtensionPage />, { wrapper: makeWrapper() });
+    await waitFor(() => {
+      expect(screen.queryByTestId('extension-page-loading')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('ext-01-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-02-strip')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-03-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-04-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-05-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-08-feed')).toBeInTheDocument();
   });
 
   it('shows empty state when gate returns 0 rows', async () => {

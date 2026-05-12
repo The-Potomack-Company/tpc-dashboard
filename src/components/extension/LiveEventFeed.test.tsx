@@ -191,9 +191,13 @@ describe('<LiveEventFeed>', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Test 4 — Row rendering with badges
+  // Test 4 — Row rendering with badges (dev sees error styling)
   // ---------------------------------------------------------------------------
-  it('renders 5 rows with timestamp + badge + email; error rows get red left border + red timestamp', () => {
+  it('renders 5 rows with timestamp + badge + email; dev sees error rows with red left border + red timestamp', () => {
+    // Phase 8: failure styling (red left border, red timestamp) is a failure
+    // visualisation and is dev-only per "admin shouldn't see failures". This
+    // test exercises the dev branch by overriding the default admin email.
+    authStateMock.mockReturnValue({ profile: { email: 'josh@potomackco.com' } });
     liveFeedMock.mockReturnValue(makeHookReturn());
     render(<LiveEventFeed />);
     // 5 rows total.
@@ -216,9 +220,12 @@ describe('<LiveEventFeed>', () => {
     expect(screen.getByText('spreadsheet_transform').className).toMatch(/text-amber-800/);
     expect(screen.getByText('data_import').className).toMatch(/bg-violet-100/);
     expect(screen.getByText('data_import').className).toMatch(/text-violet-700/);
-    // The catalog_batch row is the only one with error_message — its <li> child
-    // carries the red left border. Find it by walking up from the badge.
+    // The catalog_batch row is the only one with error_message — for the dev
+    // viewer its <li> child carries the red left border.
     const errorBadge = screen.getByText('catalog_batch');
+    // Dev rows wrap the row content in a <button>; the <li>'s first child is
+    // that button. Admin rows wrap in a <div>. Either way the className we
+    // want is on the immediate child of <li>.
     const errorRow = errorBadge.closest('li')!.firstElementChild as HTMLElement;
     expect(errorRow.className).toMatch(/border-l-red-500/);
     // Timestamp (sibling of badge) should be red on the error row.
@@ -231,6 +238,23 @@ describe('<LiveEventFeed>', () => {
     const successRow = successBadge.closest('li')!.firstElementChild as HTMLElement;
     const successRowTimestamp = successRow.querySelector('span.tabular-nums');
     expect(successRowTimestamp!.className).toMatch(/text-ink-3/);
+  });
+
+  // Phase 8 — admin-trim: the failure styling on error rows is dev-only.
+  // Admin sees the operational stream without the red-border / red-timestamp
+  // treatment.
+  it('Phase 8: admin (non-dev) sees error rows without the red-border + red-timestamp treatment', () => {
+    authStateMock.mockReturnValue({ profile: { email: 'info@potomackco.com' } });
+    liveFeedMock.mockReturnValue(makeHookReturn());
+    render(<LiveEventFeed />);
+    const errorBadge = screen.getByText('catalog_batch');
+    const errorRow = errorBadge.closest('li')!.firstElementChild as HTMLElement;
+    expect(errorRow.className).not.toMatch(/border-l-red-500/);
+    const errorRowTimestamp = errorRow.querySelector('span.tabular-nums');
+    expect(errorRowTimestamp).not.toBeNull();
+    // Non-error treatment for the timestamp — `text-ink-3`, NOT `text-err`.
+    expect(errorRowTimestamp!.className).toMatch(/text-ink-3/);
+    expect(errorRowTimestamp!.className).not.toMatch(/text-err/);
   });
 
   // ---------------------------------------------------------------------------

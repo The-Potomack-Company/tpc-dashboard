@@ -80,6 +80,7 @@ interface StubAuthState {
   profile: { email: string | null } | null;
   session: { user: { id: string } } | null;
   isAdmin: boolean;
+  isDev: boolean;
 }
 
 const authStub = vi.hoisted(() => ({
@@ -87,6 +88,7 @@ const authStub = vi.hoisted(() => ({
     profile: { email: 'admin@potomackco.com' as string | null },
     session: { user: { id: 'admin-1' } },
     isAdmin: true,
+    isDev: false,
   } as StubAuthState,
 }));
 
@@ -254,6 +256,7 @@ describe('ActivityPage — integration smoke', () => {
       profile: { email: 'admin@potomackco.com' },
       session: { user: { id: 'admin-1' } },
       isAdmin: true,
+      isDev: false,
     };
     supabaseStub.current = makeSupabaseStub() as unknown as typeof supabaseStub.current;
   });
@@ -279,7 +282,7 @@ describe('ActivityPage — integration smoke', () => {
     expect(screen.getByTestId('mode-toggle')).toBeInTheDocument();
   });
 
-  it('Test 2 — composes all 8 admin sections in D-01 order without runtime errors', async () => {
+  it('Test 2 — composes admin operational sections in D-01 order (no AI-status donut for admin per Phase 8)', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<ActivityPage />, { wrapper: makeWrapper() });
@@ -290,22 +293,37 @@ describe('ActivityPage — integration smoke', () => {
       expect(screen.getByTestId('app-01-card')).toBeInTheDocument();
     });
 
-    // All 8 admin sections in D-01 order (Today KPI strip → Active Sessions
-    // → Stuck Items alert → 14-day stacked bar → AI status donut + House
-    // vs Sale paired → Export Pipeline). DeveloperPanel intentionally NOT
-    // in this list (covered by Test 3 / Test 4).
+    // Operational widgets — admin sees all of these (Today KPI strip → Active
+    // Sessions → Stuck Items alert → 14-day stacked bar → House vs Sale →
+    // Export Pipeline). DeveloperPanel covered by Test 3 / Test 4.
     expect(screen.getByTestId('app-01-card')).toBeInTheDocument(); // Today KPIs
     expect(screen.getByTestId('app-02-card')).toBeInTheDocument(); // Active sessions
     expect(screen.getByTestId('app-11-card')).toBeInTheDocument(); // Stuck items alert
     expect(screen.getByTestId('app-03-card')).toBeInTheDocument(); // 14-day bar
-    expect(screen.getByTestId('app-04-card')).toBeInTheDocument(); // AI status donut
     expect(screen.getByTestId('app-12-card')).toBeInTheDocument(); // House vs Sale
     expect(screen.getByTestId('app-05-card')).toBeInTheDocument(); // Export pipeline
+
+    // Phase 8 trim — AI status donut shows success/failure rates and is
+    // dev-only. Admin (default stub) must NOT see it.
+    expect(screen.queryByTestId('app-04-card')).not.toBeInTheDocument();
 
     // No unexpected console errors (catches React key prop warnings, hook
     // violations, prop-type errors that unit tests with stub children miss).
     expect(consoleSpy).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it('Test 2b — dev sees the AI status donut alongside the rest (Phase 8)', async () => {
+    authStub.current = {
+      profile: { email: 'josh@potomackco.com' },
+      session: { user: { id: 'dev-1' } },
+      isAdmin: true,
+      isDev: true,
+    };
+    render(<ActivityPage />, { wrapper: makeWrapper() });
+    await waitFor(() => {
+      expect(screen.getByTestId('app-04-card')).toBeInTheDocument();
+    });
   });
 
   it('Test 3 — DeveloperPanel ABSENT from DOM for non-allowlisted admin (D-26)', async () => {
@@ -322,6 +340,7 @@ describe('ActivityPage — integration smoke', () => {
       profile: { email: 'josh@potomackco.com' }, // allowlisted
       session: { user: { id: 'dev-1' } },
       isAdmin: true,
+      isDev: true,
     };
 
     render(<ActivityPage />, { wrapper: makeWrapper() });

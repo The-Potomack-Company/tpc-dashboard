@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isDevAccount, DEV_EMAILS } from './devAccess';
+import { isDevAccount, DEV_EMAILS, DEV_EMAIL_ALLOWLIST } from './devAccess';
 
 describe('isDevAccount', () => {
   it('returns true for the allowlisted email', () => {
@@ -15,6 +15,12 @@ describe('isDevAccount', () => {
     expect(isDevAccount('admin@example.com')).toBe(false);
   });
 
+  // Phase 8 — both Josh and info@ are admins in the DB; only Josh is dev.
+  // This is the load-bearing distinction between `isAdmin` and `isDev`.
+  it('returns false for info@potomackco.com (admin but not dev)', () => {
+    expect(isDevAccount('info@potomackco.com')).toBe(false);
+  });
+
   it('returns false for null / undefined / empty string', () => {
     expect(isDevAccount(null)).toBe(false);
     expect(isDevAccount(undefined)).toBe(false);
@@ -25,5 +31,11 @@ describe('isDevAccount', () => {
 describe('DEV_EMAILS', () => {
   it('contains exactly the locked Phase 2 allowlist', () => {
     expect(DEV_EMAILS).toEqual(['josh@potomackco.com']);
+  });
+});
+
+describe('DEV_EMAIL_ALLOWLIST', () => {
+  it('is an alias for DEV_EMAILS — same underlying array (single source of truth)', () => {
+    expect(DEV_EMAIL_ALLOWLIST).toBe(DEV_EMAILS);
   });
 });

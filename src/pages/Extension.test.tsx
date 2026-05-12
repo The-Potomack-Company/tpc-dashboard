@@ -24,6 +24,15 @@ vi.mock('../hooks/extension/useExtensionGate', () => ({
   useExtensionGate: () => gateMock(),
 }));
 
+// Phase 8: page composition gates ErrorRateChart + RecentErrorsTable on isDev.
+// Default the mock to dev=true so the existing "all sections mounted" smoke
+// assertions keep passing; the dedicated admin-trim test flips it to false.
+let isDevMockValue = true;
+vi.mock('../stores/authStore', () => ({
+  useAuthStore: (selector: (s: { isDev: boolean }) => unknown) =>
+    selector({ isDev: isDevMockValue }),
+}));
+
 vi.mock('../components/kit/DateRangeFilter', () => ({
   DateRangeFilter: () => <div data-testid="date-range-filter" />,
 }));
@@ -68,6 +77,7 @@ describe('ExtensionPage', () => {
 
   beforeEach(() => {
     gateMock.mockReset();
+    isDevMockValue = true;
   });
 
   afterEach(() => {
@@ -156,6 +166,30 @@ describe('ExtensionPage', () => {
     render(<ExtensionPage />, { wrapper: makeWrapper() });
 
     expect(document.title).toBe('Extension — TPC Dashboard');
+  });
+
+  it('Phase 8: admin (isDev=false) hides ErrorRateChart + RecentErrorsTable', () => {
+    isDevMockValue = false;
+    gateMock.mockReturnValue({ isLoading: false, isEmpty: false, error: null });
+    render(<ExtensionPage />, { wrapper: makeWrapper() });
+
+    // Operational widgets — still visible.
+    expect(screen.getByTestId('event-volume-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
+    expect(screen.getByTestId('per-user-table')).toBeInTheDocument();
+    expect(screen.getByTestId('live-event-feed')).toBeInTheDocument();
+    // DeveloperPanel is mounted unconditionally; its inner isDevAccount gate
+    // null-renders the body, but the mocked test-double simply renders a div,
+    // which is fine — the integration assertion that matters is the perf
+    // widget testids are absent below.
+    expect(screen.getByTestId('developer-panel')).toBeInTheDocument();
+
+    // Phase 8 trim — failure-rate + per-row error widgets are dev-only.
+    expect(screen.queryByTestId('error-rate-chart')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('recent-errors-table')).not.toBeInTheDocument();
+    // The EXT-03 + EXT-05 section card chrome should also be absent.
+    expect(screen.queryByTestId('ext-03-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ext-05-card')).not.toBeInTheDocument();
   });
 
   it('section composition order: EXT-01 → EXT-02 → EXT-03 → EXT-04+05 → EXT-08 → DeveloperPanel', () => {

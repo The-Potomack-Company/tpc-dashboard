@@ -21,6 +21,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { isDevAccount } from '../../lib/devAccess';
+import { useDevDataInclusion } from '../../hooks/useDevDataInclusion';
 import { FailedAiBreakdown } from './FailedAiBreakdown';
 import { UiInteractionsPanel } from './UiInteractionsPanel';
 
@@ -94,10 +95,53 @@ export function DeveloperPanel() {
           id={PANEL_BODY_ID}
           className="border-t border-rule p-6 space-y-6"
         >
+          <DevDataInclusionToggle />
           <FailedAiBreakdown />
           <UiInteractionsPanel />
         </div>
       )}
+    </section>
+  );
+}
+
+// Phase 8: opt-in toggle for "include my (the dev's) testing/debug data in
+// admin-facing analytics". OFF by default so the dev's first view matches
+// what admin sees; flipping ON makes the dev's own dashboard surface their
+// activity for self-debugging. Persists to localStorage so the preference
+// survives reload.
+//
+// Lives inside DeveloperPanel so the toggle is structurally absent for
+// non-dev (the panel itself returns null for non-dev). Defence-in-depth at
+// the hook layer is in src/hooks/useDevDataInclusion.ts.
+function DevDataInclusionToggle() {
+  const { includeDev, setIncludeDev } = useDevDataInclusion();
+  return (
+    <section
+      className="rounded border border-rule bg-bg p-4"
+      data-testid="dev-data-inclusion-toggle"
+    >
+      <h3 className="text-sm font-semibold text-ink-2 mb-2">
+        Include my test data
+      </h3>
+      <p className="text-xs text-ink-3 mb-3">
+        Admin views exclude Josh's testing/debug data by default so the team's
+        real activity stays clean. Flip this on to surface your own activity
+        in this dashboard for self-debugging.
+      </p>
+      <label className="inline-flex items-center gap-2 cursor-pointer text-sm">
+        <input
+          type="checkbox"
+          checked={includeDev}
+          onChange={(e) => setIncludeDev(e.target.checked)}
+          className="h-4 w-4 rounded border-rule text-accent focus:ring-2 focus:ring-accent"
+          data-testid="dev-data-inclusion-checkbox"
+        />
+        <span className="text-ink-2">
+          {includeDev
+            ? 'Showing your test data (admin views still exclude it)'
+            : 'Hidden — matches the admin view'}
+        </span>
+      </label>
     </section>
   );
 }

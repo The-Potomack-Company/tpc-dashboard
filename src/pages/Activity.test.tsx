@@ -48,6 +48,15 @@ vi.mock('../components/activity/DeveloperPanel', () => ({
   DeveloperPanel: () => <div data-testid="developer-panel" />,
 }));
 
+// Phase 8: ActivityPage gates AiStatusDonut on isDev. Default to dev=true so
+// the existing "all 8 sections" composition tests keep passing; the admin
+// trim test below flips it to false.
+let isDevMockValue = true;
+vi.mock('../stores/authStore', () => ({
+  useAuthStore: (selector: (s: { isDev: boolean }) => unknown) =>
+    selector({ isDev: isDevMockValue }),
+}));
+
 function makeWrapper() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -64,6 +73,7 @@ describe('ActivityPage', () => {
 
   beforeEach(() => {
     document.title = originalTitle;
+    isDevMockValue = true;
   });
 
   afterEach(() => {
@@ -177,5 +187,27 @@ describe('ActivityPage', () => {
     expect(main).not.toBeNull();
     // Page header + sections live inside <main>.
     expect(main!.querySelector('[data-testid="today-kpi-strip"]')).not.toBeNull();
+  });
+
+  // Phase 8 — admin-trim: AiStatusDonut shows success/failure breakdown w/ a
+  // "% AI done" center label. Per the user directive "admin shouldn't see
+  // failures/success or time", admin (isDev=false) does NOT mount it. The
+  // remaining HouseSaleSplit collapses to single-column so it doesn't render
+  // as a lonely 50%-width tile.
+  it('Phase 8: admin (isDev=false) does NOT mount AiStatusDonut; other sections remain', () => {
+    isDevMockValue = false;
+    render(<ActivityPage />, { wrapper: makeWrapper() });
+
+    // Operational widgets still mount.
+    expect(screen.getByTestId('today-kpi-strip')).toBeInTheDocument();
+    expect(screen.getByTestId('active-sessions-table')).toBeInTheDocument();
+    expect(screen.getByTestId('stuck-items-alert-card')).toBeInTheDocument();
+    expect(screen.getByTestId('items-per-specialist-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('house-sale-split')).toBeInTheDocument();
+    expect(screen.getByTestId('export-pipeline-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('developer-panel')).toBeInTheDocument();
+
+    // AiStatusDonut — success/failure-rate widget — gated out for admin.
+    expect(screen.queryByTestId('ai-status-donut')).not.toBeInTheDocument();
   });
 });

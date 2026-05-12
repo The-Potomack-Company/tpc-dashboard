@@ -13,10 +13,22 @@ vi.mock('../../hooks/activity/useTodayKpis', () => ({
   useTodayKpis: () => useTodayKpisMock(),
 }));
 
+// Phase 8: the "% AI done today" KpiCard is gated on `isDev`. Most tests in
+// this file want the historical "4 cards rendered" behaviour, so the default
+// auth-store mock returns isDev=true. The Phase 8 admin-trim test overrides
+// this with isDev=false to assert the gating.
+let isDevMockValue = true;
+vi.mock('../../stores/authStore', () => ({
+  useAuthStore: (
+    selector: (s: { isDev: boolean }) => unknown,
+  ) => selector({ isDev: isDevMockValue }),
+}));
+
 import { TodayKpiStrip } from './TodayKpiStrip';
 
 beforeEach(() => {
   useTodayKpisMock.mockReset();
+  isDevMockValue = true;
 });
 
 function happyData(overrides: Partial<Record<string, number>> = {}) {
@@ -175,5 +187,37 @@ describe('<TodayKpiStrip>', () => {
     render(<TodayKpiStrip />);
     // The Sessions today card shows value 5
     expect(screen.getByText('5')).toBeInTheDocument();
+  });
+
+  // Phase 8 — admin-trim: "% AI done today" is a completion-rate metric and
+  // belongs to the dev surface only. Admin sees 3 cards.
+  it("Phase 8: admin (isDev=false) renders 3 cards and omits '% AI done today'", () => {
+    isDevMockValue = false;
+    useTodayKpisMock.mockReturnValue({
+      data: happyData(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    const { container } = render(<TodayKpiStrip />);
+    expect(screen.getAllByTestId('kpi-card')).toHaveLength(3);
+    expect(screen.queryByText('% AI done today')).not.toBeInTheDocument();
+    // Grid should switch to lg:grid-cols-3 so the 3 cards span evenly.
+    const grid = container.querySelector('.grid');
+    expect(grid?.className).toMatch(/lg:grid-cols-3/);
+    expect(grid?.className).not.toMatch(/lg:grid-cols-4/);
+  });
+
+  it("Phase 8: dev (isDev=true) still renders all 4 cards (regression guard)", () => {
+    isDevMockValue = true;
+    useTodayKpisMock.mockReturnValue({
+      data: happyData(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    render(<TodayKpiStrip />);
+    expect(screen.getAllByTestId('kpi-card')).toHaveLength(4);
+    expect(screen.getByText('% AI done today')).toBeInTheDocument();
   });
 });

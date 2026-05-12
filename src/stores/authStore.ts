@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../db/database.types';
+import { isDevAccount } from '../lib/devAccess';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -10,6 +11,13 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   isAdmin: boolean;
+  // `isDev` is independent of `isAdmin`. It is sourced from the email
+  // allowlist in src/lib/devAccess.ts — NOT from profiles.role. Two admins
+  // can have role='admin' but only the dev-allowlisted email gets `isDev=true`.
+  // Used by perf/failure/time widget gating and dev-only affordances. Keeps
+  // the role check separate so future RBAC work doesn't have to entangle
+  // "is internal dev" with "has admin permissions".
+  isDev: boolean;
   loading: boolean;
   profileLoading: boolean;
   // True after the first profile fetch attempt resolves (success or failure).
@@ -26,6 +34,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   profile: null,
   isAdmin: false,
+  isDev: false,
   loading: true,
   profileLoading: false,
   profileLoaded: false,
@@ -70,6 +79,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           set({
             profile: data ?? null,
             isAdmin: data?.role === 'admin',
+            isDev: isDevAccount(data?.email ?? null),
             profileLoading: false,
             profileLoaded: true,
           });
@@ -84,6 +94,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           set({
             profile: null,
             isAdmin: false,
+            isDev: false,
             profileLoading: false,
             profileLoaded: true,
           });
@@ -92,6 +103,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         set({
           profile: null,
           isAdmin: false,
+          isDev: false,
           profileLoading: false,
           profileLoaded: true,
         });

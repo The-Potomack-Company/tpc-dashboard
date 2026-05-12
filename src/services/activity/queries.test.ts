@@ -99,17 +99,18 @@ describe('fetchTodayKpis', () => {
       ],
       error: null,
     });
-    const row = await fetchTodayKpis({ specialists: [], mode: 'all' });
+    const row = await fetchTodayKpis({ specialists: [], mode: 'all', includeDev: false });
     expect(rpcMock).toHaveBeenCalledWith('get_today_kpis', {
       p_specialists: [],
       p_mode: 'all',
+      p_include_dev: false,
     });
     expect(row.sessions_today).toBe(0);
   });
 
   it('returns the default zero row when supabase yields []', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    const row = await fetchTodayKpis({ specialists: [], mode: 'all' });
+    const row = await fetchTodayKpis({ specialists: [], mode: 'all', includeDev: false });
     expect(row.sessions_today).toBe(0);
     expect(row.items_today).toBe(0);
   });
@@ -118,7 +119,7 @@ describe('fetchTodayKpis', () => {
     const err = { message: 'kpi fail' };
     rpcMock.mockResolvedValueOnce({ data: null, error: err });
     await expect(
-      fetchTodayKpis({ specialists: [], mode: 'all' }),
+      fetchTodayKpis({ specialists: [], mode: 'all', includeDev: false }),
     ).rejects.toBe(err);
   });
 });
@@ -126,10 +127,11 @@ describe('fetchTodayKpis', () => {
 describe('fetchActiveSessions', () => {
   it('passes specialists + mode to get_active_sessions', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    await fetchActiveSessions({ specialists: ['a@x.com'], mode: 'house' });
+    await fetchActiveSessions({ specialists: ['a@x.com'], mode: 'house', includeDev: false });
     expect(rpcMock).toHaveBeenCalledWith('get_active_sessions', {
       p_specialists: ['a@x.com'],
       p_mode: 'house',
+      p_include_dev: false,
     });
   });
 });
@@ -154,6 +156,7 @@ describe('fetchAiStatusDistribution (D-17 range-driven)', () => {
       to: TO,
       specialists: ['a@x.com'],
       mode: 'sale',
+      includeDev: false,
     });
     expect(rpcMock).toHaveBeenCalledWith(
       'get_ai_status_distribution',
@@ -162,6 +165,7 @@ describe('fetchAiStatusDistribution (D-17 range-driven)', () => {
         p_to: '2026-04-30T23:59:59.999Z',
         p_specialists: ['a@x.com'],
         p_mode: 'sale',
+        p_include_dev: false,
       }),
     );
   });
@@ -170,7 +174,7 @@ describe('fetchAiStatusDistribution (D-17 range-driven)', () => {
 describe('fetchExportPipeline / fetchHouseSaleSplit / fetchFailedAiBreakdown', () => {
   it('fetchExportPipeline calls get_export_pipeline', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    await fetchExportPipeline({ from: FROM, to: TO, specialists: [], mode: 'all' });
+    await fetchExportPipeline({ from: FROM, to: TO, specialists: [], mode: 'all', includeDev: false });
     expect(rpcMock).toHaveBeenCalledWith(
       'get_export_pipeline',
       expect.objectContaining({ p_from: FROM.toISOString(), p_to: TO.toISOString() }),
@@ -179,7 +183,7 @@ describe('fetchExportPipeline / fetchHouseSaleSplit / fetchFailedAiBreakdown', (
 
   it('fetchHouseSaleSplit calls get_house_sale_split', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    await fetchHouseSaleSplit({ from: FROM, to: TO, specialists: [], mode: 'all' });
+    await fetchHouseSaleSplit({ from: FROM, to: TO, specialists: [], mode: 'all', includeDev: false });
     expect(rpcMock).toHaveBeenCalledWith(
       'get_house_sale_split',
       expect.objectContaining({ p_from: FROM.toISOString(), p_to: TO.toISOString() }),
@@ -193,6 +197,7 @@ describe('fetchExportPipeline / fetchHouseSaleSplit / fetchFailedAiBreakdown', (
       to: TO,
       specialists: [],
       mode: 'all',
+      includeDev: false,
     });
     expect(rpcMock).toHaveBeenCalledWith(
       'get_failed_ai_breakdown',
@@ -204,11 +209,11 @@ describe('fetchExportPipeline / fetchHouseSaleSplit / fetchFailedAiBreakdown', (
 describe('fetchStuckItems', () => {
   it('passes specialists + mode (NO from/to — right-now class)', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    await fetchStuckItems({ specialists: ['x@y.com'], mode: 'all' });
+    await fetchStuckItems({ specialists: ['x@y.com'], mode: 'all', includeDev: false });
     const arg = rpcMock.mock.calls[0][1];
     expect(arg).not.toHaveProperty('p_from');
     expect(arg).not.toHaveProperty('p_to');
-    expect(arg).toEqual({ p_specialists: ['x@y.com'], p_mode: 'all' });
+    expect(arg).toEqual({ p_specialists: ['x@y.com'], p_mode: 'all', p_include_dev: false });
   });
 });
 

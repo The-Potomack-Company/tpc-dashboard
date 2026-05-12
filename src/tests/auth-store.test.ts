@@ -74,6 +74,7 @@ describe('useAuthStore', () => {
       user: null,
       profile: null,
       isAdmin: false,
+      isDev: false,
       loading: true,
       profileLoading: false,
       profileLoaded: false,
@@ -155,6 +156,93 @@ describe('useAuthStore', () => {
     const s = useAuthStore.getState();
     expect(s.isAdmin).toBe(false);
     expect(s.profile?.role).toBe('specialist');
+  });
+
+  // Phase 8 (PR #2 follow-up) — `isDev` is sourced from the email allowlist
+  // in src/lib/devAccess.ts (NOT from profiles.role). Two admins can have
+  // role='admin' but only the dev-allowlisted email gets `isDev=true`.
+
+  it('sets isDev=true when profile.email is in the dev allowlist', async () => {
+    (supabase.from as unknown as MockableFrom).mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => ({
+        data: {
+          id: 'u-josh',
+          role: 'admin',
+          email: 'josh@potomackco.com',
+          display_name: 'Josh',
+          is_active: true,
+        },
+        error: null,
+      })),
+    });
+
+    useAuthStore.getState().initialize();
+    (supabase.auth as unknown as AuthWithHelper).__fireAuthEvent('SIGNED_IN', {
+      user: { id: 'u-josh' },
+    });
+    await new Promise((r) => setTimeout(r, 10));
+
+    const s = useAuthStore.getState();
+    expect(s.isAdmin).toBe(true);
+    expect(s.isDev).toBe(true);
+  });
+
+  it('sets isDev=false when profile.email is admin but NOT in the dev allowlist (e.g. info@potomackco.com)', async () => {
+    (supabase.from as unknown as MockableFrom).mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => ({
+        data: {
+          id: 'u-info',
+          role: 'admin',
+          email: 'info@potomackco.com',
+          display_name: 'Info',
+          is_active: true,
+        },
+        error: null,
+      })),
+    });
+
+    useAuthStore.getState().initialize();
+    (supabase.auth as unknown as AuthWithHelper).__fireAuthEvent('SIGNED_IN', {
+      user: { id: 'u-info' },
+    });
+    await new Promise((r) => setTimeout(r, 10));
+
+    const s = useAuthStore.getState();
+    expect(s.isAdmin).toBe(true);
+    expect(s.isDev).toBe(false);
+  });
+
+  it('clears isDev=false on SIGNED_OUT', async () => {
+    (supabase.from as unknown as MockableFrom).mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => ({
+        data: {
+          id: 'u-josh',
+          role: 'admin',
+          email: 'josh@potomackco.com',
+          display_name: 'Josh',
+          is_active: true,
+        },
+        error: null,
+      })),
+    });
+
+    useAuthStore.getState().initialize();
+    (supabase.auth as unknown as AuthWithHelper).__fireAuthEvent('SIGNED_IN', {
+      user: { id: 'u-josh' },
+    });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(useAuthStore.getState().isDev).toBe(true);
+
+    (supabase.auth as unknown as AuthWithHelper).__fireAuthEvent('SIGNED_OUT', null);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(useAuthStore.getState().isDev).toBe(false);
   });
 
   // ---------- Stale/expired token bootstrap (regression suite) ----------

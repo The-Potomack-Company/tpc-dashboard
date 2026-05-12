@@ -199,10 +199,16 @@ export function LiveEventFeed() {
           <ul role="list">
             {rows.map((row) => {
               const hasError = row.error_message != null;
+              // Phase 8: the red error-border + timestamp-in-red row treatment
+              // is a failure indicator. Per the user directive "admin shouldn't
+              // see failures", admin sees the row as a regular activity row
+              // (operational stream stays visible — only the failure styling
+              // is suppressed). Dev still sees the error highlight.
+              const showErrorIndicator = hasError && isDev;
               const badgeClass =
                 EVENT_BADGE_CLASSES[row.event_type] ?? EVENT_BADGE_CLASSES.unknown;
               const baseRowClass = `w-full flex items-center gap-3 h-10 px-4 border-b border-rule ${
-                hasError ? 'border-l-2 border-l-red-500' : ''
+                showErrorIndicator ? 'border-l-2 border-l-red-500' : ''
               }`;
               const interactiveClass = isDev
                 ? 'hover:bg-bg-2 cursor-pointer focus:ring-2 focus:ring-accent outline-none text-left'
@@ -217,11 +223,11 @@ export function LiveEventFeed() {
                       aria-haspopup="dialog"
                       className={rowClass}
                     >
-                      <RowContent row={row as EventRow} hasError={hasError} badgeClass={badgeClass} />
+                      <RowContent row={row as EventRow} hasError={showErrorIndicator} badgeClass={badgeClass} />
                     </button>
                   ) : (
                     <div className={rowClass}>
-                      <RowContent row={row as EventRow} hasError={hasError} badgeClass={badgeClass} />
+                      <RowContent row={row as EventRow} hasError={showErrorIndicator} badgeClass={badgeClass} />
                     </div>
                   )}
                 </li>

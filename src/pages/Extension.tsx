@@ -10,6 +10,7 @@ import { PerUserTable } from '../components/extension/PerUserTable';
 import { RecentErrorsTable } from '../components/extension/RecentErrorsTable';
 import { LiveEventFeed } from '../components/extension/LiveEventFeed';
 import { DeveloperPanel } from '../components/extension/DeveloperPanel';
+import { useAuthStore } from '../stores/authStore';
 
 // Phase 2 / EXT-01..10 — Page shell.
 //
@@ -26,6 +27,14 @@ import { DeveloperPanel } from '../components/extension/DeveloperPanel';
 // DeveloperPanel mounts unconditionally — its internal `isDevAccount(email)`
 // gate (D-15, Plan 02-07) decides whether to render anything. The whole
 // subtree is absent from the DOM for non-dev users; not display:hidden.
+//
+// Phase 8 admin-trim — per user directive "admin shouldn't see
+// failures/success or time — that's dev only":
+//   EXT-03 ErrorRateChart       (rate metric — dev only)
+//   EXT-05 RecentErrorsTable    (per-row failure breakdown — dev only)
+// Both are rendered for `isDev` accounts only. EXT-04 PerUserTable keeps
+// its event-count columns for admin; its trailing "Errors" column self-
+// trims to dev-only inside the component.
 
 const PAGE_TITLE = 'Extension — TPC Dashboard';
 
@@ -50,6 +59,7 @@ function PageHeader() {
 
 export function ExtensionPage() {
   const gate = useExtensionGate();
+  const isDev = useAuthStore((s) => s.isDev);
 
   useEffect(() => {
     const previous = document.title;
@@ -125,26 +135,35 @@ export function ExtensionPage() {
         <KpiStrip />
       </section>
 
-      {/* EXT-03 — error rate by event type */}
-      <section
-        className="tpc-card p-4 mt-6"
-        data-testid="ext-03-card"
-      >
-        <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-sm font-semibold text-ink-2">
-            Error rate by event type
-          </h2>
-          <span className="text-sm text-ink-3">
-            <code>count(error_message IS NOT NULL) / count(*)</code>
-          </span>
-        </div>
-        <div className="h-48">
-          <ErrorRateChart />
-        </div>
-      </section>
+      {/* EXT-03 — error rate by event type (Phase 8: dev-only — failure rate) */}
+      {isDev && (
+        <section
+          className="tpc-card p-4 mt-6"
+          data-testid="ext-03-card"
+        >
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-sm font-semibold text-ink-2">
+              Error rate by event type
+            </h2>
+            <span className="text-sm text-ink-3">
+              <code>count(error_message IS NOT NULL) / count(*)</code>
+            </span>
+          </div>
+          <div className="h-48">
+            <ErrorRateChart />
+          </div>
+        </section>
+      )}
 
-      {/* EXT-04 + EXT-05 — side-by-side at xl, stacked below */}
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+      {/*
+        EXT-04 + EXT-05 — paired row.
+        Dev: side-by-side at xl (Per-user + Recent errors).
+        Admin: single column with just Per user — Recent errors is a failure
+        breakdown and dev-only per Phase 8.
+      */}
+      <section
+        className={`grid grid-cols-1 gap-6 mt-8 ${isDev ? 'xl:grid-cols-2' : ''}`}
+      >
         <div
           className="tpc-card p-4"
           data-testid="ext-04-card"
@@ -154,18 +173,20 @@ export function ExtensionPage() {
           </header>
           <PerUserTable />
         </div>
-        <div
-          className="tpc-card p-4"
-          data-testid="ext-05-card"
-        >
-          <header className="mb-3">
-            <h2 className="text-sm font-semibold text-ink-2">
-              Recent errors
-            </h2>
-            <p className="text-sm text-ink-3">Last 100 errors, newest first</p>
-          </header>
-          <RecentErrorsTable />
-        </div>
+        {isDev && (
+          <div
+            className="tpc-card p-4"
+            data-testid="ext-05-card"
+          >
+            <header className="mb-3">
+              <h2 className="text-sm font-semibold text-ink-2">
+                Recent errors
+              </h2>
+              <p className="text-sm text-ink-3">Last 100 errors, newest first</p>
+            </header>
+            <RecentErrorsTable />
+          </div>
+        )}
       </section>
 
       {/* EXT-08 — live event feed */}

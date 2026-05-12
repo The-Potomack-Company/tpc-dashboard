@@ -111,10 +111,15 @@ function defaultTodayKpisRow(): TodayKpisRow {
 export async function fetchTodayKpis(args: {
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  // Phase 8: when false (admin default), the RPC excludes Josh's data.
+  // When true (dev override), no filter is applied. See migration
+  // 20260512000000_filter_dev_user_in_analytics_rpcs.sql.
+  includeDev: boolean;
 }): Promise<TodayKpisRow> {
   const { data, error } = await supabase.rpc('get_today_kpis', {
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data?.[0] ?? defaultTodayKpisRow();
@@ -126,10 +131,12 @@ export async function fetchTodayKpis(args: {
 export async function fetchActiveSessions(args: {
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<ActiveSessionsRow[]> {
   const { data, error } = await supabase.rpc('get_active_sessions', {
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];
@@ -141,10 +148,12 @@ export async function fetchActiveSessions(args: {
 export async function fetchStuckItems(args: {
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<StuckItemsRow[]> {
   const { data, error } = await supabase.rpc('get_stuck_items', {
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];
@@ -191,12 +200,14 @@ export async function fetchAiStatusDistribution(args: {
   to: Date;
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<AiStatusRow[]> {
   const { data, error } = await supabase.rpc('get_ai_status_distribution', {
     p_from: args.from.toISOString(),
     p_to: args.to.toISOString(),
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];
@@ -211,12 +222,14 @@ export async function fetchExportPipeline(args: {
   to: Date;
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<ExportPipelineRow[]> {
   const { data, error } = await supabase.rpc('get_export_pipeline', {
     p_from: args.from.toISOString(),
     p_to: args.to.toISOString(),
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];
@@ -231,12 +244,14 @@ export async function fetchHouseSaleSplit(args: {
   to: Date;
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<HouseSaleSplitRow[]> {
   const { data, error } = await supabase.rpc('get_house_sale_split', {
     p_from: args.from.toISOString(),
     p_to: args.to.toISOString(),
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];
@@ -251,12 +266,14 @@ export async function fetchFailedAiBreakdown(args: {
   to: Date;
   specialists: string[];
   mode: 'house' | 'sale' | 'all';
+  includeDev: boolean;
 }): Promise<FailedAiBreakdownRow[]> {
   const { data, error } = await supabase.rpc('get_failed_ai_breakdown', {
     p_from: args.from.toISOString(),
     p_to: args.to.toISOString(),
     p_specialists: args.specialists,
     p_mode: args.mode,
+    p_include_dev: args.includeDev,
   });
   if (error) throw error;
   return data ?? [];

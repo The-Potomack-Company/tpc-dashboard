@@ -9,6 +9,16 @@ vi.mock('../../hooks/extension/usePerUserSummary', () => ({
   usePerUserSummary: () => usePerUserMock(),
 }));
 
+// Phase 8: PerUserTable.tsx reads `isDev` from authStore to gate the
+// "Errors" column. Default to isDev=true here so existing assertions
+// (8 columns, Errors header present) keep passing; the dedicated
+// admin-trim test below flips it to false.
+let isDevMockValue = true;
+vi.mock('../../stores/authStore', () => ({
+  useAuthStore: (selector: (s: { isDev: boolean }) => unknown) =>
+    selector({ isDev: isDevMockValue }),
+}));
+
 const SAMPLE = [
   // Newest last-seen at top by default sort.
   {
@@ -45,6 +55,7 @@ const SAMPLE = [
 
 beforeEach(() => {
   usePerUserMock.mockReset();
+  isDevMockValue = true;
 });
 
 describe('<PerUserTable>', () => {
@@ -121,12 +132,39 @@ describe('<PerUserTable>', () => {
     expect(inner?.className).toMatch(/tabular-nums/);
   });
 
-  it('renders TableSkeleton inside a wrapper <table> when isLoading', () => {
+  it('renders TableSkeleton inside a wrapper <table> when isLoading (dev: 8 cols)', () => {
     usePerUserMock.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
     const { container } = render(<PerUserTable />);
     // TableSkeleton renders 5 rows × 8 cols of pulsing bars.
     const pulseBars = container.querySelectorAll('.motion-safe\\:animate-pulse');
     expect(pulseBars.length).toBe(5 * 8);
+  });
+
+  // Phase 8 — admin-trim: the trailing "Errors" column is a failure count and
+  // is dev-only per the user directive "admin shouldn't see failures".
+  it('Phase 8: admin (isDev=false) renders 7 columns and omits the Errors header', () => {
+    isDevMockValue = false;
+    usePerUserMock.mockReturnValue({ data: SAMPLE, isLoading: false, error: null, refetch: vi.fn() });
+    render(<PerUserTable />);
+    const headers = screen.getAllByRole('columnheader').map((h) => h.textContent?.trim());
+    expect(headers).toEqual([
+      expect.stringMatching(/^User/),
+      expect.stringMatching(/^catalog_single/),
+      expect.stringMatching(/^catalog_batch/),
+      expect.stringMatching(/^portal_upload/),
+      expect.stringMatching(/^spreadsheet_transform/),
+      expect.stringMatching(/^data_import/),
+      expect.stringMatching(/^Last seen/),
+    ]);
+    expect(screen.queryByRole('columnheader', { name: /^Errors/ })).not.toBeInTheDocument();
+  });
+
+  it('Phase 8: admin loading skeleton renders 5 rows × 7 cols (not 8)', () => {
+    isDevMockValue = false;
+    usePerUserMock.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
+    const { container } = render(<PerUserTable />);
+    const pulseBars = container.querySelectorAll('.motion-safe\\:animate-pulse');
+    expect(pulseBars.length).toBe(5 * 7);
   });
 
   it('renders EmptyState with the locked copy when data is empty', () => {

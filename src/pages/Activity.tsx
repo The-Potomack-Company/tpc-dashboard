@@ -10,6 +10,7 @@ import { AiStatusDonut } from '../components/activity/AiStatusDonut';
 import { HouseSaleSplit } from '../components/activity/HouseSaleSplit';
 import { ExportPipelineChart } from '../components/activity/ExportPipelineChart';
 import { DeveloperPanel } from '../components/activity/DeveloperPanel';
+import { useAuthStore } from '../stores/authStore';
 
 // Phase 3 / APP-01..12 — `/activity` page shell.
 //
@@ -27,6 +28,13 @@ import { DeveloperPanel } from '../components/activity/DeveloperPanel';
 // DeveloperPanel is mounted unconditionally; its internal `isDevAccount`
 // gate (D-26) decides whether to render anything. The whole subtree is
 // absent from the DOM for non-dev users; not display:hidden.
+//
+// Phase 8: AiStatusDonut is a completion/success-rate widget (slices show
+// pending/processing/queued/done/FAILED with a center-label "% AI done")
+// and per user directive "admin shouldn't see failures/success or time —
+// that's dev only", it renders for `isDev` accounts only. The paired
+// xl:grid-cols-2 row collapses to a single column for admin so the
+// remaining HouseSaleSplit doesn't end up as a lonely 50%-width tile.
 
 const PAGE_TITLE = 'Activity — TPC Dashboard';
 
@@ -49,6 +57,10 @@ function PageHeader() {
 }
 
 export function ActivityPage() {
+  // Phase 8 — `isDev` gates the perf/success/failure widgets. Sourced from
+  // the authStore (email allowlist via isDevAccount), independent of isAdmin.
+  const isDev = useAuthStore((s) => s.isDev);
+
   useEffect(() => {
     const previous = document.title;
     document.title = PAGE_TITLE;
@@ -61,7 +73,7 @@ export function ActivityPage() {
     <main>
       <PageHeader />
 
-      {/* APP-01 — Today KPI strip */}
+      {/* APP-01 — Today KPI strip (self-trims the "% AI done today" card for non-dev) */}
       <TodayKpiStrip />
 
       {/* APP-02 — Active sessions table */}
@@ -73,9 +85,16 @@ export function ActivityPage() {
       {/* APP-03 — 14-day items-per-specialist stacked bar */}
       <ItemsPerSpecialistChart />
 
-      {/* APP-04 + APP-12 — paired row, side-by-side at xl, stacked below */}
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
-        <AiStatusDonut />
+      {/*
+        APP-04 + APP-12 — paired row.
+        Dev: side-by-side at xl (AiStatusDonut + HouseSaleSplit).
+        Admin: single-column with just HouseSaleSplit — AiStatusDonut shows
+        success/failure rates and is dev-only per Phase 8 directive.
+      */}
+      <section
+        className={`grid grid-cols-1 gap-6 mt-8 ${isDev ? 'xl:grid-cols-2' : ''}`}
+      >
+        {isDev && <AiStatusDonut />}
         <HouseSaleSplit />
       </section>
 

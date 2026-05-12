@@ -15,6 +15,7 @@
 
 import { KpiCard, type KpiDelta } from '../kit/KpiCard';
 import { useTodayKpis } from '../../hooks/activity/useTodayKpis';
+import { useAuthStore } from '../../stores/authStore';
 import { ErrorState } from '../ErrorState';
 import { formatCount, formatPercent, EMPTY } from '../../lib/format';
 
@@ -73,6 +74,12 @@ function pctRate(num: number, denom: number): number {
 
 export function TodayKpiStrip() {
   const query = useTodayKpis();
+  // Phase 8: "% AI done today" is a completion-rate metric (success vs total
+  // attempts) — per the user directive "admin shouldn't see failures/success
+  // or time — that's dev only", this 4th card renders for `isDev` accounts
+  // only. The first three cards (counts: sessions, items, exports) remain
+  // for everyone so admins still see operational volume.
+  const isDev = useAuthStore((s) => s.isDev);
 
   return (
     <section data-testid="app-01-card" className="space-y-2">
@@ -96,7 +103,15 @@ export function TodayKpiStrip() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        // Layout: 4-card grid for dev (includes "% AI done today"), 3-card
+        // grid for admin (drops the rate metric). The grid step at `lg` is
+        // explicit per-branch so admin doesn't end up with a single trailing
+        // card stretching to full width.
+        <div
+          className={`grid grid-cols-2 gap-4 ${
+            isDev ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+          }`}
+        >
           <KpiCard
             label="Sessions today"
             value={
@@ -148,34 +163,36 @@ export function TodayKpiStrip() {
             }
             loading={query.isLoading}
           />
-          <KpiCard
-            label="% AI done today"
-            value={
-              query.isLoading
-                ? ''
-                : pctValue(
-                    Number(query.data?.items_done_today ?? 0),
-                    Number(query.data?.items_total_today ?? 0),
-                  )
-            }
-            delta={
-              query.isLoading ||
-              !query.data ||
-              Number(query.data.items_total_today) === 0
-                ? undefined
-                : computeDelta(
-                    pctRate(
-                      Number(query.data.items_done_today),
-                      Number(query.data.items_total_today),
-                    ),
-                    pctRate(
-                      Number(query.data.items_done_yday),
-                      Number(query.data.items_total_yday),
-                    ),
-                  )
-            }
-            loading={query.isLoading}
-          />
+          {isDev && (
+            <KpiCard
+              label="% AI done today"
+              value={
+                query.isLoading
+                  ? ''
+                  : pctValue(
+                      Number(query.data?.items_done_today ?? 0),
+                      Number(query.data?.items_total_today ?? 0),
+                    )
+              }
+              delta={
+                query.isLoading ||
+                !query.data ||
+                Number(query.data.items_total_today) === 0
+                  ? undefined
+                  : computeDelta(
+                      pctRate(
+                        Number(query.data.items_done_today),
+                        Number(query.data.items_total_today),
+                      ),
+                      pctRate(
+                        Number(query.data.items_done_yday),
+                        Number(query.data.items_total_yday),
+                      ),
+                    )
+              }
+              loading={query.isLoading}
+            />
+          )}
         </div>
       )}
     </section>

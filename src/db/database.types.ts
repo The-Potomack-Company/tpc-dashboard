@@ -406,7 +406,7 @@ export type Database = {
     }
     Functions: {
       get_active_sessions: {
-        Args: { p_mode?: string; p_specialists?: string[] }
+        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
         Returns: {
           assigned_to_display_name: string
           assigned_to_id: string
@@ -422,6 +422,7 @@ export type Database = {
       get_ai_status_distribution: {
         Args: {
           p_from: string
+          p_include_dev?: boolean
           p_mode?: string
           p_specialists?: string[]
           p_to: string
@@ -489,6 +490,7 @@ export type Database = {
       get_export_pipeline: {
         Args: {
           p_from: string
+          p_include_dev?: boolean
           p_mode?: string
           p_specialists?: string[]
           p_to: string
@@ -501,6 +503,7 @@ export type Database = {
       get_failed_ai_breakdown: {
         Args: {
           p_from: string
+          p_include_dev?: boolean
           p_mode?: string
           p_specialists?: string[]
           p_to: string
@@ -515,6 +518,7 @@ export type Database = {
       get_house_sale_split: {
         Args: {
           p_from: string
+          p_include_dev?: boolean
           p_mode?: string
           p_specialists?: string[]
           p_to: string
@@ -598,7 +602,7 @@ export type Database = {
         }[]
       }
       get_stuck_items: {
-        Args: { p_mode?: string; p_specialists?: string[] }
+        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
         Returns: {
           age_seconds: number
           ai_status: string
@@ -616,7 +620,7 @@ export type Database = {
         }[]
       }
       get_today_kpis: {
-        Args: { p_mode?: string; p_specialists?: string[] }
+        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
         Returns: {
           exports_today: number
           exports_yday: number
