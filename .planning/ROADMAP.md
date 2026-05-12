@@ -25,6 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Live RFC Scraper Infrastructure** — Build dashboard-owned live tables (post sale-monitor discuss), Playwright scraper deployed to Railway, heartbeat + anomaly detection
 - [ ] **Phase 5: Live Sale UI (`/live`)** — Consume Phase 4 output as the `/live` route: current lot card, running totals, pace, recent lots, issues feed, scraper-health indicator, Realtime wiring
 - [ ] **Phase 6: Vercel Production Deploy** — Ship the dashboard to a production Vercel URL with env vars configured (INFR-01 carryover)
+- [ ] **Phase 7: Unified Design Migration** — *(INSERTED 2026-05-12)* Bring the dashboard onto the unified TPC design system shared with the cataloger + extension (OKLCH tokens, teal-blue accent, class-based dark mode, shared primitive library, ~50 SVG icons, DashboardAppIcon favicon). Pure visual treatment — no logic changes.
 
 ## Phase Details
 
@@ -182,6 +183,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
 | 5. Live Sale UI (`/live`) | 0/TBD | Not started | - |
 | 6. Vercel Production Deploy | 0/TBD | Not started | - |
+| 7. Unified Design Migration | 0/8 | In Progress | - |
 
 **Phase 2 status note (reconciled 2026-05-12):** All 9 plans have SUMMARY.md and 02-VERIFICATION.md reports `human_needed` status — 6/6 ROADMAP success criteria verified programmatically (254/254 tests pass, all prebuild verifiers green), but 10 operator UAT steps remain pending in `phases/02-extension-analytics-extension/02-09-HUMAN-UAT.md` (live-feed timing, payload viewer with real data, dev-panel DOM verification, production-cleanliness SQL, URL filter sharing). Phase will flip to Complete after operator UAT against the live shared Supabase project.
 
