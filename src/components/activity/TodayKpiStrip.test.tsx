@@ -82,8 +82,9 @@ describe('<TodayKpiStrip>', () => {
     const { container } = render(<TodayKpiStrip />);
     expect(screen.getByText("Today's Snapshot")).toBeInTheDocument();
     expect(screen.getByText('Live')).toBeInTheDocument();
-    // Right-now pip: aria-hidden + bg-green-500 + motion-safe:animate-pulse
-    const pip = container.querySelector('.bg-green-500');
+    // Phase 7 unified-design: right-now pip is aria-hidden + bg-ok
+    // (token-backed, was bg-green-500) + motion-safe:animate-pulse.
+    const pip = container.querySelector('.bg-ok');
     expect(pip).not.toBeNull();
     expect(pip?.className).toMatch(/motion-safe:animate-pulse/);
     expect(pip?.getAttribute('aria-hidden')).toBe('true');

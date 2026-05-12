@@ -132,8 +132,10 @@ describe('<ActiveSessionsTable>', () => {
     const { container } = render(<ActiveSessionsTable />, { wrapper: Wrapper });
     expect(screen.getByText('Active sessions')).toBeInTheDocument();
     expect(screen.getByText('Live')).toBeInTheDocument();
-    // Right-now pip
-    const pip = container.querySelector('.bg-green-500');
+    // Phase 7 unified-design: right-now pip color migrated from
+    // `bg-green-500` to the token-backed `bg-ok` (resolves to var(--ok)
+    // under both themes).
+    const pip = container.querySelector('.bg-ok');
     expect(pip).not.toBeNull();
     expect(pip?.className).toMatch(/motion-safe:animate-pulse/);
     // Plural subheading

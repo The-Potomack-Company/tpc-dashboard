@@ -34,8 +34,8 @@ function PageHeader() {
   return (
     <header className="flex items-end justify-between mb-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Activity</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-xl font-semibold text-ink">Activity</h1>
+        <p className="text-sm text-ink-3 mt-1">
           TPC team cataloging activity
         </p>
       </div>

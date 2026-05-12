@@ -82,7 +82,9 @@ describe('FilterInput', () => {
     );
     const input = screen.getByLabelText('Filter');
     const cls = input.getAttribute('class') ?? '';
-    expect(cls).toContain('focus:ring-2');
-    expect(cls).toContain('focus:ring-accent');
+    // Phase 7 unified-design: focus ring + accent border-color now ship via
+    // the `.tpc-input` base class (3px accent-wash box-shadow on :focus). We
+    // assert the class itself rather than the individual Tailwind utilities.
+    expect(cls).toContain('tpc-input');
   });
 });

@@ -54,17 +54,17 @@ export function KitPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 p-8">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">UI Kit — Dev Demo</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-ink">UI Kit — Dev Demo</h1>
+        <p className="mt-1 text-sm text-ink-2">
           Renders every shared v2.0 primitive in multiple states. Dev-only: tree-shaken from production via{' '}
-          <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">import.meta.env.DEV</code>.
+          <code className="rounded bg-bg-3 px-1 py-0.5 text-xs">import.meta.env.DEV</code>.
         </p>
       </header>
 
       {/* --- DateRangeFilter --- */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">&lt;DateRangeFilter&gt;</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-lg font-semibold text-ink">&lt;DateRangeFilter&gt;</h2>
+        <p className="text-sm text-ink-2">
           URL-bound. Range: <code>{range}</code>. Window: {formatRange(from, to)}.
         </p>
         <DateRangeFilter />
@@ -72,23 +72,23 @@ export function KitPage() {
 
       {/* --- Sparkline: 3 shapes --- */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">&lt;Sparkline&gt;</h2>
+        <h2 className="text-lg font-semibold text-ink">&lt;Sparkline&gt;</h2>
         <div className="grid grid-cols-3 gap-4">
-          <div className="rounded border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-xs uppercase text-gray-500">Up</div>
+          <div className="rounded border border-rule bg-bg p-4">
+            <div className="mb-1 text-xs uppercase text-ink-3">Up</div>
             <div className="text-emerald-600">
               <Sparkline data={SPARKLINE_UP} />
             </div>
           </div>
-          <div className="rounded border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-xs uppercase text-gray-500">Down</div>
-            <div className="text-red-600">
+          <div className="rounded border border-rule bg-bg p-4">
+            <div className="mb-1 text-xs uppercase text-ink-3">Down</div>
+            <div className="text-err">
               <Sparkline data={SPARKLINE_DOWN} />
             </div>
           </div>
-          <div className="rounded border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-xs uppercase text-gray-500">Flat</div>
-            <div className="text-gray-500">
+          <div className="rounded border border-rule bg-bg p-4">
+            <div className="mb-1 text-xs uppercase text-ink-3">Flat</div>
+            <div className="text-ink-3">
               <Sparkline data={SPARKLINE_FLAT} />
             </div>
           </div>
@@ -97,7 +97,7 @@ export function KitPage() {
 
       {/* --- KpiCard: loading, plain, with delta up/down/flat, with sparkline --- */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">&lt;KpiCard&gt;</h2>
+        <h2 className="text-lg font-semibold text-ink">&lt;KpiCard&gt;</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <KpiCard label="Loading" value="" loading />
           <KpiCard label="Sessions today" value={42} />
@@ -127,14 +127,14 @@ export function KitPage() {
 
       {/* --- PayloadViewerModal --- */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">&lt;PayloadViewerModal&gt;</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-lg font-semibold text-ink">&lt;PayloadViewerModal&gt;</h2>
+        <p className="text-sm text-ink-2">
           Click below to open with a sample catalog_batch event payload.
         </p>
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+          className="rounded-md bg-bg px-3 py-1.5 text-sm font-medium text-accent-ink hover:bg-bg-2"
         >
           Open payload viewer
         </button>
@@ -147,9 +147,9 @@ export function KitPage() {
       </section>
 
       {/* --- useTimezone spot-check --- */}
-      <section className="space-y-2 border-t border-gray-200 pt-6">
-        <h2 className="text-lg font-semibold text-gray-900">useTimezone spot-check</h2>
-        <ul className="space-y-1 text-sm text-gray-700">
+      <section className="space-y-2 border-t border-rule pt-6">
+        <h2 className="text-lg font-semibold text-ink">useTimezone spot-check</h2>
+        <ul className="space-y-1 text-sm text-ink-2">
           <li>Now (ET): <code>{formatDateTime(new Date())}</code></li>
           <li>
             Jan 15, 2026 17:00 UTC → <code>{formatDateTime(new Date('2026-01-15T17:00:00Z'))}</code> (should read "12:00 PM ET" — winter/EST)

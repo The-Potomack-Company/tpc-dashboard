@@ -24,7 +24,7 @@ function PhotoIcon() {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className="w-5 h-5 text-gray-400"
+      className="w-5 h-5 text-ink-4"
       aria-hidden="true"
     >
       <path
@@ -45,18 +45,18 @@ export function PhotoCoveragePanel({ sessionId }: Props) {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-6"
+      className="rounded-lg border border-rule bg-bg p-6"
       data-testid="photo-coverage-panel"
     >
       <header className="flex items-center gap-2 mb-4">
         <PhotoIcon />
-        <h2 className="text-sm font-semibold text-gray-700">Photo coverage</h2>
+        <h2 className="text-sm font-semibold text-ink-2">Photo coverage</h2>
       </header>
 
       {query.isLoading ? (
         <div className="space-y-2 animate-pulse">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-6 bg-gray-200 rounded" />
+            <div key={i} className="h-6 bg-bg-3 rounded" />
           ))}
         </div>
       ) : query.error ? (
@@ -80,20 +80,20 @@ export function PhotoCoveragePanel({ sessionId }: Props) {
           return (
             <div className="space-y-4">
               <div>
-                <div className="text-sm font-semibold text-gray-700">Items with photos</div>
-                <div className="text-2xl font-semibold tabular-nums text-gray-900">
+                <div className="text-sm font-semibold text-ink-2">Items with photos</div>
+                <div className="text-2xl font-semibold tabular-nums text-ink">
                   {formatCount(withPhotos)} / {formatCount(total)}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-gray-700">Items with no photos</div>
-                <div className="text-2xl font-semibold tabular-nums text-gray-900">
+                <div className="text-sm font-semibold text-ink-2">Items with no photos</div>
+                <div className="text-2xl font-semibold tabular-nums text-ink">
                   {formatCount(withoutPhotos)}
                 </div>
               </div>
-              <div className="border-t border-gray-200 pt-4">
-                <div className="text-sm font-semibold text-gray-700 mb-2">By upload status</div>
-                <ul className="space-y-1 text-sm text-gray-700">
+              <div className="border-t border-rule pt-4">
+                <div className="text-sm font-semibold text-ink-2 mb-2">By upload status</div>
+                <ul className="space-y-1 text-sm text-ink-2">
                   {(['pending', 'uploading', 'uploaded', 'failed'] as const).map((s) => {
                     const key =
                       `status_${s}` as 'status_pending' | 'status_uploading' | 'status_uploaded' | 'status_failed';
@@ -104,7 +104,7 @@ export function PhotoCoveragePanel({ sessionId }: Props) {
                         <span className="flex items-center gap-2">
                           <span className="tabular-nums">{formatCount(n)}</span>
                           {s === 'failed' && n > 0 && (
-                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">
+                            <span className="bg-err-wash text-err px-2 py-1 rounded text-xs font-semibold">
                               {n} failed
                             </span>
                           )}
@@ -114,7 +114,7 @@ export function PhotoCoveragePanel({ sessionId }: Props) {
                   })}
                 </ul>
                 {failedCount > 0 && (
-                  <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mt-3">
+                  <p className="text-sm text-err bg-err-wash border border-err rounded p-3 mt-3">
                     {failedCount} {failedCount === 1 ? 'photo' : 'photos'} couldn't upload. Check the affected items in the list below.
                   </p>
                 )}

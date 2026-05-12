@@ -20,8 +20,11 @@ describe('STUCK_ITEMS_THRESHOLDS', () => {
 });
 
 describe('STUCK_ITEMS_TONE', () => {
-  it('none.container includes bg-white', () => {
-    expect(STUCK_ITEMS_TONE.none.container).toContain('bg-white');
+  it('none.container uses the tpc-card token vocabulary (Phase 7)', () => {
+    // Phase 7 unified-design: the "none" (quiet success) tone shifted from
+    // raw `bg-white border border-gray-200` to the `.tpc-card` base class,
+    // which resolves to var(--bg) + var(--rule) under both themes.
+    expect(STUCK_ITEMS_TONE.none.container).toContain('tpc-card');
   });
   it('yellow.container includes bg-amber-50', () => {
     expect(STUCK_ITEMS_TONE.yellow.container).toContain('bg-amber-50');

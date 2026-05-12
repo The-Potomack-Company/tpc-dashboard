@@ -120,11 +120,12 @@ describe('<LiveEventFeed>', () => {
     ).toBeInTheDocument();
     // sr-only Live label present so screen readers announce running state.
     expect(screen.getByText('Live')).toBeInTheDocument();
-    // Live dot uses bg-green-500 + animate-pulse — locate via test container.
+    // Phase 7 unified-design: live dot uses `bg-ok` (token-backed, was
+    // `bg-green-500`) + animate-pulse. Located via test container.
     const feed = screen.getByTestId('live-event-feed');
     const dot = feed.querySelector('span[aria-hidden="true"]');
     expect(dot).not.toBeNull();
-    expect(dot!.className).toMatch(/bg-green-500/);
+    expect(dot!.className).toMatch(/bg-ok/);
     expect(dot!.className).toMatch(/animate-pulse/);
   });
 
@@ -157,7 +158,9 @@ describe('<LiveEventFeed>', () => {
     expect(screen.getByText('Paused')).toBeInTheDocument();
     const feed = screen.getByTestId('live-event-feed');
     const dot = feed.querySelector('span[aria-hidden="true"]');
-    expect(dot!.className).toMatch(/bg-gray-400/);
+    // Phase 7 unified-design: paused dot uses the token-backed `bg-ink-4`
+    // (replaced `bg-gray-400`).
+    expect(dot!.className).toMatch(/bg-ink-4/);
     expect(dot!.className).not.toMatch(/animate-pulse/);
   });
 
@@ -221,12 +224,13 @@ describe('<LiveEventFeed>', () => {
     // Timestamp (sibling of badge) should be red on the error row.
     const errorRowTimestamp = errorRow.querySelector('span.tabular-nums');
     expect(errorRowTimestamp).not.toBeNull();
-    expect(errorRowTimestamp!.className).toMatch(/text-red-600/);
-    // Non-error timestamps stay gray.
+    // Phase 7 unified-design: error rows use `text-err`; non-error
+    // timestamps use the muted `text-ink-3`.
+    expect(errorRowTimestamp!.className).toMatch(/text-err/);
     const successBadge = screen.getByText('catalog_single');
     const successRow = successBadge.closest('li')!.firstElementChild as HTMLElement;
     const successRowTimestamp = successRow.querySelector('span.tabular-nums');
-    expect(successRowTimestamp!.className).toMatch(/text-gray-500/);
+    expect(successRowTimestamp!.className).toMatch(/text-ink-3/);
   });
 
   // ---------------------------------------------------------------------------
@@ -272,8 +276,9 @@ describe('<LiveEventFeed>', () => {
     render(<LiveEventFeed />);
     const msg = screen.getByText(/Waiting for events/);
     expect(msg).toBeInTheDocument();
+    // Phase 7 unified-design: muted message now uses the token `text-ink-3`.
     expect(msg.className).toMatch(/italic/);
-    expect(msg.className).toMatch(/text-gray-500/);
+    expect(msg.className).toMatch(/text-ink-3/);
   });
 
   // ---------------------------------------------------------------------------

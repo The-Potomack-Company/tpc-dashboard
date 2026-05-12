@@ -84,17 +84,17 @@ export function ItemsPerSpecialistChart() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4 mt-8"
+      className="rounded-lg border border-rule bg-bg p-4 mt-8"
       data-testid="app-03-card"
     >
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-sm font-semibold text-gray-700">Items per specialist</h2>
-        <span className="text-sm text-gray-500">Last 14 days</span>
+        <h2 className="text-sm font-semibold text-ink-2">Items per specialist</h2>
+        <span className="text-sm text-ink-3">Last 14 days</span>
       </div>
       <div className="h-72">
         {query.isLoading ? (
           <div
-            className="h-full w-full animate-pulse rounded bg-gray-100"
+            className="h-full w-full animate-pulse rounded bg-bg-3"
             data-testid="items-per-specialist-skeleton"
             aria-busy="true"
           />

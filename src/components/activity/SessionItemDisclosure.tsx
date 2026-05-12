@@ -28,7 +28,7 @@ export function SessionItemDisclosure({ item, isDev }: Props) {
 
   return (
     <div
-      className="bg-gray-50 p-4 space-y-4"
+      className="bg-bg-2 p-4 space-y-4"
       data-testid={`item-disclosure-${item.id}`}
     >
       {photosQuery.isLoading ? (
@@ -36,7 +36,7 @@ export function SessionItemDisclosure({ item, isDev }: Props) {
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="bg-gray-200 h-20 w-20 rounded motion-safe:animate-pulse"
+              className="bg-bg-3 h-20 w-20 rounded motion-safe:animate-pulse"
             />
           ))}
         </div>
@@ -47,7 +47,7 @@ export function SessionItemDisclosure({ item, isDev }: Props) {
           onRetry={() => void photosQuery.refetch()}
         />
       ) : (photosQuery.data ?? []).length === 0 ? (
-        <p className="text-sm text-gray-500 italic">No photos for this item.</p>
+        <p className="text-sm text-ink-3 italic">No photos for this item.</p>
       ) : (
         <div
           className="flex gap-2 overflow-x-auto"

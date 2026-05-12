@@ -82,14 +82,17 @@ describe('DashboardLayout', () => {
     }
 
     function isActive(link: HTMLElement): boolean {
-      // The locked active class string is "text-accent border-l-2 border-accent
-      // bg-accent/5". We check for `border-l-accent` (the most specific token)
-      // as a stable indicator.
+      // Phase 7 unified-design: the active vocabulary is
+      // "text-accent border-l-2 border-accent bg-accent-wash". The wash
+      // utility resolves to var(--accent-wash) from the design tokens
+      // (was bg-accent/5 before the unified migration). We check for
+      // the three structural tokens that together signal "this NavLink
+      // is highlighted".
       const cls = link.className;
       return (
         cls.includes('border-accent') &&
         cls.includes('text-accent') &&
-        cls.includes('bg-accent/5')
+        cls.includes('bg-accent-wash')
       );
     }
 

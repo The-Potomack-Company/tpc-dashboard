@@ -22,7 +22,6 @@ export function Icon({ name, size, title, ...rest }: IconProps) {
   const render = ICON_MANIFEST[name];
   if (!render) {
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.warn(`<Icon> unknown name: ${name}`);
     }
     return null;

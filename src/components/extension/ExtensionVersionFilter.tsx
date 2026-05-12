@@ -79,7 +79,7 @@ export function ExtensionVersionFilter() {
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label="Filter by extension version"
-        className="h-8 px-3 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-accent outline-none"
+        className="h-8 px-3 rounded-md border border-rule-2 bg-bg text-sm font-medium text-ink-2 shadow-sm hover:bg-bg-2 focus:ring-2 focus:ring-accent outline-none"
         data-testid="extension-version-filter-trigger"
       >
         {triggerLabel}
@@ -89,18 +89,18 @@ export function ExtensionVersionFilter() {
           ref={popoverRef}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2 shadow-lg min-w-48 max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-1 rounded-md border border-rule bg-bg p-2 shadow-lg min-w-48 max-h-72 overflow-y-auto"
           data-testid="extension-version-filter-popover"
         >
           {options.length === 0 && (
-            <span className="text-sm text-gray-500 px-2 py-1">
+            <span className="text-sm text-ink-3 px-2 py-1">
               No versions available
             </span>
           )}
           {options.map((version) => (
             <label
               key={version}
-              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer"
+              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-2 cursor-pointer"
             >
               <input
                 type="checkbox"
@@ -109,7 +109,7 @@ export function ExtensionVersionFilter() {
                 className="focus:ring-2 focus:ring-accent"
                 aria-label={version}
               />
-              <span className="text-sm text-gray-700 tabular-nums">
+              <span className="text-sm text-ink-2 tabular-nums">
                 {version}
               </span>
             </label>

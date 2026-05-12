@@ -14,7 +14,7 @@
 //   - Section header "Active sessions" + green pulsing right-now pip
 //   - Plural-correct subheading ("{n} active session" / "{n} active sessions")
 //   - Row click navigates to /activity/sessions/<session_id>; full row is the
-//     click target with hover bg-gray-50 + Enter/Space keyboard activation.
+//     click target with hover bg-bg-2 + Enter/Space keyboard activation.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -128,18 +128,18 @@ export function ActiveSessionsTable() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4 mt-8"
+      className="rounded-lg border border-rule bg-bg p-4 mt-8"
       data-testid="app-02-card"
     >
       <header className="flex items-center gap-2 mb-2">
         <span
           aria-hidden="true"
-          className="h-2 w-2 rounded-full bg-green-500 motion-safe:animate-pulse"
+          className="h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse"
         />
         <span className="sr-only">Live</span>
-        <h2 className="text-sm font-semibold text-gray-700">Active sessions</h2>
+        <h2 className="text-sm font-semibold text-ink-2">Active sessions</h2>
         {rowCount > 0 && (
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="text-xs text-ink-3 ml-2">
             {rowCount} {rowCount === 1 ? 'active session' : 'active sessions'}
           </span>
         )}
@@ -166,7 +166,7 @@ export function ActiveSessionsTable() {
           className="w-full text-sm"
           data-testid="active-sessions-table"
         >
-          <thead className="border-b border-gray-200 bg-gray-50 text-left">
+          <thead className="border-b border-rule bg-bg-2 text-left">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="h-11">
                 {hg.headers.map((h, idx) => {
@@ -178,7 +178,7 @@ export function ActiveSessionsTable() {
                     <th
                       key={h.id}
                       scope="col"
-                      className={`px-4 cursor-pointer text-sm font-semibold text-gray-700 select-none ${
+                      className={`px-4 cursor-pointer text-sm font-semibold text-ink-2 select-none ${
                         isNumericColumn(idx) ? 'text-right' : ''
                       }`}
                       aria-sort={
@@ -207,7 +207,7 @@ export function ActiveSessionsTable() {
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="h-11 border-b border-gray-100 hover:bg-gray-50 cursor-pointer focus:ring-2 focus:ring-accent outline-none"
+                className="h-11 border-b border-rule hover:bg-bg-2 cursor-pointer focus:ring-2 focus:ring-accent outline-none"
                 tabIndex={0}
                 onClick={() =>
                   navigate(`/activity/sessions/${row.original.session_id}`)

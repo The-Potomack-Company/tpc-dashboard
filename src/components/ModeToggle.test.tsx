@@ -47,9 +47,11 @@ describe('<ModeToggle>', () => {
     render(<ModeToggle />);
     const allBtn = screen.getByRole('radio', { name: /^All$/ });
     const houseBtn = screen.getByRole('radio', { name: /^House$/ });
+    // Phase 7 unified-design: active option uses bg-accent + text-accent-ink
+    // (was bg-accent + text-white before the unified migration).
     expect(allBtn.className).toMatch(/bg-accent/);
-    expect(allBtn.className).toMatch(/text-white/);
-    expect(houseBtn.className).not.toMatch(/bg-accent/);
+    expect(allBtn.className).toMatch(/text-accent-ink/);
+    expect(houseBtn.className).not.toMatch(/bg-accent\b/);
   });
 
   it('Test 8b: when mode="house", "House" button is visually selected', () => {

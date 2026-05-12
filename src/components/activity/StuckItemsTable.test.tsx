@@ -231,10 +231,11 @@ describe('<StuckItemsTable>', () => {
       refetch: vi.fn(),
     });
     render(<StuckItemsTable />);
+    // Phase 7 unified-design: chip palette adopts token vocabulary.
     const failedChip = screen.getByText('failed');
-    expect(failedChip.className).toMatch(/bg-red-100/);
+    expect(failedChip.className).toMatch(/bg-err-wash/);
     const pendingChip = screen.getByText('pending');
-    expect(pendingChip.className).toMatch(/bg-gray-100/);
+    expect(pendingChip.className).toMatch(/bg-bg-3/);
   });
 
   it('Test 10: dev Raw cell opens PayloadViewerModal; admin sees no Raw cell', async () => {

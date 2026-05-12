@@ -151,14 +151,15 @@ describe('<UiRecentEventsFeed>', () => {
     ).toBeInTheDocument();
   });
 
-  it('Test 3a: live indicator dot is green pulsing when running (bg-green-500 + motion-safe:animate-pulse) and sr-only "Live" label', () => {
+  it('Test 3a: live indicator dot is green pulsing when running (bg-ok + motion-safe:animate-pulse) and sr-only "Live" label', () => {
     useUiRecentEventsFeedMock.mockReturnValue(makeHookReturn());
     render(<UiRecentEventsFeed />);
     expect(screen.getByText('Live')).toBeInTheDocument();
     const feed = screen.getByTestId('ui-recent-events-feed');
     const dot = feed.querySelector('span[aria-hidden="true"]');
     expect(dot).not.toBeNull();
-    expect(dot!.className).toMatch(/bg-green-500/);
+    // Phase 7 unified-design: dot uses token-backed `bg-ok`.
+    expect(dot!.className).toMatch(/bg-ok/);
     expect(dot!.className).toMatch(/animate-pulse/);
   });
 
@@ -170,7 +171,9 @@ describe('<UiRecentEventsFeed>', () => {
     expect(screen.getByText('Paused')).toBeInTheDocument();
     const feed = screen.getByTestId('ui-recent-events-feed');
     const dot = feed.querySelector('span[aria-hidden="true"]');
-    expect(dot!.className).toMatch(/bg-gray-400/);
+    // Phase 7 unified-design: paused dot uses the token-backed `bg-ink-4`
+    // (replaced `bg-gray-400`).
+    expect(dot!.className).toMatch(/bg-ink-4/);
     expect(dot!.className).not.toMatch(/animate-pulse/);
   });
 
@@ -223,8 +226,13 @@ describe('<UiRecentEventsFeed>', () => {
     expect(screen.getByText('click').className).toMatch(/text-sky-700/);
     expect(screen.getByText('focus').className).toMatch(/bg-teal-100/);
     expect(screen.getByText('focus').className).toMatch(/text-teal-700/);
-    expect(screen.getByText('blur').className).toMatch(/bg-gray-100/);
-    expect(screen.getByText('blur').className).toMatch(/text-gray-500/);
+    // Phase 7 unified-design: "blur" chip switched from raw gray palette to
+    // the muted token vocabulary (bg-bg-3 + text-ink-3). The other six
+    // interaction chips keep their differentiated category colors
+    // (slate / sky / teal / violet / amber) which encode meaning that
+    // doesn't collapse into a single brand-accent.
+    expect(screen.getByText('blur').className).toMatch(/bg-bg-3/);
+    expect(screen.getByText('blur').className).toMatch(/text-ink-3/);
     expect(screen.getByText('submit').className).toMatch(/bg-violet-100/);
     expect(screen.getByText('submit').className).toMatch(/text-violet-700/);
     expect(screen.getByText('walkthrough_step').className).toMatch(/bg-amber-100/);
@@ -252,7 +260,8 @@ describe('<UiRecentEventsFeed>', () => {
     render(<UiRecentEventsFeed />);
     const msg = screen.getByText(/Waiting for events/);
     expect(msg.className).toMatch(/italic/);
-    expect(msg.className).toMatch(/text-gray-500/);
+    // Phase 7 unified-design: muted message now uses the token `text-ink-3`.
+    expect(msg.className).toMatch(/text-ink-3/);
   });
 
   it('Test 10: loading state renders TableSkeleton with 6 rows', () => {

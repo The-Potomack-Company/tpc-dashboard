@@ -36,19 +36,19 @@ export function ExportPipelineChart() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4 mt-8"
+      className="rounded-lg border border-rule bg-bg p-4 mt-8"
       data-testid="app-05-card"
     >
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-sm font-semibold text-gray-700">Export pipeline</h2>
-        <span className="text-sm text-gray-500">
+        <h2 className="text-sm font-semibold text-ink-2">Export pipeline</h2>
+        <span className="text-sm text-ink-3">
           Sessions by status · selected range
         </span>
       </div>
       <div className="h-32" data-testid="export-pipeline-body">
         {query.isLoading ? (
           <div
-            className="h-full w-full animate-pulse rounded bg-gray-100"
+            className="h-full w-full animate-pulse rounded bg-bg-3"
             data-testid="export-pipeline-skeleton"
             aria-busy="true"
           />

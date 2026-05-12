@@ -122,14 +122,15 @@ describe('<DeveloperPanel> — chrome and content', () => {
     expect(screen.getByTestId('developer-panel')).toBeInTheDocument();
   });
 
-  it('Test 7c: panel chrome uses border-card vocabulary (rounded-lg + border + bg-white + mt-8 spacing)', () => {
+  it('Test 7c: panel chrome uses border-card vocabulary (rounded-lg + token-backed border-rule + bg-bg + mt-8 spacing)', () => {
     authMock.mockReturnValue({ profile: { email: 'josh@potomackco.com' } });
     render(<DeveloperPanel />);
     const panel = screen.getByTestId('developer-panel');
+    // Phase 7 unified-design: gray/white surfaces shift to token vocabulary.
     expect(panel.className).toContain('rounded-lg');
     expect(panel.className).toContain('border');
-    expect(panel.className).toContain('border-gray-200');
-    expect(panel.className).toContain('bg-white');
+    expect(panel.className).toContain('border-rule');
+    expect(panel.className).toContain('bg-bg');
     expect(panel.className).toContain('mt-8');
   });
 });

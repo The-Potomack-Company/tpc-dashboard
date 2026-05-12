@@ -157,9 +157,11 @@ describe('<DeveloperPanel> — chrome and content', () => {
     });
     render(<DeveloperPanel />);
     const panel = screen.getByTestId('developer-panel');
+    // Phase 7 unified-design: gray/white surfaces shift to token vocabulary
+    // (border-rule + bg-bg). `rounded-lg` continues to ship from Tailwind.
     expect(panel.className).toContain('rounded-lg');
     expect(panel.className).toContain('border');
-    expect(panel.className).toContain('border-gray-200');
-    expect(panel.className).toContain('bg-white');
+    expect(panel.className).toContain('border-rule');
+    expect(panel.className).toContain('bg-bg');
   });
 });

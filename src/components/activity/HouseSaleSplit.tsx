@@ -28,23 +28,23 @@ export function HouseSaleSplit() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4"
+      className="rounded-lg border border-rule bg-bg p-4"
       data-testid="app-12-card"
     >
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-sm font-semibold text-gray-700">House vs sale</h2>
-        <span className="text-sm text-gray-500">Selected range</span>
+        <h2 className="text-sm font-semibold text-ink-2">House vs sale</h2>
+        <span className="text-sm text-ink-3">Selected range</span>
       </div>
       <div className="h-72">
         {query.isLoading ? (
           <div className="h-full grid grid-cols-2 gap-4" data-testid="house-sale-loading">
             <div
-              className="rounded bg-gray-100 animate-pulse"
+              className="rounded bg-bg-3 animate-pulse"
               data-testid="house-sale-skeleton-house"
               aria-busy="true"
             />
             <div
-              className="rounded bg-gray-100 animate-pulse"
+              className="rounded bg-bg-3 animate-pulse"
               data-testid="house-sale-skeleton-sale"
               aria-busy="true"
             />
@@ -86,16 +86,16 @@ export function HouseSaleSplit() {
                   return (
                     <div
                       key={mode}
-                      className={`rounded ${borderClass} bg-white border border-gray-200 p-6 flex flex-col justify-center`}
+                      className={`rounded ${borderClass} bg-bg border border-rule p-6 flex flex-col justify-center`}
                       data-testid={`house-sale-tile-${mode}`}
                     >
-                      <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <div className="text-xs font-medium uppercase tracking-wide text-ink-3">
                         {label}
                       </div>
-                      <div className="text-3xl font-semibold tabular-nums text-gray-900 mt-2">
+                      <div className="text-3xl font-semibold tabular-nums text-ink mt-2">
                         {formatCount(nSessions)}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
+                      <div className="text-sm text-ink-3 mt-1">
                         {nSessions} {nSessions === 1 ? 'session' : 'sessions'} ·{' '}
                         {formatCount(nItems)} {nItems === 1 ? 'item' : 'items'}
                       </div>

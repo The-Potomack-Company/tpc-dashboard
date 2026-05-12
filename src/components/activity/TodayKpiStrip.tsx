@@ -79,10 +79,10 @@ export function TodayKpiStrip() {
       <header className="flex items-center gap-2 mb-2">
         <span
           aria-hidden="true"
-          className="h-2 w-2 rounded-full bg-green-500 motion-safe:animate-pulse"
+          className="h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse"
         />
         <span className="sr-only">Live</span>
-        <h2 className="text-sm font-semibold text-gray-700">Today's Snapshot</h2>
+        <h2 className="text-sm font-semibold text-ink-2">Today's Snapshot</h2>
       </header>
 
       {query.error ? (

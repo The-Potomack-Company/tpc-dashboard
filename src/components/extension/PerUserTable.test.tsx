@@ -86,7 +86,8 @@ describe('<PerUserTable>', () => {
     render(<PerUserTable />);
     const unknownSpan = screen.getByText('Unknown');
     expect(unknownSpan.className).toMatch(/italic/);
-    expect(unknownSpan.className).toMatch(/text-gray-500/);
+    // Phase 7 unified-design: muted gray now resolves to `text-ink-3`.
+    expect(unknownSpan.className).toMatch(/text-ink-3/);
   });
 
   it('clicking the User column header cycles unsorted/asc/desc', async () => {

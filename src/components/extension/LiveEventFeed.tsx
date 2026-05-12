@@ -35,7 +35,7 @@ const EVENT_BADGE_CLASSES: Record<string, string> = {
   data_import: 'bg-violet-100 text-violet-700',
   // Fallback for any unexpected event_type (e.g. catalog_item, were it to
   // sneak in). Keeps the row visible without exploding on missing palette.
-  unknown: 'bg-gray-100 text-gray-700',
+  unknown: 'bg-bg-3 text-ink-2',
 };
 
 interface ModalState {
@@ -56,7 +56,7 @@ function PauseButton({ paused, onPause, onResume }: PauseButtonProps) {
       type="button"
       onClick={paused ? onResume : onPause}
       aria-label={paused ? 'Resume live feed' : 'Pause live feed'}
-      className="h-8 px-3 inline-flex items-center gap-1 rounded-md border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-accent outline-none"
+      className="h-8 px-3 inline-flex items-center gap-1 rounded-md border border-rule text-sm text-ink-2 hover:bg-bg-2 focus:ring-2 focus:ring-accent outline-none"
     >
       {paused ? (
         <>
@@ -143,23 +143,23 @@ export function LiveEventFeed() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white"
+      className="rounded-lg border border-rule bg-bg"
       data-testid="live-event-feed"
     >
-      <header className="flex items-center justify-between border-b border-gray-200 px-4 h-12">
+      <header className="flex items-center justify-between border-b border-rule px-4 h-12">
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
             className={
               paused
-                ? 'h-2 w-2 rounded-full bg-gray-400'
-                : 'h-2 w-2 rounded-full bg-green-500 motion-safe:animate-pulse'
+                ? 'h-2 w-2 rounded-full bg-ink-4'
+                : 'h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse'
             }
           />
           <span className="sr-only">{paused ? 'Paused' : 'Live'}</span>
-          <h2 className="text-sm font-semibold text-gray-700">Live feed</h2>
+          <h2 className="text-sm font-semibold text-ink-2">Live feed</h2>
           <p
-            className="text-xs text-gray-500"
+            className="text-xs text-ink-3"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -192,7 +192,7 @@ export function LiveEventFeed() {
         )}
         {!isLoading && !error && rows.length === 0 && (
           <div className="flex items-center justify-center py-12">
-            <p className="italic text-gray-500">Waiting for events…</p>
+            <p className="italic text-ink-3">Waiting for events…</p>
           </div>
         )}
         {!error && rows.length > 0 && (
@@ -201,11 +201,11 @@ export function LiveEventFeed() {
               const hasError = row.error_message != null;
               const badgeClass =
                 EVENT_BADGE_CLASSES[row.event_type] ?? EVENT_BADGE_CLASSES.unknown;
-              const baseRowClass = `w-full flex items-center gap-3 h-10 px-4 border-b border-gray-100 ${
+              const baseRowClass = `w-full flex items-center gap-3 h-10 px-4 border-b border-rule ${
                 hasError ? 'border-l-2 border-l-red-500' : ''
               }`;
               const interactiveClass = isDev
-                ? 'hover:bg-gray-50 cursor-pointer focus:ring-2 focus:ring-accent outline-none text-left'
+                ? 'hover:bg-bg-2 cursor-pointer focus:ring-2 focus:ring-accent outline-none text-left'
                 : '';
               const rowClass = `${baseRowClass} ${interactiveClass}`.trim();
               return (
@@ -253,7 +253,7 @@ function RowContent({ row, hasError, badgeClass }: RowContentProps) {
     <>
       <span
         className={`text-sm tabular-nums ${
-          hasError ? 'text-red-600' : 'text-gray-500'
+          hasError ? 'text-err' : 'text-ink-3'
         }`}
       >
         {formatTimestampShort(row.created_at)}
@@ -263,7 +263,7 @@ function RowContent({ row, hasError, badgeClass }: RowContentProps) {
       >
         {row.event_type}
       </span>
-      <span className="text-sm text-gray-700 truncate">
+      <span className="text-sm text-ink-2 truncate">
         {row.user_email ?? EMPTY}
       </span>
     </>

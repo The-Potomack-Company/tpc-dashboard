@@ -41,11 +41,11 @@ const ADMIN_WIDTHS = ['w-24', 'w-full', 'w-24', 'w-16', 'w-32', 'w-32'];
 const DEV_WIDTHS = ['w-24', 'w-full', 'w-24', 'w-16', 'w-32', 'w-32', 'w-24', 'w-16', 'w-12'];
 
 const AI_STATUS_TONE: Record<string, string> = {
-  pending:    'bg-gray-100 text-gray-700',
+  pending:    'bg-bg-3 text-ink-2',
   processing: 'bg-sky-100 text-sky-700',
   queued:     'bg-amber-100 text-amber-800',
-  done:       'bg-green-100 text-green-700',
-  failed:     'bg-red-100 text-red-700',
+  done:       'bg-ok-wash text-ok',
+  failed:     'bg-err-wash text-err',
 };
 
 interface ModalState {
@@ -82,7 +82,7 @@ export function StuckItemsTable() {
       header: 'AI status',
       cell: (info) => {
         const status = info.getValue() as string;
-        const tone = AI_STATUS_TONE[status] ?? 'bg-gray-100 text-gray-700';
+        const tone = AI_STATUS_TONE[status] ?? 'bg-bg-3 text-ink-2';
         return (
           <span
             className={`px-2 py-0.5 rounded text-xs font-semibold ${tone}`}
@@ -148,7 +148,7 @@ export function StuckItemsTable() {
                 setModal({ open: true, row: row.original });
               }}
               aria-haspopup="dialog"
-              className="text-sm text-gray-700 hover:text-accent focus:ring-2 focus:ring-accent rounded outline-none"
+              className="text-sm text-ink-2 hover:text-accent focus:ring-2 focus:ring-accent rounded outline-none"
             >
               View →
             </button>
@@ -176,12 +176,12 @@ export function StuckItemsTable() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4 mt-8"
+      className="rounded-lg border border-rule bg-bg p-4 mt-8"
       data-testid="stuck-items-table"
     >
       {rowCount > 0 && (
         <header className="mb-2">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-ink-3">
             {rowCount} {rowCount === 1 ? 'stuck item' : 'stuck items'}
           </span>
         </header>
@@ -207,7 +207,7 @@ export function StuckItemsTable() {
       ) : (
         <>
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-left">
+            <thead className="border-b border-rule bg-bg-2 text-left">
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id} className="h-11">
                   {hg.headers.map((h) => {
@@ -225,7 +225,7 @@ export function StuckItemsTable() {
                       <th
                         key={h.id}
                         scope="col"
-                        className={`px-4 text-sm font-semibold text-gray-700 select-none ${
+                        className={`px-4 text-sm font-semibold text-ink-2 select-none ${
                           sortable ? 'cursor-pointer' : ''
                         }`}
                         aria-sort={ariaSort}
@@ -247,7 +247,7 @@ export function StuckItemsTable() {
               {table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="h-11 border-b border-gray-100 hover:bg-gray-50 cursor-pointer focus:ring-2 focus:ring-accent outline-none"
+                  className="h-11 border-b border-rule hover:bg-bg-2 cursor-pointer focus:ring-2 focus:ring-accent outline-none"
                   tabIndex={0}
                   onClick={() => navigateToSession(row.original.session_id)}
                   onKeyDown={(e) => {

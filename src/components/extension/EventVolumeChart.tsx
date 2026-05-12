@@ -76,7 +76,7 @@ export function EventVolumeChart() {
   if (query.isLoading) {
     return (
       <div
-        className="h-full w-full animate-pulse rounded bg-gray-100"
+        className="h-full w-full animate-pulse rounded bg-bg-3"
         data-testid="event-volume-skeleton"
         aria-busy="true"
       />

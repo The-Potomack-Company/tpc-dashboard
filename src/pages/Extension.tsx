@@ -33,10 +33,10 @@ function PageHeader() {
   return (
     <header className="flex items-end justify-between mb-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-ink">
           Extension Analytics
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-ink-3 mt-1">
           Cataloger Chrome extension activity
         </p>
       </div>
@@ -105,12 +105,12 @@ export function ExtensionPage() {
 
       {/* EXT-01 — stacked bar: events by type/day */}
       <section
-        className="rounded-lg border border-gray-200 bg-white p-4"
+        className="tpc-card p-4"
         data-testid="ext-01-card"
       >
         <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-sm font-semibold text-gray-700">Event volume</h2>
-          <span className="text-sm text-gray-500">Last 14 days</span>
+          <h2 className="text-sm font-semibold text-ink-2">Event volume</h2>
+          <span className="text-sm text-ink-3">Last 14 days</span>
         </div>
         <div className="h-72">
           <EventVolumeChart />
@@ -127,14 +127,14 @@ export function ExtensionPage() {
 
       {/* EXT-03 — error rate by event type */}
       <section
-        className="rounded-lg border border-gray-200 bg-white p-4 mt-6"
+        className="tpc-card p-4 mt-6"
         data-testid="ext-03-card"
       >
         <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-sm font-semibold text-gray-700">
+          <h2 className="text-sm font-semibold text-ink-2">
             Error rate by event type
           </h2>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-ink-3">
             <code>count(error_message IS NOT NULL) / count(*)</code>
           </span>
         </div>
@@ -146,23 +146,23 @@ export function ExtensionPage() {
       {/* EXT-04 + EXT-05 — side-by-side at xl, stacked below */}
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
         <div
-          className="rounded-lg border border-gray-200 bg-white p-4"
+          className="tpc-card p-4"
           data-testid="ext-04-card"
         >
           <header className="mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">Per user</h2>
+            <h2 className="text-sm font-semibold text-ink-2">Per user</h2>
           </header>
           <PerUserTable />
         </div>
         <div
-          className="rounded-lg border border-gray-200 bg-white p-4"
+          className="tpc-card p-4"
           data-testid="ext-05-card"
         >
           <header className="mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-sm font-semibold text-ink-2">
               Recent errors
             </h2>
-            <p className="text-sm text-gray-500">Last 100 errors, newest first</p>
+            <p className="text-sm text-ink-3">Last 100 errors, newest first</p>
           </header>
           <RecentErrorsTable />
         </div>

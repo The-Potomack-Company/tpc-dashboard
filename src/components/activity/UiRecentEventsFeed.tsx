@@ -35,7 +35,7 @@ const TYPE_TONE: Record<string, string> = {
   view:             'bg-slate-100 text-slate-700',
   click:            'bg-sky-100 text-sky-700',
   focus:            'bg-teal-100 text-teal-700',
-  blur:             'bg-gray-100 text-gray-500',
+  blur:             'bg-bg-3 text-ink-3',
   submit:           'bg-violet-100 text-violet-700',
   walkthrough_step: 'bg-amber-100 text-amber-800',
 };
@@ -58,7 +58,7 @@ function PauseButton({ paused, onPause, onResume }: PauseButtonProps) {
       type="button"
       onClick={paused ? onResume : onPause}
       aria-label={paused ? 'Resume' : 'Pause'}
-      className="h-8 px-3 inline-flex items-center gap-1 rounded-md border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-accent outline-none"
+      className="h-8 px-3 inline-flex items-center gap-1 rounded-md border border-rule text-sm text-ink-2 hover:bg-bg-2 focus:ring-2 focus:ring-accent outline-none"
     >
       {paused ? 'Resume' : 'Pause'}
     </button>
@@ -90,23 +90,23 @@ export function UiRecentEventsFeed() {
 
   return (
     <section
-      className="rounded border border-gray-200 bg-white"
+      className="rounded border border-rule bg-bg"
       data-testid="ui-recent-events-feed"
     >
-      <header className="flex items-center justify-between border-b border-gray-200 px-4 h-12">
+      <header className="flex items-center justify-between border-b border-rule px-4 h-12">
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
             className={
               paused
-                ? 'h-2 w-2 rounded-full bg-gray-400'
-                : 'h-2 w-2 rounded-full bg-green-500 motion-safe:animate-pulse'
+                ? 'h-2 w-2 rounded-full bg-ink-4'
+                : 'h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse'
             }
           />
           <span className="sr-only">{paused ? 'Paused' : 'Live'}</span>
-          <h4 className="text-sm font-semibold text-gray-700">Recent UI events</h4>
+          <h4 className="text-sm font-semibold text-ink-2">Recent UI events</h4>
           <p
-            className="text-xs text-gray-500 ml-2"
+            className="text-xs text-ink-3 ml-2"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -138,7 +138,7 @@ export function UiRecentEventsFeed() {
         )}
         {!isLoading && !error && rows.length === 0 && (
           <div className="flex items-center justify-center py-6">
-            <p className="italic text-gray-500">Waiting for events…</p>
+            <p className="italic text-ink-3">Waiting for events…</p>
           </div>
         )}
         {!error && rows.length > 0 && (
@@ -149,22 +149,22 @@ export function UiRecentEventsFeed() {
                   type="button"
                   onClick={() => handleRowClick(row)}
                   aria-haspopup="dialog"
-                  className="w-full flex items-center gap-3 h-10 px-4 hover:bg-gray-50 focus:bg-gray-50 focus:ring-2 focus:ring-accent outline-none border-b border-gray-100 text-left"
+                  className="w-full flex items-center gap-3 h-10 px-4 hover:bg-bg-2 focus:bg-bg-2 focus:ring-2 focus:ring-accent outline-none border-b border-rule text-left"
                 >
-                  <span className="text-xs text-gray-500 tabular-nums w-24 flex-shrink-0">
+                  <span className="text-xs text-ink-3 tabular-nums w-24 flex-shrink-0">
                     {formatTimestampShort(row.created_at)}
                   </span>
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                      TYPE_TONE[row.interaction_type] ?? 'bg-gray-100 text-gray-700'
+                      TYPE_TONE[row.interaction_type] ?? 'bg-bg-3 text-ink-2'
                     } w-32 flex-shrink-0 text-center`}
                   >
                     {row.interaction_type}
                   </span>
-                  <span className="text-sm text-gray-700 w-48 flex-shrink-0 truncate">
+                  <span className="text-sm text-ink-2 w-48 flex-shrink-0 truncate">
                     {row.user_email ?? 'unknown'}
                   </span>
-                  <span className="text-sm text-gray-500 font-mono truncate">
+                  <span className="text-sm text-ink-3 font-mono truncate">
                     {row.page_path ?? EMPTY}
                   </span>
                 </button>

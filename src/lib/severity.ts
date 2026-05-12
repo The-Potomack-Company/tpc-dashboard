@@ -22,12 +22,13 @@ export const STUCK_ITEMS_THRESHOLDS = {
 // these are distinct shades and a different visual role (banner vs chart bar).
 export const STUCK_ITEMS_TONE = {
   none: {
-    // N=0 quiet success: white card, no left border, gray icon, gray text.
-    container: 'bg-white border border-gray-200',
+    // N=0 quiet success: Phase 7 unified-design uses .tpc-card vocabulary
+    // (token-backed bg + rule border) with muted ink for icon/headline/body.
+    container: 'tpc-card',
     leftBorder: '', // no border for quiet state
-    icon: 'text-gray-400',
-    headline: 'text-gray-900',
-    body: 'text-gray-500',
+    icon: 'text-ink-4',
+    headline: 'text-ink',
+    body: 'text-ink-3',
   },
   yellow: {
     // N >= 1 (with no red trigger): amber tint banner.

@@ -20,17 +20,17 @@ export function AiStatusDonut() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4"
+      className="rounded-lg border border-rule bg-bg p-4"
       data-testid="app-04-card"
     >
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-sm font-semibold text-gray-700">AI status</h2>
-        <span className="text-sm text-gray-500">Items created in selected range</span>
+        <h2 className="text-sm font-semibold text-ink-2">AI status</h2>
+        <span className="text-sm text-ink-3">Items created in selected range</span>
       </div>
       <div className="h-72 relative">
         {query.isLoading ? (
           <div
-            className="h-full w-full animate-pulse rounded bg-gray-100"
+            className="h-full w-full animate-pulse rounded bg-bg-3"
             data-testid="ai-status-skeleton"
             aria-busy="true"
           />
@@ -105,10 +105,10 @@ export function AiStatusDonut() {
                   className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
                   data-testid="ai-status-center-label"
                 >
-                  <span className="text-2xl font-semibold tabular-nums text-gray-900">
+                  <span className="text-2xl font-semibold tabular-nums text-ink">
                     {pctDone}%
                   </span>
-                  <span className="text-sm text-gray-500">AI done</span>
+                  <span className="text-sm text-ink-3">AI done</span>
                 </div>
               </>
             );

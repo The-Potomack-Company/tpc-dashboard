@@ -107,9 +107,9 @@ describe('<UserMultiSelect>', () => {
     await user.click(screen.getByRole('button', { name: /Filter by user email/i }));
     const unknownLabel = screen.getByText('Unknown (no email)');
     expect(unknownLabel).toBeInTheDocument();
-    // The label span uses italic + text-gray-500 per UI-SPEC.
+    // Phase 7 unified-design: muted gray is now the token-backed `text-ink-3`.
     expect(unknownLabel.className).toMatch(/italic/);
-    expect(unknownLabel.className).toMatch(/text-gray-500/);
+    expect(unknownLabel.className).toMatch(/text-ink-3/);
   });
 
   it('selecting Unknown adds "Unknown" to the URL via setUsers', async () => {

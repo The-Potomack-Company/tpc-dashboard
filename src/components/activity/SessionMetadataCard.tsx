@@ -30,15 +30,15 @@ export function SessionMetadataCard({ session }: Props) {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-6"
+      className="rounded-lg border border-rule bg-bg p-6"
       data-testid="session-metadata-card"
     >
-      <h2 className="text-sm font-semibold text-gray-700 mb-4">Session details</h2>
+      <h2 className="text-sm font-semibold text-ink-2 mb-4">Session details</h2>
       <dl className="grid grid-cols-1 gap-y-3">
         {fields.map(([label, value]) => (
           <div key={label} className="flex flex-col">
-            <dt className="text-sm font-semibold text-gray-700">{label}</dt>
-            <dd className="text-sm text-gray-900">
+            <dt className="text-sm font-semibold text-ink-2">{label}</dt>
+            <dd className="text-sm text-ink">
               {value == null || value === '' ? EMPTY : value}
             </dd>
           </div>

@@ -62,11 +62,11 @@ describe('<StuckItemsAlertCard>', () => {
     expect(screen.getByText('Last checked just now.')).toBeInTheDocument();
     // No CTA link in 'none' state
     expect(screen.queryByRole('link')).toBeNull();
-    // 'none' container: bg-white border border-gray-200, no left border
+    // Phase 7 unified-design: 'none' container now uses the .tpc-card
+    // base class (var(--bg) + var(--rule)). No left border in quiet state.
     const card = container.querySelector('[data-testid="app-11-card"]');
     expect(card).not.toBeNull();
-    expect(card?.className).toMatch(/bg-white/);
-    expect(card?.className).toMatch(/border-gray-200/);
+    expect(card?.className).toMatch(/tpc-card/);
     expect(card?.className).not.toMatch(/border-l-4/);
     // min-h-[6rem]
     expect(card?.className).toMatch(/min-h-\[6rem\]/);
@@ -297,7 +297,8 @@ describe('<StuckItemsAlertCard>', () => {
     });
     let svg = container.querySelector('svg');
     expect(svg).not.toBeNull();
-    expect(svg?.getAttribute('class')).toMatch(/text-gray-400/);
+    // Phase 7 unified-design: quiet-state icon uses token-backed `text-ink-4`.
+    expect(svg?.getAttribute('class')).toMatch(/text-ink-4/);
     unmount();
 
     // yellow

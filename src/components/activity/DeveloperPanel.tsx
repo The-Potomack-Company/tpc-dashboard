@@ -38,7 +38,7 @@ function Chevron({ rotated }: { rotated: boolean }) {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className={`w-4 h-4 motion-safe:transition-transform text-gray-500 ${
+      className={`w-4 h-4 motion-safe:transition-transform text-ink-3 ${
         rotated ? 'rotate-90' : ''
       }`}
       role="presentation"
@@ -66,7 +66,7 @@ export function DeveloperPanel() {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white mt-8"
+      className="rounded-lg border border-rule bg-bg mt-8"
       data-testid="developer-panel"
     >
       <button
@@ -77,14 +77,14 @@ export function DeveloperPanel() {
         aria-label={
           isExpanded ? 'Collapse developer panel' : 'Expand developer panel'
         }
-        className="w-full flex items-center justify-between px-4 h-12 hover:bg-gray-50 focus:ring-2 focus:ring-accent rounded-lg outline-none"
+        className="w-full flex items-center justify-between px-4 h-12 hover:bg-bg-2 focus:ring-2 focus:ring-accent rounded-lg outline-none"
       >
         <div className="flex items-center gap-2">
           <Chevron rotated={isExpanded} />
-          <span className="text-sm font-semibold text-gray-700">
+          <span className="text-sm font-semibold text-ink-2">
             Developer panel
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-ink-3">
             Diagnostics for {email}
           </span>
         </div>
@@ -92,7 +92,7 @@ export function DeveloperPanel() {
       {isExpanded && (
         <div
           id={PANEL_BODY_ID}
-          className="border-t border-gray-200 p-6 space-y-6"
+          className="border-t border-rule p-6 space-y-6"
         >
           <FailedAiBreakdown />
           <UiInteractionsPanel />

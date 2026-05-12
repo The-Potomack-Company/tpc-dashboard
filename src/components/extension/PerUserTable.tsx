@@ -44,9 +44,9 @@ const columns: ColumnDef<PerUserRow>[] = [
     cell: (info) => {
       const v = info.getValue<string>();
       return v === 'Unknown' ? (
-        <span className="italic text-gray-500">Unknown</span>
+        <span className="italic text-ink-3">Unknown</span>
       ) : (
-        <span className="text-gray-700">{v}</span>
+        <span className="text-ink-2">{v}</span>
       );
     },
   },
@@ -86,7 +86,7 @@ const columns: ColumnDef<PerUserRow>[] = [
     cell: (info) => {
       const v = info.getValue<string | null>();
       return (
-        <span className="tabular-nums text-gray-500">
+        <span className="tabular-nums text-ink-3">
           {v ? formatTimestampShort(v) : EMPTY}
         </span>
       );
@@ -146,7 +146,7 @@ export function PerUserTable() {
 
   return (
     <table className="w-full text-sm" data-testid="per-user-table">
-      <thead className="border-b border-gray-200 bg-gray-50 text-left">
+      <thead className="border-b border-rule bg-bg-2 text-left">
         {table.getHeaderGroups().map((hg) => (
           <tr key={hg.id} className="h-11">
             {hg.headers.map((h, idx) => {
@@ -155,7 +155,7 @@ export function PerUserTable() {
                 <th
                   key={h.id}
                   scope="col"
-                  className={`px-4 cursor-pointer text-sm font-semibold text-gray-700 select-none ${
+                  className={`px-4 cursor-pointer text-sm font-semibold text-ink-2 select-none ${
                     isNumericColumn(idx) ? 'text-right' : ''
                   }`}
                   aria-sort={
@@ -181,7 +181,7 @@ export function PerUserTable() {
         {table.getRowModel().rows.map((r) => (
           <tr
             key={r.id}
-            className="h-11 border-b border-gray-100 hover:bg-gray-50"
+            className="h-11 border-b border-rule hover:bg-bg-2"
           >
             {r.getVisibleCells().map((c, idx) => (
               <td

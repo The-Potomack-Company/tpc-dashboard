@@ -15,7 +15,7 @@ export function ProtectedRoute() {
       <div
         data-testid="auth-loading"
         aria-label="Checking your session"
-        className="flex items-center justify-center h-dvh bg-white dark:bg-gray-900"
+        className="flex items-center justify-center h-dvh bg-bg"
       >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
       </div>
@@ -35,7 +35,7 @@ export function ProtectedRoute() {
       <div
         data-testid="profile-loading"
         aria-label="Checking your session"
-        className="flex items-center justify-center h-dvh bg-white dark:bg-gray-900"
+        className="flex items-center justify-center h-dvh bg-bg"
       >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
       </div>

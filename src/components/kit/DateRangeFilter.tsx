@@ -7,7 +7,7 @@ import { useDateRange, type DateRangePreset } from '../../hooks/useDateRange';
 // needing to wire the URL manually.
 //
 // Phase 7: surfaces, borders, and text shift to design tokens. The active
-// preset uses accent + accent-ink (was bg-gray-900 + text-white). Custom
+// preset uses accent + accent-ink (was bg-bg + text-accent-ink). Custom
 // popover inputs adopt the .tpc-input treatment; primary action becomes a
 // `tpc-btn tpc-btn-primary`, cancel becomes `tpc-btn tpc-btn-secondary`.
 

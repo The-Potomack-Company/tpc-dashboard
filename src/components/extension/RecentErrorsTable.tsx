@@ -64,7 +64,7 @@ export function RecentErrorsTable() {
       accessorKey: 'created_at',
       header: 'Time',
       cell: (info) => (
-        <span className="tabular-nums text-red-600">
+        <span className="tabular-nums text-err">
           {formatTimestampShort(info.getValue<string>())}
         </span>
       ),
@@ -73,7 +73,7 @@ export function RecentErrorsTable() {
       accessorKey: 'user_email',
       header: 'User',
       cell: (info) => (
-        <span className="text-gray-700">
+        <span className="text-ink-2">
           {info.getValue<string | null>() ?? EMPTY}
         </span>
       ),
@@ -81,13 +81,13 @@ export function RecentErrorsTable() {
     {
       accessorKey: 'event_type',
       header: 'Event',
-      cell: (info) => <span className="text-gray-700">{info.getValue<string>()}</span>,
+      cell: (info) => <span className="text-ink-2">{info.getValue<string>()}</span>,
     },
     {
       accessorKey: 'error_message',
       header: 'Error',
       cell: (info) => (
-        <span className="text-red-600 truncate" title={info.getValue<string | null>() ?? undefined}>
+        <span className="text-err truncate" title={info.getValue<string | null>() ?? undefined}>
           {info.getValue<string | null>() ?? EMPTY}
         </span>
       ),
@@ -96,7 +96,7 @@ export function RecentErrorsTable() {
       accessorKey: 'extension_version',
       header: 'Version',
       cell: (info) => (
-        <span className="tabular-nums text-gray-500">
+        <span className="tabular-nums text-ink-3">
           {info.getValue<string | null>() ?? EMPTY}
         </span>
       ),
@@ -120,7 +120,7 @@ export function RecentErrorsTable() {
               });
             }}
             aria-haspopup="dialog"
-            className="text-sm text-gray-700 hover:text-accent focus:ring-2 focus:ring-accent rounded outline-none"
+            className="text-sm text-ink-2 hover:text-accent focus:ring-2 focus:ring-accent rounded outline-none"
           >
             View →
           </button>
@@ -170,7 +170,7 @@ export function RecentErrorsTable() {
     <>
       <div className="max-h-[28rem] overflow-y-auto">
         <table className="w-full text-sm" data-testid="recent-errors-table">
-          <thead className="border-b border-gray-200 bg-gray-50 text-left sticky top-0">
+          <thead className="border-b border-rule bg-bg-2 text-left sticky top-0">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="h-11">
                 {hg.headers.map((h) => {
@@ -189,7 +189,7 @@ export function RecentErrorsTable() {
                     <th
                       key={h.id}
                       scope="col"
-                      className={`px-4 text-sm font-semibold text-gray-700 select-none ${
+                      className={`px-4 text-sm font-semibold text-ink-2 select-none ${
                         sortable ? 'cursor-pointer' : ''
                       }`}
                       onClick={sortable ? h.column.getToggleSortingHandler() : undefined}
@@ -213,7 +213,7 @@ export function RecentErrorsTable() {
                 // (D-03: error_message IS NOT NULL filter is on the query).
                 // UI-SPEC § Color "Error indicator on live-feed rows" — left-
                 // border-red treatment makes the error nature scannable.
-                className="h-11 border-b border-gray-100 border-l-2 border-l-red-500 hover:bg-gray-50"
+                className="h-11 border-b border-rule border-l-2 border-l-red-500 hover:bg-bg-2"
               >
                 {r.getVisibleCells().map((c) => (
                   <td key={c.id} className="px-4">

@@ -39,18 +39,18 @@ import type { ItemListRow } from '../../services/activity/queries';
 const COLUMN_WIDTHS = ['w-4', 'w-24', 'w-full', 'w-24', 'w-12', 'w-12'];
 
 const AI_STATUS_TONE: Record<string, string> = {
-  pending:    'bg-gray-100 text-gray-700',
+  pending:    'bg-bg-3 text-ink-2',
   processing: 'bg-sky-100 text-sky-700',
   queued:     'bg-amber-100 text-amber-800',
-  done:       'bg-green-100 text-green-700',
-  failed:     'bg-red-100 text-red-700',
+  done:       'bg-ok-wash text-ok',
+  failed:     'bg-err-wash text-err',
 };
 
 function ChevronCell({ row }: { row: { getIsExpanded: () => boolean } }) {
   return (
     <span
       className={`inline-block transition-transform ${
-        row.getIsExpanded() ? 'rotate-90 text-accent' : 'text-gray-400'
+        row.getIsExpanded() ? 'rotate-90 text-accent' : 'text-ink-4'
       }`}
       aria-hidden="true"
     >
@@ -98,7 +98,7 @@ export function SessionItemList({ sessionId }: Props) {
       header: 'AI status',
       cell: (info) => {
         const status = info.getValue() as string;
-        const tone = AI_STATUS_TONE[status] ?? 'bg-gray-100 text-gray-700';
+        const tone = AI_STATUS_TONE[status] ?? 'bg-bg-3 text-ink-2';
         return (
           <span
             className={`px-2 py-0.5 rounded text-xs font-semibold ${tone}`}
@@ -122,7 +122,7 @@ export function SessionItemList({ sessionId }: Props) {
       header: 'Raw',
       enableSorting: false,
       cell: () =>
-        isDev ? <span className="text-sm text-gray-500">expand row →</span> : null,
+        isDev ? <span className="text-sm text-ink-3">expand row →</span> : null,
     },
   ];
 
@@ -142,13 +142,13 @@ export function SessionItemList({ sessionId }: Props) {
 
   return (
     <section
-      className="rounded-lg border border-gray-200 bg-white p-4 mt-8"
+      className="rounded-lg border border-rule bg-bg p-4 mt-8"
       data-testid="session-item-list"
     >
       <header className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-semibold text-gray-700">Items</h2>
+        <h2 className="text-sm font-semibold text-ink-2">Items</h2>
         {rowCount > 0 && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-ink-3">
             {rowCount} {rowCount === 1 ? 'item' : 'items'}
           </span>
         )}
@@ -170,7 +170,7 @@ export function SessionItemList({ sessionId }: Props) {
         </EmptyState>
       ) : (
         <table className="w-full text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50 text-left">
+          <thead className="border-b border-rule bg-bg-2 text-left">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="h-11">
                 {hg.headers.map((h) => {
@@ -188,7 +188,7 @@ export function SessionItemList({ sessionId }: Props) {
                     <th
                       key={h.id}
                       scope="col"
-                      className={`px-4 text-sm font-semibold text-gray-700 select-none ${
+                      className={`px-4 text-sm font-semibold text-ink-2 select-none ${
                         sortable ? 'cursor-pointer' : ''
                       }`}
                       aria-sort={ariaSort}
@@ -210,7 +210,7 @@ export function SessionItemList({ sessionId }: Props) {
             {table.getRowModel().rows.map((row) => (
               <Fragment key={row.id}>
                 <tr
-                  className="h-11 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                  className="h-11 border-b border-rule hover:bg-bg-2 cursor-pointer"
                   onClick={row.getToggleExpandedHandler()}
                   aria-expanded={row.getIsExpanded()}
                 >

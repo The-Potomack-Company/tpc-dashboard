@@ -79,14 +79,14 @@ export function StuckItemsAlertCard() {
     return (
       <section
         data-testid="app-11-card"
-        className="rounded-lg bg-white border border-gray-200 p-6 min-h-[6rem] mt-8 motion-safe:animate-pulse"
+        className="rounded-lg bg-bg border border-rule p-6 min-h-[6rem] mt-8 motion-safe:animate-pulse"
         aria-busy="true"
       >
         <div className="space-y-2">
-          <div className="h-6 w-6 rounded bg-gray-200" />
-          <div className="h-7 w-1/3 rounded bg-gray-200" />
-          <div className="h-4 w-1/2 rounded bg-gray-200" />
-          <div className="h-4 w-24 rounded bg-gray-200" />
+          <div className="h-6 w-6 rounded bg-bg-3" />
+          <div className="h-7 w-1/3 rounded bg-bg-3" />
+          <div className="h-4 w-1/2 rounded bg-bg-3" />
+          <div className="h-4 w-24 rounded bg-bg-3" />
         </div>
       </section>
     );
@@ -97,7 +97,7 @@ export function StuckItemsAlertCard() {
     return (
       <section
         data-testid="app-11-card"
-        className="rounded-lg bg-white border border-gray-200 p-6 min-h-[6rem] mt-8"
+        className="rounded-lg bg-bg border border-rule p-6 min-h-[6rem] mt-8"
       >
         <ErrorState
           heading="Couldn't check for stuck items"

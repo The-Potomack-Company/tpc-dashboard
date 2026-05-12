@@ -1,26 +1,29 @@
-// Heroicons outline SVGs inlined to avoid a package dependency
-// (see Phase 3 UI-SPEC § Design System — icon library).
+// Sort-indicator chevron states — uses Heroicons-style inline SVG paths
+// so the SortIndicator can remain a leaf component (no <Icon> dependency
+// loop from inside table heads).
 //
 // States (per 03-UI-SPEC.md § Interaction Contract):
-//   false  → chevron-up-down, text-gray-400  (inactive column)
-//   'asc'  → chevron-up,      text-accent    (active ascending)
-//   'desc' → chevron-down,    text-accent    (active descending)
+//   false  → chevron-up-down, ink-4              (inactive column)
+//   'asc'  → chevron-up,      text-accent        (active ascending)
+//   'desc' → chevron-down,    text-accent        (active descending)
 //
-// Accent reservation #6 (03-UI-SPEC.md § Color): active sort indicator.
+// Phase 7: inactive color shifts to the token-backed `text-ink-4` (was
+// `text-gray-400 dark:text-gray-500`) so it inherits the token under
+// both themes. The active `text-accent` token already resolves to the
+// unified accent.
 
 interface SortIndicatorProps {
   state: 'asc' | 'desc' | false;
 }
 
 const ACTIVE_CLASS = 'text-accent';
-const INACTIVE_CLASS = 'text-gray-400 dark:text-gray-500';
+const INACTIVE_CLASS = 'text-ink-4';
 
 export function SortIndicator({ state }: SortIndicatorProps) {
   const colorClass = state === false ? INACTIVE_CLASS : ACTIVE_CLASS;
   const className = `w-4 h-4 ${colorClass}`;
 
   if (state === 'asc') {
-    // Heroicons chevron-up (outline, stroke-width 1.5)
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +44,6 @@ export function SortIndicator({ state }: SortIndicatorProps) {
   }
 
   if (state === 'desc') {
-    // Heroicons chevron-down (outline, stroke-width 1.5)
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +63,7 @@ export function SortIndicator({ state }: SortIndicatorProps) {
     );
   }
 
-  // Heroicons chevron-up-down (outline, stroke-width 1.5) — inactive
+  // Inactive chevron-up-down
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

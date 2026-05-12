@@ -37,10 +37,10 @@ export function FailedAiBreakdown() {
   return (
     <section className="space-y-3" data-testid="failed-ai-breakdown">
       <header className="flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-ink-2">
           Failed-AI breakdown
         </h3>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-ink-3">
           Items where ai_status = 'failed' · selected range
         </span>
       </header>
@@ -50,7 +50,7 @@ export function FailedAiBreakdown() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-24 rounded bg-gray-100 motion-safe:animate-pulse animate-pulse"
+              className="h-24 rounded bg-bg-3 motion-safe:animate-pulse animate-pulse"
             />
           ))}
         </div>
@@ -73,13 +73,13 @@ export function FailedAiBreakdown() {
             return (
               <div
                 key={key}
-                className="rounded border border-gray-200 bg-white p-4"
+                className="rounded border border-rule bg-bg p-4"
               >
-                <h4 className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">
+                <h4 className="text-xs font-medium uppercase tracking-wide text-ink-3 mb-2">
                   {heading}
                 </h4>
                 {rows.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">None</p>
+                  <p className="text-sm text-ink-3 italic">None</p>
                 ) : (
                   <ul className="space-y-2">
                     {rows.map((row) => (
@@ -88,12 +88,12 @@ export function FailedAiBreakdown() {
                         className="flex items-center justify-between text-sm"
                       >
                         <span
-                          className="text-gray-700 truncate"
+                          className="text-ink-2 truncate"
                           title={row.dim_label}
                         >
                           {row.dim_label}
                         </span>
-                        <span className="font-semibold text-gray-900 tabular-nums">
+                        <span className="font-semibold text-ink tabular-nums">
                           {formatCount(Number(row.item_count))}
                         </span>
                       </li>

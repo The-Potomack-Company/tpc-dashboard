@@ -23,10 +23,10 @@ export function UiInteractionsPanel() {
   return (
     <section className="space-y-6" data-testid="ui-interactions-panel">
       <header>
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-ink-2">
           UI interactions (TPC App)
         </h3>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-ink-3 mt-1">
           app_source = 'tpc-app' · admin-side observation
         </p>
       </header>

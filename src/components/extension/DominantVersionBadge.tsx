@@ -6,8 +6,8 @@ import { useDominantVersion } from '../../hooks/extension/useDominantVersion';
 //
 // Tie-break (latest semver) is owned by the RPC (D-06). When the filter
 // selection returns no rows, the hook returns `null`; we render `Dominant: —`.
-// Styling follows UI-SPEC § Color: text-sm font-semibold + bg-gray-100
-// text-gray-700 chip; non-interactive <span> (NOT a button — the panel toggle
+// Styling follows UI-SPEC § Color: text-sm font-semibold + bg-bg-3
+// text-ink-2 chip; non-interactive <span> (NOT a button — the panel toggle
 // button hosts the badge inside it).
 
 export function DominantVersionBadge() {
@@ -16,7 +16,7 @@ export function DominantVersionBadge() {
   const label = version ? `Dominant: v${version}` : 'Dominant: —';
   return (
     <span
-      className="text-sm font-semibold bg-gray-100 text-gray-700 rounded px-2 py-0.5"
+      className="text-sm font-semibold bg-bg-3 text-ink-2 rounded px-2 py-0.5"
       data-testid="dominant-version-badge"
     >
       {label}

@@ -34,19 +34,19 @@ export function WalkthroughFunnel() {
 
   return (
     <section
-      className="rounded border border-gray-200 bg-white p-4"
+      className="rounded border border-rule bg-bg p-4"
       data-testid="walkthrough-funnel"
     >
       <header className="flex items-baseline justify-between mb-2">
-        <h4 className="text-sm font-semibold text-gray-700">Walkthrough funnel</h4>
-        <span className="text-xs text-gray-500">
+        <h4 className="text-sm font-semibold text-ink-2">Walkthrough funnel</h4>
+        <span className="text-xs text-ink-3">
           Distinct users at each step · ignores date range
         </span>
       </header>
       <div className="h-32">
         {query.isLoading ? (
           <div
-            className="h-full w-full motion-safe:animate-pulse animate-pulse rounded bg-gray-100"
+            className="h-full w-full motion-safe:animate-pulse animate-pulse rounded bg-bg-3"
             aria-busy="true"
           />
         ) : query.error ? (

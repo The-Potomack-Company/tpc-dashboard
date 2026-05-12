@@ -76,7 +76,7 @@ export function ErrorRateChart() {
   if (query.isLoading) {
     return (
       <div
-        className="h-full w-full animate-pulse rounded bg-gray-100"
+        className="h-full w-full animate-pulse rounded bg-bg-3"
         data-testid="error-rate-skeleton"
         aria-busy="true"
       />

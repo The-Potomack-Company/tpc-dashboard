@@ -129,11 +129,13 @@ describe('<SessionItemList>', () => {
       refetch: vi.fn(),
     });
     render(<SessionItemList sessionId="s1" />);
+    // Phase 7 unified-design: chip palette adopts token vocabulary
+    // (bg-ok-wash + text-ok for "done", bg-err-wash + text-err for "failed").
     const doneChip = screen.getByText('done');
-    expect(doneChip.className).toMatch(/bg-green-100/);
-    expect(doneChip.className).toMatch(/text-green-700/);
+    expect(doneChip.className).toMatch(/bg-ok-wash/);
+    expect(doneChip.className).toMatch(/text-ok/);
     const failedChip = screen.getByText('failed');
-    expect(failedChip.className).toMatch(/bg-red-100/);
+    expect(failedChip.className).toMatch(/bg-err-wash/);
   });
 
   it('Test 25: photo count cell — 0 renders EMPTY, >0 renders numeric tabular-nums', () => {

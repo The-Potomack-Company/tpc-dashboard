@@ -55,17 +55,17 @@ export function SessionDetailPage() {
         {query.data && (
           <>
             <nav
-              className="text-sm font-semibold text-gray-500 mt-2"
+              className="text-sm font-semibold text-ink-3 mt-2"
               aria-label="Breadcrumb"
             >
               <span>Activity</span>
               <span aria-hidden="true"> › </span>
-              <span className="text-gray-900">{query.data.name}</span>
+              <span className="text-ink">{query.data.name}</span>
             </nav>
-            <h1 className="text-xl font-semibold text-gray-900 mt-2">
+            <h1 className="text-xl font-semibold text-ink mt-2">
               {query.data.name}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-ink-3 mt-1">
               {query.data.mode} · {query.data.status} · created{' '}
               {formatDateTime(new Date(query.data.created_at))}
             </p>
@@ -75,8 +75,8 @@ export function SessionDetailPage() {
 
       {query.isLoading ? (
         <div className="space-y-6 animate-pulse" aria-busy="true">
-          <div className="h-72 bg-gray-100 rounded" />
-          <div className="h-96 bg-gray-100 rounded" />
+          <div className="h-72 bg-bg-3 rounded" />
+          <div className="h-96 bg-bg-3 rounded" />
         </div>
       ) : query.error ? (
         <ErrorState

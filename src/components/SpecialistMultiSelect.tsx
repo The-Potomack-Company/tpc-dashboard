@@ -62,7 +62,7 @@ export function SpecialistMultiSelect() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="h-8 px-3 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-accent outline-none"
+        className="h-8 px-3 rounded-md border border-rule-2 bg-bg text-sm font-medium text-ink-2 shadow-sm hover:bg-bg-2 focus:ring-2 focus:ring-accent outline-none"
         data-testid="specialist-multi-select-trigger"
       >
         {triggerLabel}
@@ -71,13 +71,13 @@ export function SpecialistMultiSelect() {
         <div
           role="listbox"
           aria-multiselectable="true"
-          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2 shadow-lg min-w-48 max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 z-10 mt-1 flex flex-col gap-1 rounded-md border border-rule bg-bg p-2 shadow-lg min-w-48 max-h-72 overflow-y-auto"
           data-testid="specialist-multi-select-popover"
         >
           {optionsQuery.isLoading ? (
-            <span className="text-sm text-gray-500 px-2 py-1">Loading specialists…</span>
+            <span className="text-sm text-ink-3 px-2 py-1">Loading specialists…</span>
           ) : optionsQuery.error ? (
-            <div className="text-sm text-red-700 px-2 py-1">
+            <div className="text-sm text-err px-2 py-1">
               Couldn't load specialists.{' '}
               <button
                 type="button"
@@ -88,14 +88,14 @@ export function SpecialistMultiSelect() {
               </button>
             </div>
           ) : (optionsQuery.data ?? []).length === 0 ? (
-            <span className="text-sm text-gray-500 px-2 py-1">No specialists.</span>
+            <span className="text-sm text-ink-3 px-2 py-1">No specialists.</span>
           ) : (
             (optionsQuery.data ?? []).map((opt) => {
               const visibleLabel = opt.display_name ?? opt.email;
               return (
                 <label
                   key={opt.email}
-                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-2 cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -104,7 +104,7 @@ export function SpecialistMultiSelect() {
                     className="focus:ring-2 focus:ring-accent"
                     aria-label={visibleLabel}
                   />
-                  <span className="text-sm text-gray-700">{visibleLabel}</span>
+                  <span className="text-sm text-ink-2">{visibleLabel}</span>
                 </label>
               );
             })

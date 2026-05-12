@@ -9,10 +9,9 @@ import { useModeFilter, type SessionMode } from '../hooks/useModeFilter';
 // D-21: default = 'all' (no URL param) — `<ModeToggle>` highlights "All"
 // when there is no `?mode=` segment in the URL.
 //
-// a11y: rendered as a `radiogroup` with three `radio`-role buttons. Each
-// radio has aria-checked reflecting active state. The group has an
-// aria-label so screen readers announce the purpose ("Filter by session
-// mode").
+// Phase 7: surface uses bg + rule-2 border; active option swaps to
+// accent + accent-ink (was bg-accent + text-white); inactive uses ink with
+// bg-bg-2 on hover.
 
 const OPTIONS: ReadonlyArray<{ value: SessionMode; label: string }> = [
   { value: 'all',   label: 'All' },
@@ -27,7 +26,7 @@ export function ModeToggle() {
     <div
       role="radiogroup"
       aria-label="Filter by session mode"
-      className="inline-flex rounded-md border border-gray-300 overflow-hidden bg-white shadow-sm"
+      className="inline-flex rounded-md border border-rule-2 overflow-hidden bg-bg shadow-sm"
       data-testid="mode-toggle"
     >
       {OPTIONS.map((opt) => {
@@ -39,10 +38,10 @@ export function ModeToggle() {
             role="radio"
             aria-checked={active}
             onClick={() => setMode(opt.value)}
-            className={`h-8 px-3 text-sm font-medium focus:ring-2 focus:ring-accent outline-none ${
+            className={`h-8 px-3 text-sm font-medium focus:ring-2 focus:ring-accent outline-none transition-colors ${
               active
-                ? 'bg-accent text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+                ? 'bg-accent text-accent-ink'
+                : 'bg-bg text-ink hover:bg-bg-2'
             }`}
             data-testid={`mode-toggle-${opt.value}`}
           >

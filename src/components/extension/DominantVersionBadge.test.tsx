@@ -62,10 +62,12 @@ describe('<DominantVersionBadge>', () => {
     const badge = screen.getByTestId('dominant-version-badge');
     // Non-interactive (not a button)
     expect(badge.tagName).toBe('SPAN');
-    // UI-SPEC § Color: text-sm font-semibold + bg-gray-100 text-gray-700
+    // Phase 7 unified-design: chip palette adopts token vocabulary
+    // (bg-bg-3 + text-ink-2). Original UI-SPEC vocabulary was
+    // bg-gray-100 + text-gray-700.
     expect(badge.className).toContain('text-sm');
     expect(badge.className).toContain('font-semibold');
-    expect(badge.className).toContain('bg-gray-100');
-    expect(badge.className).toContain('text-gray-700');
+    expect(badge.className).toContain('bg-bg-3');
+    expect(badge.className).toContain('text-ink-2');
   });
 });

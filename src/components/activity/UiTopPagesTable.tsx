@@ -38,7 +38,7 @@ const columns: ColumnDef<UiTopPagesRow>[] = [
     accessorKey: 'page_path',
     header: 'Path',
     cell: (info) => (
-      <span className="font-mono text-sm break-all text-gray-700">
+      <span className="font-mono text-sm break-all text-ink-2">
         {info.getValue<string>()}
       </span>
     ),
@@ -74,12 +74,12 @@ export function UiTopPagesTable() {
 
   return (
     <section
-      className="rounded border border-gray-200 bg-white p-4"
+      className="rounded border border-rule bg-bg p-4"
       data-testid="ui-top-pages-table"
     >
       <header className="flex items-baseline justify-between mb-2">
-        <h4 className="text-sm font-semibold text-gray-700">Top page paths</h4>
-        <span className="text-xs text-gray-500">
+        <h4 className="text-sm font-semibold text-ink-2">Top page paths</h4>
+        <span className="text-xs text-ink-3">
           Top 10 by view count · selected range
         </span>
       </header>
@@ -102,7 +102,7 @@ export function UiTopPagesTable() {
         </EmptyState>
       ) : (
         <table className="w-full text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50 text-left">
+          <thead className="border-b border-rule bg-bg-2 text-left">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="h-10">
                 {hg.headers.map((h, idx) => {
@@ -115,7 +115,7 @@ export function UiTopPagesTable() {
                     <th
                       key={h.id}
                       scope="col"
-                      className={`px-3 cursor-pointer text-sm font-semibold text-gray-700 select-none ${
+                      className={`px-3 cursor-pointer text-sm font-semibold text-ink-2 select-none ${
                         isNumeric ? 'text-right' : ''
                       }`}
                       aria-sort={
@@ -141,7 +141,7 @@ export function UiTopPagesTable() {
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="h-10 border-b border-gray-100 hover:bg-gray-50"
+                className="h-10 border-b border-rule hover:bg-bg-2"
               >
                 {row.getVisibleCells().map((cell, idx) => (
                   <td

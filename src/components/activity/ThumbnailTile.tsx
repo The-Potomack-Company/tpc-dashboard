@@ -48,12 +48,12 @@ export function ThumbnailTile({ photo, isDev = false }: Props) {
         <div
           role="img"
           aria-label="Failed upload"
-          className="bg-red-100 text-red-700 h-7 px-3 rounded text-sm font-semibold inline-flex items-center"
+          className="bg-err-wash text-err h-7 px-3 rounded text-sm font-semibold inline-flex items-center"
         >
           Failed upload
         </div>
         {isDev && photo.storage_path && (
-          <div className="font-mono text-xs text-gray-500 break-all">{photo.storage_path}</div>
+          <div className="font-mono text-xs text-ink-3 break-all">{photo.storage_path}</div>
         )}
       </div>
     );
@@ -62,7 +62,7 @@ export function ThumbnailTile({ photo, isDev = false }: Props) {
   if (query.isLoading || query.isFetching) {
     return (
       <div
-        className={`bg-gray-200 h-20 w-20 rounded motion-safe:animate-pulse ${
+        className={`bg-bg-3 h-20 w-20 rounded motion-safe:animate-pulse ${
           isPendingOrUploading ? 'opacity-60' : ''
         }`}
         data-testid="thumbnail-shimmer"
@@ -80,7 +80,7 @@ export function ThumbnailTile({ photo, isDev = false }: Props) {
           void query.refetch();
         }}
         aria-label="Retry loading thumbnail"
-        className="bg-red-100 text-red-700 h-7 px-3 rounded text-sm font-semibold inline-flex items-center hover:bg-red-200 focus:ring-2 focus:ring-accent outline-none"
+        className="bg-err-wash text-err h-7 px-3 rounded text-sm font-semibold inline-flex items-center hover:bg-red-200 focus:ring-2 focus:ring-accent outline-none"
       >
         Couldn't load
       </button>
@@ -103,7 +103,7 @@ export function ThumbnailTile({ photo, isDev = false }: Props) {
         }}
       />
       {isDev && photo.thumbnail_path && (
-        <div className="font-mono text-xs text-gray-500 break-all">{photo.thumbnail_path}</div>
+        <div className="font-mono text-xs text-ink-3 break-all">{photo.thumbnail_path}</div>
       )}
     </div>
   );

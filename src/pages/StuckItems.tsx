@@ -29,17 +29,17 @@ export function StuckItemsPage() {
       <header className="mb-6">
         <BackLink to="/activity">Activity</BackLink>
         <nav
-          className="text-sm font-semibold text-gray-500 mt-2"
+          className="text-sm font-semibold text-ink-3 mt-2"
           aria-label="Breadcrumb"
         >
           <span>Activity</span>
           <span aria-hidden="true"> › </span>
-          <span className="text-gray-900">Stuck items</span>
+          <span className="text-ink">Stuck items</span>
         </nav>
-        <h1 className="text-xl font-semibold text-gray-900 mt-2">
+        <h1 className="text-xl font-semibold text-ink mt-2">
           Stuck items
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-ink-3 mt-1">
           Items in 'processing' or 'queued' for more than 2 hours
         </p>
       </header>

@@ -22,31 +22,31 @@ export function RawItemInspector({ item }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-t border-gray-200 pt-4 mt-4" data-testid="raw-item-inspector">
-      <h3 className="text-sm font-semibold text-gray-700">Raw item data</h3>
+    <div className="border-t border-rule pt-4 mt-4" data-testid="raw-item-inspector">
+      <h3 className="text-sm font-semibold text-ink-2">Raw item data</h3>
       <dl className="mt-2 space-y-2 text-sm">
         {item.transcript && (
           <div>
-            <dt className="font-semibold text-gray-600">Transcript</dt>
-            <dd className="text-gray-800 whitespace-pre-wrap line-clamp-3">{item.transcript}</dd>
+            <dt className="font-semibold text-ink-2">Transcript</dt>
+            <dd className="text-ink whitespace-pre-wrap line-clamp-3">{item.transcript}</dd>
           </div>
         )}
         {item.description && (
           <div>
-            <dt className="font-semibold text-gray-600">Description</dt>
-            <dd className="text-gray-800 line-clamp-2">{item.description}</dd>
+            <dt className="font-semibold text-ink-2">Description</dt>
+            <dd className="text-ink line-clamp-2">{item.description}</dd>
           </div>
         )}
         {item.measurements && (
           <div>
-            <dt className="font-semibold text-gray-600">Measurements</dt>
-            <dd className="text-gray-800">{item.measurements}</dd>
+            <dt className="font-semibold text-ink-2">Measurements</dt>
+            <dd className="text-ink">{item.measurements}</dd>
           </div>
         )}
         {item.estimate && (
           <div>
-            <dt className="font-semibold text-gray-600">Estimate</dt>
-            <dd className="text-gray-800">{item.estimate}</dd>
+            <dt className="font-semibold text-ink-2">Estimate</dt>
+            <dd className="text-ink">{item.estimate}</dd>
           </div>
         )}
       </dl>
