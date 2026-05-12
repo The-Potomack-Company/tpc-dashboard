@@ -6,6 +6,16 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './index.css';
 import App from './App';
 import { useAuthStore } from './stores/authStore';
+import { initTheme } from './ui/tokens';
+
+// Phase 7 — runtime dark-mode listener. The inline <script> in index.html
+// handles the pre-paint sync pass; this attaches a matchMedia listener so a
+// runtime OS theme flip updates .tpc-dark on <html> without a reload.
+const teardownTheme = initTheme();
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => teardownTheme());
+}
 
 // Module-level QueryClient so hot reloads reuse the same cache and Plan 04+
 // components compose with a single provider tree.

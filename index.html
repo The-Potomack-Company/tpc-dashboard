@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="tpc">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Pre-paint dark-mode bootstrap. Synchronous and blocking so it cannot
+         introduce FOUC. System-pref-only; a future phase can read a stored
+         user preference here. -->
+    <script>
+      try { if (matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.add('tpc-dark'); } catch (_) {}
+    </script>
+    <!-- Paired theme-color metas. Hex values are sRGB conversions of the
+         --accent OKLCH tokens:
+           light --accent  oklch(0.58 0.13 225) -> #0089b4
+           dark  --accent  oklch(0.72 0.13 225) -> #22b5e1 -->
+    <meta name="theme-color" content="#0089b4" />
+    <meta name="theme-color" content="#22b5e1" media="(prefers-color-scheme: dark)" />
     <title>TPC Dashboard</title>
   </head>
   <body>
