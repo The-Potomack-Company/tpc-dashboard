@@ -1,15 +1,15 @@
-# Roadmap: TPC Dashboard — v2.0 Live Ops
+# Roadmap: TPC Dashboard — v2.0 Internal Ops Console
 
 ## Overview
 
-v2.0 pivots the dashboard from historical auction analytics (v1.0, retired) to a live-ops console that surfaces three things the TPC team currently has no visibility into: how the voice Cataloger app is being used, how the AI Cataloger Chrome extension is being used, and what's happening on the auction floor while a sale is live. Phase 1 repairs the v1.0→v2.0 schema drift and lands the shared UI primitives, hooks, and cross-cutting RLS/admin-client conventions every downstream phase needs. Phase 2 ships the smallest real-data slice (`/extension`) to prove the hook/query/Recharts pattern against a cross-repo table. Phase 3 stress-tests the pattern across five TPC App tables at `/activity`, including the photo signed-URL story. Phase 4 stands up the live RFC scraper (dashboard-owned tables on Railway with Playwright), gated by a sale-monitor discuss so the live schema is shaped around the signals monitors actually use. Phase 5 consumes Phase 4's output as the `/live` route with Supabase Realtime wiring. Phase 6 closes the milestone by shipping the dashboard to Vercel production (INFR-01 carryover from v1.0).
+v2.0 pivots the dashboard from historical auction analytics (v1.0, retired) to an internal-ops console that surfaces two things the TPC team currently has no visibility into: how the voice Cataloger app is being used, and how the AI Cataloger Chrome extension is being used. Phase 1 repairs the v1.0→v2.0 schema drift and lands the shared UI primitives, hooks, and cross-cutting RLS/admin-client conventions every downstream phase needs. Phase 2 ships the smallest real-data slice (`/extension`) to prove the hook/query/Recharts pattern against a cross-repo table. Phase 3 stress-tests the pattern across five TPC App tables at `/activity`, including the photo signed-URL story. Phase 6 closes the milestone by shipping the dashboard to Vercel production (INFR-01 carryover from v1.0).
 
 > **Phase numbering:** v2.0 resets to Phase 1. v1.0 phase directories are archived under `.planning/milestones/v1.0-phases/`. All v2.0 phase REQ-IDs are from `.planning/REQUIREMENTS.md` § v2.0 Requirements.
 
 ## Milestones
 
 - ✅ **v1.0 Original thesis** — pivot-closed 2026-04-24, archived
-- 🚧 **v2.0 Live Ops** — Phases 1–6 (this milestone)
+- 🚧 **v2.0 Internal Ops Console** — Phases 1–3, 6 (this milestone)
 
 ## Phases
 
@@ -22,8 +22,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Infrastructure & Shared UI Kit** — Repair schema drift, ship shared UI primitives/hooks, establish RLS + admin-client conventions every downstream phase reuses
 - [ ] **Phase 2: Extension Analytics (`/extension`)** — Ship the `/extension` route reading `analytics_events` with charts, filters, per-user/error tables, payload viewer, and live feed
 - [ ] **Phase 3: TPC App Activity (`/activity`)** — Ship the `/activity` route across `profiles` / `sessions` / `items` / `photos` / `export_history` with KPI strip, specialist/mode filters, session detail + photo coverage
-- [ ] **Phase 4: Live RFC Scraper Infrastructure** — Build dashboard-owned live tables (post sale-monitor discuss), Playwright scraper deployed to Railway, heartbeat + anomaly detection
-- [ ] **Phase 5: Live Sale UI (`/live`)** — Consume Phase 4 output as the `/live` route: current lot card, running totals, pace, recent lots, issues feed, scraper-health indicator, Realtime wiring
 - [ ] **Phase 6: Vercel Production Deploy** — Ship the dashboard to a production Vercel URL with env vars configured (INFR-01 carryover)
 - [ ] **Phase 7: Unified Design Migration** — *(INSERTED 2026-05-12)* Bring the dashboard onto the unified TPC design system shared with the cataloger + extension (OKLCH tokens, teal-blue accent, class-based dark mode, shared primitive library, ~50 SVG icons, DashboardAppIcon favicon). Pure visual treatment — no logic changes.
 
@@ -135,53 +133,26 @@ Plans:
 
 **UI hint**: yes
 
-### Phase 4: Live RFC Scraper Infrastructure
-**Goal**: Stand up the server-side Playwright scraper on Railway — running outside the Vercel frontend, authenticated to Supabase via service_role — and the dashboard-owned live-sale tables it writes to (`live_lot_events`, `live_lot_current`, `scraper_heartbeats`, anomalies), with schema shaped by a sale-monitor discuss and Supabase Realtime enabled on the read-critical tables.
-**Depends on**: Phase 1 (admin-client convention, schema-drift repair, `private.is_admin()` pattern)
-**Requirements**: SCRP-06, SCRP-07, SCRP-08, SCRP-09, SCRP-10, SCRP-11, SCRP-12, SCRP-13, SCRP-14, SCRP-15, SCRP-16
-**Success Criteria** (what must be TRUE):
-  1. Before any `live_*` migration ships, a sale-monitor discuss has happened and its notes — what signals monitors actually use during a sale (anomaly vocabulary, close-without-bid warnings, etc.) — are captured under `.planning/phases/04-*/discuss/`; raw RFC HTML snapshots are captured during prototype runs so the schema can be shaped around real data (SCRP-15).
-  2. The scraper is packaged as a separate workspace (`scraper/` sibling of `src/`) with its own `package.json` and Dockerfile based on `mcr.microsoft.com/playwright:v1.59.1-noble`, deploys to Railway with at least 1 GB RAM, has Fly.io documented as a fallback, and its service-role Supabase key is only in the Railway secret store — never in any `VITE_*` var or the frontend bundle.
-  3. Running against a live or recorded RFC sale, the scraper logs in with stored credentials, persists `storageState` across restarts, polls the active auction page at a configurable 2–5 s cadence, writes append-only lot-level rows to `live_lot_events`, and atomically upserts `live_lot_current` via a security-definer RPC.
-  4. The scraper writes a `scraper_heartbeats` row every poll cycle (timestamp, scrape latency, error if any) and detects `scraper_offline`, `lot_stalled` (>2 min on same lot), and `lot_skipped` (non-sequential lot jump) anomalies, writing rows to an anomalies table with type, lot number, and contextual payload.
-  5. Across a 2-hour synthetic or real run, scraper RSS stays flat (context recycled on a time/memory budget to defeat the ~400 MB / 20 min memory leak), the process survives a mid-run session-cookie refresh, and Supabase Realtime is enabled on `live_lot_current` (and other low-frequency live tables) with matching SELECT RLS policies shipped in the same migration; `live_lot_events` is intentionally NOT in the realtime publication.
-**Plans**: TBD
-
-### Phase 5: Live Sale UI (`/live`)
-**Goal**: Admin can open `/live` during an active RFC sale and see current lot + bid state, running totals, pace, recent lots, anomalies, and scraper health in near-real time — with manual start/stop controls, a between-sales layout, post-sale summary + lot replay, and a cross-route "live sale in progress" banner.
-**Depends on**: Phase 4 (live tables populated, Realtime enabled on `live_lot_current`, heartbeat table, anomalies table)
-**Requirements**: LIVE-01, LIVE-02, LIVE-03, LIVE-04, LIVE-05, LIVE-06, LIVE-07, LIVE-08, LIVE-09, LIVE-10, LIVE-11, LIVE-12
-**Success Criteria** (what must be TRUE):
-  1. During an active sale, admin sees a Current Lot card (lot #, title, current bid, source if exposed, time-on-lot, department if exposed) refreshing at 2–5 s cadence, a KPI strip (lots sold / passed / total hammer / sell-through %), a Lots-per-Hour pace indicator with a 30-min sparkline, and a Recent Lots table (last 20, newest-first).
-  2. During an active sale, admin sees an Issues feed showing timestamped anomalies (`scraper_offline`, `lot_stalled`, `lot_skipped` at minimum, plus any monitor-defined signals from Phase 4 discuss), and a global cross-route banner ("Live sale in progress — click to open") that links to `/live`.
-  3. A scraper-health indicator (green / yellow / red pill + "last successful scrape: X ago" + latency) is visible on every route and turns red if no successful scrape in >60 s during an active sale, computed against server time (no clock-skew "in 3 seconds" glitches).
-  4. Between sales, admin sees a Past Sales list (date, duration, total lots, sell-through %, total hammer), can click into a post-sale summary (duration, lots total/sold/passed/withdrawn, sell-through %, total hammer, lots-per-hour avg, anomaly summary), and can open a lot-by-lot replay table filterable by sold/passed and department, CSV-exportable via `papaparse`.
-  5. Admin can manually override the scraper's auto-detection via Start / Stop buttons on `/live`, and the `/live` route is admin-bookmarkable, distinct from `/activity` and `/extension`, and shows the correct "Active sale" vs "Between sales" layout based on scraper-reported state.
-**Plans**: TBD
-**UI hint**: yes
-
 ### Phase 6: Vercel Production Deploy
 **Goal**: The TPC Dashboard is live on a production Vercel URL (same org as TPC App) with production env vars set, accessible to admins, and ready for the team to use day-to-day.
-**Depends on**: Phase 1 (schema drift repaired so `supabase db push` against prod is safe). Phases 2/3/5 don't block — Vercel deploy is orthogonal — but in practice this phase runs at end-of-milestone to ship a cohesive v2.0.
+**Depends on**: Phase 1 (schema drift repaired so `supabase db push` against prod is safe). Phases 2/3 don't block — Vercel deploy is orthogonal — but in practice this phase runs at end-of-milestone to ship a cohesive v2.0.
 **Requirements**: INFR-01
 **Success Criteria** (what must be TRUE):
   1. A production Vercel deployment of the dashboard is accessible at a stable production URL (same Vercel org as TPC App).
-  2. `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set as Vercel production environment variables and a TPC-App admin can log in via the existing Supabase auth flow and reach `/activity`, `/extension`, and `/live`.
-  3. The frontend build pipeline (`tsc -b && vite build`) produces a bundle that does NOT contain any occurrence of `SUPABASE_SERVICE_ROLE_KEY`, Playwright, or any scraper-only dependency (verified with a grep/audit step in the deploy plan).
+  2. `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set as Vercel production environment variables and a TPC-App admin can log in via the existing Supabase auth flow and reach `/activity` and `/extension`.
+  3. The frontend build pipeline (`tsc -b && vite build`) produces a bundle that does NOT contain any occurrence of `SUPABASE_SERVICE_ROLE_KEY` or any server-only dependency (verified with a grep/audit step in the deploy plan).
 **Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure & Shared UI Kit | 6/6 | Complete | 2026-04-28 |
 | 2. Extension Analytics (`/extension`) | 9/9 | In Progress (human_needed) | - |
 | 3. TPC App Activity (`/activity`) | 9/9 | In Progress (human_needed) | - |
-| 4. Live RFC Scraper Infrastructure | 0/TBD | Not started | - |
-| 5. Live Sale UI (`/live`) | 0/TBD | Not started | - |
 | 6. Vercel Production Deploy | 0/TBD | Not started | - |
 | 7. Unified Design Migration | 8/8 | Complete (human_needed) | - |
 
@@ -191,4 +162,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 ---
 
-*Roadmap created: 2026-04-24 — v2.0 Live Ops milestone, phases reset to 1 (v1.0 archived under `.planning/milestones/v1.0-phases/`).*
+*Roadmap created: 2026-04-24 — v2.0 Internal Ops Console milestone, phases reset to 1 (v1.0 archived under `.planning/milestones/v1.0-phases/`). Phases 4 (Live RFC Scraper) and 5 (Live Sale UI) removed 2026-05-12 — live-ops narrative abandoned.*
