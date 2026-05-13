@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Live Ops
-status: ready_to_execute
-stopped_at: Phase 3 plans approved (9 plans, 5 waves)
-last_updated: "2026-04-30T18:30:00.000Z"
-last_activity: 2026-04-30
+milestone: v2.1
+milestone_name: TBD
+status: not_started
+stopped_at: "v2.0 SHIPPED 2026-05-13 via PR #2. Production live at https://tpc-dashboard-nine.vercel.app. All 5 phases (1, 2, 3, 6, 7) complete. v2.1 scope pending — likely subsumed by cross-app Unified 3.0 / tpc-hub effort which merges dashboard + voice-cataloger into one repo with Field/Office mode switcher + responsive baseline."
+last_updated: "2026-05-13T17:58:00.000Z"
+last_activity: 2026-05-13 -- v2.0 closed out; ready for v2.1 scoping (or hub migration)
 progress:
-  total_phases: 6
-  completed_phases: 2
-  total_plans: 24
-  completed_plans: 15
-  percent: 63
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
