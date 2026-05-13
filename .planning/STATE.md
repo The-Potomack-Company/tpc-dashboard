@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: category-filtered-batch
 milestone_name: Category-Filtered Batch AI Generation
-status: ready_to_execute
-stopped_at: "Phase 01 stub PLAN.md ready (post-Codex pass 4 approval). BLOCKED on cataloger phase migration 007 landing in shared Supabase project — once that's pushed, run npm run db:types here then /gsd-plan-phase 01-category-filtered-batch."
-last_updated: "2026-05-13T19:20:00.000Z"
-last_activity: 2026-05-13 -- feat-spawn-phases category-filtered-batch
+status: ready_for_uat
+stopped_at: "Phase 01 dashboard half implemented (01-02 queries+hook, 01-03 chart, 01-04 page insertion). Branch feat/category-filtered-batch pushed; awaiting Vercel preview + user smoke at <prod>/extension."
+last_updated: "2026-05-13T17:15:00.000Z"
+last_activity: 2026-05-13 -- executed phase 01 (Skip Reasons donut)
 current_phase: 01-category-filtered-batch
 progress:
   total_phases: 1
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
