@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.1
-milestone_name: TBD
-status: not_started
-stopped_at: "v2.0 SHIPPED 2026-05-13 via PR #2. Production live at https://tpc-dashboard-nine.vercel.app. All 5 phases (1, 2, 3, 6, 7) complete. v2.1 scope pending — likely subsumed by cross-app Unified 3.0 / tpc-hub effort which merges dashboard + voice-cataloger into one repo with Field/Office mode switcher + responsive baseline."
-last_updated: "2026-05-13T17:58:00.000Z"
-last_activity: 2026-05-13 -- v2.0 closed out; ready for v2.1 scoping (or hub migration)
+milestone: category-filtered-batch
+milestone_name: Category-Filtered Batch AI Generation
+status: planning
+stopped_at: "feat-capture scaffolded milestone, awaiting feat-plan"
+last_updated: "2026-05-13T18:20:00.000Z"
+last_activity: 2026-05-13 -- feat-capture category-filtered-batch
 progress:
   total_phases: 0
   completed_phases: 0
@@ -13,6 +13,15 @@ progress:
   completed_plans: 0
   percent: 0
 ---
+
+# Project State
+
+## Project Reference
+
+See: `.planning/PROJECT.md`
+
+**Core value:** Single place to see extension analytics and team cataloging activity.
+**Current focus:** cross-app feature `category-filtered-batch` — new Skip Reasons panel on /extension. Workspace spec at `_workspace/Features/category-filtered-batch.md`
 
 # Project State
 
