@@ -48,6 +48,9 @@ vi.mock('../components/extension/KpiStrip', () => ({
 vi.mock('../components/extension/ErrorRateChart', () => ({
   ErrorRateChart: () => <div data-testid="error-rate-chart" />,
 }));
+vi.mock('../components/extension/SkipReasonsChart', () => ({
+  SkipReasonsChart: () => <div data-testid="skip-reasons-chart" />,
+}));
 vi.mock('../components/extension/PerUserTable', () => ({
   PerUserTable: () => <div data-testid="per-user-table" />,
 }));
@@ -98,6 +101,7 @@ describe('ExtensionPage', () => {
     expect(screen.queryByTestId('event-volume-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kpi-strip')).not.toBeInTheDocument();
     expect(screen.queryByTestId('error-rate-chart')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('skip-reasons-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('per-user-table')).not.toBeInTheDocument();
     expect(screen.queryByTestId('recent-errors-table')).not.toBeInTheDocument();
     expect(screen.queryByTestId('live-event-feed')).not.toBeInTheDocument();
@@ -119,6 +123,7 @@ describe('ExtensionPage', () => {
     expect(screen.queryByTestId('event-volume-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kpi-strip')).not.toBeInTheDocument();
     expect(screen.queryByTestId('error-rate-chart')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('skip-reasons-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('per-user-table')).not.toBeInTheDocument();
     expect(screen.queryByTestId('recent-errors-table')).not.toBeInTheDocument();
     expect(screen.queryByTestId('live-event-feed')).not.toBeInTheDocument();
@@ -136,6 +141,7 @@ describe('ExtensionPage', () => {
     expect(screen.getByTestId('event-volume-chart')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
     expect(screen.getByTestId('error-rate-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('skip-reasons-chart')).toBeInTheDocument();
     expect(screen.getByTestId('per-user-table')).toBeInTheDocument();
     expect(screen.getByTestId('recent-errors-table')).toBeInTheDocument();
     expect(screen.getByTestId('live-event-feed')).toBeInTheDocument();
@@ -176,6 +182,9 @@ describe('ExtensionPage', () => {
     // Operational widgets — still visible.
     expect(screen.getByTestId('event-volume-chart')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-strip')).toBeInTheDocument();
+    // category-filtered-batch — Skip Reasons is admin-visible (NOT dev-gated).
+    expect(screen.getByTestId('skip-reasons-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('ext-skip-reasons-card')).toBeInTheDocument();
     expect(screen.getByTestId('per-user-table')).toBeInTheDocument();
     expect(screen.getByTestId('live-event-feed')).toBeInTheDocument();
     // DeveloperPanel is mounted unconditionally; its inner isDevAccount gate
@@ -192,7 +201,7 @@ describe('ExtensionPage', () => {
     expect(screen.queryByTestId('ext-05-card')).not.toBeInTheDocument();
   });
 
-  it('section composition order: EXT-01 → EXT-02 → EXT-03 → EXT-04+05 → EXT-08 → DeveloperPanel', () => {
+  it('section composition order: EXT-01 → EXT-02 → EXT-03 → EXT-SKIP → EXT-04+05 → EXT-08 → DeveloperPanel', () => {
     gateMock.mockReturnValue({ isLoading: false, isEmpty: false, error: null });
     const { container } = render(<ExtensionPage />, { wrapper: makeWrapper() });
 
@@ -200,6 +209,7 @@ describe('ExtensionPage', () => {
       'event-volume-chart',
       'kpi-strip',
       'error-rate-chart',
+      'skip-reasons-chart',
       'per-user-table',
       'recent-errors-table',
       'live-event-feed',
