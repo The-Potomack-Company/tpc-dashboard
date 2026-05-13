@@ -53,7 +53,7 @@ function computeDelta(current: number, previous: number): KpiDelta {
 }
 
 /**
- * pctValue — render value for the % AI done card.
+ * pctValue — render value for the "Processed" card.
  * Returns EMPTY ('—') when denom is 0 (no AI items today → no percent makes sense).
  * Else returns formatPercent(rate) where rate is num/denom * 100, 1-decimal precision.
  */
@@ -74,11 +74,12 @@ function pctRate(num: number, denom: number): number {
 
 export function TodayKpiStrip() {
   const query = useTodayKpis();
-  // Phase 8: "% AI done today" is a completion-rate metric (success vs total
-  // attempts) — per the user directive "admin shouldn't see failures/success
-  // or time — that's dev only", this 4th card renders for `isDev` accounts
-  // only. The first three cards (counts: sessions, items, exports) remain
-  // for everyone so admins still see operational volume.
+  // Phase 8: "Processed" is a completion-rate metric
+  // (success vs total attempts) — per the user directive "admin shouldn't
+  // see failures/success or time — that's dev only", this 4th card renders
+  // for `isDev` accounts only. The first three cards (counts: sessions,
+  // items, exports) remain for everyone so admins still see operational
+  // volume.
   const isDev = useAuthStore((s) => s.isDev);
 
   return (
@@ -103,7 +104,7 @@ export function TodayKpiStrip() {
           />
         </div>
       ) : (
-        // Layout: 4-card grid for dev (includes "% AI done today"), 3-card
+        // Layout: 4-card grid for dev (includes "Processed"), 3-card
         // grid for admin (drops the rate metric). The grid step at `lg` is
         // explicit per-branch so admin doesn't end up with a single trailing
         // card stretching to full width.
@@ -165,7 +166,7 @@ export function TodayKpiStrip() {
           />
           {isDev && (
             <KpiCard
-              label="% AI done today"
+              label="Processed"
               value={
                 query.isLoading
                   ? ''

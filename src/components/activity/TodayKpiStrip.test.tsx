@@ -13,7 +13,7 @@ vi.mock('../../hooks/activity/useTodayKpis', () => ({
   useTodayKpis: () => useTodayKpisMock(),
 }));
 
-// Phase 8: the "% AI done today" KpiCard is gated on `isDev`. Most tests in
+// Phase 8: the "Processed" KpiCard is gated on `isDev`. Most tests in
 // this file want the historical "4 cards rendered" behaviour, so the default
 // auth-store mock returns isDev=true. The Phase 8 admin-trim test overrides
 // this with isDev=false to assert the gating.
@@ -60,7 +60,7 @@ describe('<TodayKpiStrip>', () => {
     expect(screen.getByText('Sessions today')).toBeInTheDocument();
     expect(screen.getByText('Items today')).toBeInTheDocument();
     expect(screen.getByText('Items exported today')).toBeInTheDocument();
-    expect(screen.getByText('% AI done today')).toBeInTheDocument();
+    expect(screen.getByText('Processed')).toBeInTheDocument();
     // Grid layout: grid grid-cols-2 lg:grid-cols-4 gap-4
     const grid = container.querySelector('.grid');
     expect(grid).not.toBeNull();
@@ -69,7 +69,7 @@ describe('<TodayKpiStrip>', () => {
     expect(grid?.className).toMatch(/gap-4/);
   });
 
-  it("Test 2: % AI done with items_total_today=0 renders EMPTY (em-dash) and no delta", () => {
+  it("Test 2: Processed with items_total_today=0 renders EMPTY (em-dash) and no delta", () => {
     useTodayKpisMock.mockReturnValue({
       data: happyData({ items_done_today: 0, items_total_today: 0 }),
       isLoading: false,
@@ -77,11 +77,11 @@ describe('<TodayKpiStrip>', () => {
       refetch: vi.fn(),
     });
     render(<TodayKpiStrip />);
-    // The % AI done card should show '—' as its value when denom is 0
+    // The Processed card should show '—' as its value when denom is 0
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
     // The card delta region is missing for the denom=0 case;
     // the card label is still present.
-    expect(screen.getByText('% AI done today')).toBeInTheDocument();
+    expect(screen.getByText('Processed')).toBeInTheDocument();
   });
 
   it("Test 3: section header reads 'Today's Snapshot' with green pulsing right-now pip + sr-only Live", () => {
@@ -173,7 +173,7 @@ describe('<TodayKpiStrip>', () => {
       refetch: vi.fn(),
     });
     render(<TodayKpiStrip />);
-    // 4 cards, all should have 'vs yesterday' label (denom = 90 != 0 for % AI done)
+    // 4 cards, all should have 'vs yesterday' label (denom = 90 != 0 for Processed)
     expect(screen.getAllByText('vs yesterday').length).toBeGreaterThanOrEqual(3);
   });
 
@@ -189,9 +189,9 @@ describe('<TodayKpiStrip>', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
-  // Phase 8 — admin-trim: "% AI done today" is a completion-rate metric and
-  // belongs to the dev surface only. Admin sees 3 cards.
-  it("Phase 8: admin (isDev=false) renders 3 cards and omits '% AI done today'", () => {
+  // Phase 8 — admin-trim: "Processed" is a completion-rate
+  // metric and belongs to the dev surface only. Admin sees 3 cards.
+  it("Phase 8: admin (isDev=false) renders 3 cards and omits 'Processed'", () => {
     isDevMockValue = false;
     useTodayKpisMock.mockReturnValue({
       data: happyData(),
@@ -201,7 +201,7 @@ describe('<TodayKpiStrip>', () => {
     });
     const { container } = render(<TodayKpiStrip />);
     expect(screen.getAllByTestId('kpi-card')).toHaveLength(3);
-    expect(screen.queryByText('% AI done today')).not.toBeInTheDocument();
+    expect(screen.queryByText('Processed')).not.toBeInTheDocument();
     // Grid should switch to lg:grid-cols-3 so the 3 cards span evenly.
     const grid = container.querySelector('.grid');
     expect(grid?.className).toMatch(/lg:grid-cols-3/);
@@ -218,6 +218,6 @@ describe('<TodayKpiStrip>', () => {
     });
     render(<TodayKpiStrip />);
     expect(screen.getAllByTestId('kpi-card')).toHaveLength(4);
-    expect(screen.getByText('% AI done today')).toBeInTheDocument();
+    expect(screen.getByText('Processed')).toBeInTheDocument();
   });
 });

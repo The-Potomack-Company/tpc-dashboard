@@ -30,11 +30,18 @@ import type { PerUserRow } from '../../services/extension/queries';
 // The Phase 1 SortIndicator already accepts the v8 sort-state shape
 // ('asc' | 'desc' | false) — cast h.column.getIsSorted() to that union.
 
-// Two width sets — dev includes the "Errors" column (8 columns total), admin
-// drops it (7 columns). Phase 8: errors is a failure-count metric and is
-// dev-only per the user directive "admin shouldn't see failures".
-const COLUMN_WIDTHS_DEV   = ['w-48', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12', 'w-20'];
-const COLUMN_WIDTHS_ADMIN = ['w-48', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12',        'w-20'];
+// Skeleton shimmer-bar widths — dev includes the "Errors" column
+// (8 columns total), admin drops it (7 columns). Phase 8: errors is a
+// failure-count metric and is dev-only per the user directive "admin
+// shouldn't see failures".
+//
+// These widths are used ONLY by TableSkeleton's inner shimmer bars to
+// approximate cell content size during loading. The rendered table itself
+// no longer pins column widths — the parent wraps `<table>` in an
+// overflow-x-auto container so columns can size naturally and the table
+// can scroll horizontally if it overflows the card.
+const SKELETON_WIDTHS_DEV   = ['w-48', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12', 'w-20'];
+const SKELETON_WIDTHS_ADMIN = ['w-48', 'w-12', 'w-12', 'w-12', 'w-12', 'w-12',        'w-20'];
 
 // Cell renderer for numeric columns. Lifted out so the same renderer is used
 // for the 5 event-type columns AND the Errors column.
@@ -133,7 +140,7 @@ export function PerUserTable() {
     [isDev],
   );
 
-  const columnWidths = isDev ? COLUMN_WIDTHS_DEV : COLUMN_WIDTHS_ADMIN;
+  const skeletonWidths = isDev ? SKELETON_WIDTHS_DEV : SKELETON_WIDTHS_ADMIN;
 
   const table = useReactTable({
     data: query.data ?? [],
@@ -147,9 +154,11 @@ export function PerUserTable() {
   if (query.isLoading) {
     // TableSkeleton renders <tbody>; wrap in a <table> so it's valid HTML.
     return (
-      <table className="w-full text-sm">
-        <TableSkeleton rows={5} columnWidths={columnWidths} />
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <TableSkeleton rows={5} columnWidths={skeletonWidths} />
+        </table>
+      </div>
     );
   }
 
@@ -173,55 +182,57 @@ export function PerUserTable() {
   }
 
   return (
-    <table className="w-full text-sm" data-testid="per-user-table">
-      <thead className="border-b border-rule bg-bg-2 text-left">
-        {table.getHeaderGroups().map((hg) => (
-          <tr key={hg.id} className="h-11">
-            {hg.headers.map((h, idx) => {
-              const sorted = h.column.getIsSorted() as 'asc' | 'desc' | false;
-              return (
-                <th
-                  key={h.id}
-                  scope="col"
-                  className={`px-4 cursor-pointer text-sm font-semibold text-ink-2 select-none ${
-                    isNumericColumn(idx, isDev) ? 'text-right' : ''
-                  }`}
-                  aria-sort={
-                    sorted === 'asc'
-                      ? 'ascending'
-                      : sorted === 'desc'
-                        ? 'descending'
-                        : 'none'
-                  }
-                  onClick={h.column.getToggleSortingHandler()}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm" data-testid="per-user-table">
+        <thead className="border-b border-rule bg-bg-2 text-left">
+          {table.getHeaderGroups().map((hg) => (
+            <tr key={hg.id} className="h-11">
+              {hg.headers.map((h, idx) => {
+                const sorted = h.column.getIsSorted() as 'asc' | 'desc' | false;
+                return (
+                  <th
+                    key={h.id}
+                    scope="col"
+                    className={`px-4 cursor-pointer text-sm font-semibold text-ink-2 select-none ${
+                      isNumericColumn(idx, isDev) ? 'text-right' : ''
+                    }`}
+                    aria-sort={
+                      sorted === 'asc'
+                        ? 'ascending'
+                        : sorted === 'desc'
+                          ? 'descending'
+                          : 'none'
+                    }
+                    onClick={h.column.getToggleSortingHandler()}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {flexRender(h.column.columnDef.header, h.getContext())}
+                      <SortIndicator state={sorted ?? false} />
+                    </span>
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((r) => (
+            <tr
+              key={r.id}
+              className="h-11 border-b border-rule hover:bg-bg-2"
+            >
+              {r.getVisibleCells().map((c, idx) => (
+                <td
+                  key={c.id}
+                  className={`px-4 ${isNumericColumn(idx, isDev) ? 'text-right' : ''}`}
                 >
-                  <span className="inline-flex items-center gap-1">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                    <SortIndicator state={sorted ?? false} />
-                  </span>
-                </th>
-              );
-            })}
-          </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((r) => (
-          <tr
-            key={r.id}
-            className="h-11 border-b border-rule hover:bg-bg-2"
-          >
-            {r.getVisibleCells().map((c, idx) => (
-              <td
-                key={c.id}
-                className={`px-4 ${isNumericColumn(idx, isDev) ? 'text-right' : ''}`}
-              >
-                {flexRender(c.column.columnDef.cell, c.getContext())}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+                  {flexRender(c.column.columnDef.cell, c.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

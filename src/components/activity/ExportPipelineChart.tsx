@@ -95,7 +95,7 @@ export function ExportPipelineChart() {
                   layout="vertical"
                   margin={{ top: 8, right: 16, bottom: 8, left: 16 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid stroke="var(--rule)" horizontal={false} />
                   <XAxis type="number" allowDecimals={false} />
                   <YAxis type="category" dataKey="pipeline" hide />
                   <Tooltip />

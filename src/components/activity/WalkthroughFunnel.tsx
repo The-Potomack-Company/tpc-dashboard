@@ -68,7 +68,7 @@ export function WalkthroughFunnel() {
               layout="vertical"
               margin={{ top: 4, right: 16, bottom: 4, left: 16 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--rule)" horizontal={false} />
               <XAxis type="number" allowDecimals={false} />
               <YAxis type="category" dataKey="step_name" width={100} />
               <Tooltip />

@@ -198,9 +198,13 @@ describe('<ItemsPerSpecialistChart>', () => {
     ).toBeInTheDocument();
   });
 
-  it('Test 10: source uses isAnimationActive={false} and CartesianGrid strokeDasharray="3 3"', async () => {
+  it('Test 10: source uses isAnimationActive={false} and a solid CartesianGrid with vertical={false}', async () => {
     const src = (await import('./ItemsPerSpecialistChart.tsx?raw')).default;
     expect(src).toMatch(/isAnimationActive=\{false\}/);
-    expect(src).toMatch(/strokeDasharray="3 3"/);
+    // Phase 8 unified-design: solid grid (no strokeDasharray), token-backed
+    // stroke, value-axis-only (vertical={false} suppresses X/label gridlines).
+    expect(src).not.toMatch(/strokeDasharray=/);
+    expect(src).toMatch(/stroke="var\(--rule\)"/);
+    expect(src).toMatch(/vertical=\{false\}/);
   });
 });

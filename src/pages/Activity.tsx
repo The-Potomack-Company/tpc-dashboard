@@ -73,7 +73,7 @@ export function ActivityPage() {
     <main>
       <PageHeader />
 
-      {/* APP-01 — Today KPI strip (self-trims the "% AI done today" card for non-dev) */}
+      {/* APP-01 — Today KPI strip (self-trims the "Processed" card for non-dev) */}
       <TodayKpiStrip />
 
       {/* APP-02 — Active sessions table */}

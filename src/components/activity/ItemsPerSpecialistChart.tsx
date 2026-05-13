@@ -5,7 +5,9 @@
 // the absence of the import here keeps the fixed-window invariant visible at the call site.
 //
 // Recharts pattern is verbatim Phase 2 / EventVolumeChart (long → wide pivot, isAnimationActive=false,
-// CartesianGrid strokeDasharray='3 3'). Color allocation comes from chartPalette.colorForSpecialist:
+// CartesianGrid stroke='var(--rule)' with vertical={false} — solid horizontal value-axis gridlines
+// only; label-axis (X / dates) gridlines are suppressed for a minimalist look). Color allocation
+// comes from chartPalette.colorForSpecialist:
 // the alphabetically-sorted email list determines the cycle index, so the same specialist gets the
 // same color across renders so long as the active set is stable.
 
@@ -124,7 +126,7 @@ export function ItemsPerSpecialistChart() {
             return (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={wide} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid stroke="var(--rule)" vertical={false} />
                   <XAxis
                     dataKey="bucket"
                     tickFormatter={(v: string) => formatInTimeZone(v, ET, 'M/d')}

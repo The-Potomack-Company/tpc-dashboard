@@ -115,7 +115,7 @@ export function ErrorRateChart() {
         data={data}
         margin={{ top: 8, right: 48, bottom: 8, left: 16 }}
       >
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid stroke="var(--rule)" horizontal={false} />
         <XAxis type="number" tickFormatter={(v: number) => `${v}%`} domain={[0, 'dataMax']} />
         <YAxis type="category" dataKey="event_type" width={140} />
         <Tooltip formatter={(v) => formatPercent(Number(v))} />

@@ -112,7 +112,7 @@ export function EventVolumeChart() {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={wide} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid stroke="var(--rule)" vertical={false} />
         <XAxis dataKey="bucket" tickFormatter={tickFormatter} />
         <YAxis />
         <Tooltip />

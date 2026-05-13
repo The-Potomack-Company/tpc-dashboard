@@ -22,7 +22,8 @@ import { useAuthStore } from '../stores/authStore';
 //
 // Composition order is locked by UI-SPEC § Layout Specifications:
 //   header → EXT-01 stacked bar → EXT-02 KPI strip → EXT-03 error rate →
-//   EXT-04+05 side-by-side → EXT-08 live feed → DeveloperPanel.
+//   EXT-04 per-user (full width) → EXT-05 recent errors (full width, dev-only) →
+//   EXT-08 live feed → DeveloperPanel.
 //
 // DeveloperPanel mounts unconditionally — its internal `isDevAccount(email)`
 // gate (D-15, Plan 02-07) decides whether to render anything. The whole
@@ -156,38 +157,32 @@ export function ExtensionPage() {
       )}
 
       {/*
-        EXT-04 + EXT-05 — paired row.
-        Dev: side-by-side at xl (Per-user + Recent errors).
-        Admin: single column with just Per user — Recent errors is a failure
-        breakdown and dev-only per Phase 8.
+        EXT-04 — Per user (own row, full width).
+        Wide table; sharing the row with EXT-05 squeezed it. Stacked layout
+        gives each table its own horizontal real estate.
       */}
-      <section
-        className={`grid grid-cols-1 gap-6 mt-8 ${isDev ? 'xl:grid-cols-2' : ''}`}
-      >
-        <div
-          className="tpc-card p-4"
-          data-testid="ext-04-card"
-        >
-          <header className="mb-3">
-            <h2 className="text-sm font-semibold text-ink-2">Per user</h2>
-          </header>
-          <PerUserTable />
-        </div>
-        {isDev && (
-          <div
-            className="tpc-card p-4"
-            data-testid="ext-05-card"
-          >
-            <header className="mb-3">
-              <h2 className="text-sm font-semibold text-ink-2">
-                Recent errors
-              </h2>
-              <p className="text-sm text-ink-3">Last 100 errors, newest first</p>
-            </header>
-            <RecentErrorsTable />
-          </div>
-        )}
+      <section className="tpc-card p-4 mt-8" data-testid="ext-04-card">
+        <header className="mb-3">
+          <h2 className="text-sm font-semibold text-ink-2">Per user</h2>
+        </header>
+        <PerUserTable />
       </section>
+
+      {/*
+        EXT-05 — Recent errors (own row, full width). Failure breakdown,
+        dev-only per Phase 8.
+      */}
+      {isDev && (
+        <section className="tpc-card p-4 mt-6" data-testid="ext-05-card">
+          <header className="mb-3">
+            <h2 className="text-sm font-semibold text-ink-2">
+              Recent errors
+            </h2>
+            <p className="text-sm text-ink-3">Last 100 errors, newest first</p>
+          </header>
+          <RecentErrorsTable />
+        </section>
+      )}
 
       {/* EXT-08 — live event feed */}
       <div className="mt-8" data-testid="ext-08-feed">
