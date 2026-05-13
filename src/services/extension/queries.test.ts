@@ -64,6 +64,7 @@ import {
   fetchLiveFeed,
   fetchExtensionGate,
   fetchDistinctVersions,
+  fetchSkipReasons,
   EXTENSION_EVENT_TYPES,
 } from './queries';
 
@@ -272,6 +273,97 @@ describe('fetchExtensionGate', () => {
     fromMock.mockReturnValueOnce(chain);
     const result = await fetchExtensionGate();
     expect(result).toEqual({ hasAny: false });
+  });
+});
+
+describe('fetchSkipReasons (category-filtered-batch)', () => {
+  it('scopes by app_source=tpc-extension AND event_type=catalog_batch with date range', async () => {
+    const chain = makeChain({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+
+    expect(fromMock).toHaveBeenCalledWith('analytics_events');
+    expect(chain.select).toHaveBeenCalledTimes(1);
+    // D-01 invariant + batch-only invariant: both .eq calls must fire.
+    expect(chain.eq).toHaveBeenCalledWith('app_source', 'tpc-extension');
+    expect(chain.eq).toHaveBeenCalledWith('event_type', 'catalog_batch');
+    expect(chain.gte).toHaveBeenCalledWith('created_at', FROM.toISOString());
+    expect(chain.lte).toHaveBeenCalledWith('created_at', TO.toISOString());
+  });
+
+  it('selects exactly the 5 skip-reason columns (no extra payload)', async () => {
+    const chain = makeChain({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+
+    const selectArg = chain.select.mock.calls[0][0] as string;
+    expect(selectArg).toContain('skipped_no_photos');
+    expect(selectArg).toContain('skipped_fields_filled');
+    expect(selectArg).toContain('skipped_manually');
+    expect(selectArg).toContain('skipped_category_filter');
+    expect(selectArg).toContain('skipped_classification_failed');
+  });
+
+  it('does NOT call .in() when users and versions are empty (empty-filter no-op contract)', async () => {
+    const chain = makeChain({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+
+    expect(chain.in).not.toHaveBeenCalled();
+  });
+
+  it('applies .in(user_email) only when users is non-empty', async () => {
+    const chain = makeChain({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    await fetchSkipReasons({ from: FROM, to: TO, users: ['a@x.com', 'b@x.com'], versions: [] });
+
+    const userCall = chain.in.mock.calls.find((c) => c[0] === 'user_email');
+    expect(userCall).toBeDefined();
+    expect(userCall![1]).toEqual(['a@x.com', 'b@x.com']);
+    const versionCall = chain.in.mock.calls.find((c) => c[0] === 'extension_version');
+    expect(versionCall).toBeUndefined();
+  });
+
+  it('applies .in(extension_version) only when versions is non-empty', async () => {
+    const chain = makeChain({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: ['2.0.3', '2.0.4'] });
+
+    const versionCall = chain.in.mock.calls.find((c) => c[0] === 'extension_version');
+    expect(versionCall).toBeDefined();
+    expect(versionCall![1]).toEqual(['2.0.3', '2.0.4']);
+    const userCall = chain.in.mock.calls.find((c) => c[0] === 'user_email');
+    expect(userCall).toBeUndefined();
+  });
+
+  it('returns rows from supabase response', async () => {
+    const row = {
+      skipped_no_photos: 1,
+      skipped_fields_filled: 2,
+      skipped_manually: 3,
+      skipped_category_filter: 4,
+      skipped_classification_failed: 5,
+    };
+    const chain = makeChain({ data: [row], error: null });
+    fromMock.mockReturnValueOnce(chain);
+    const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+    expect(result).toEqual([row]);
+  });
+
+  it('throws on supabase error', async () => {
+    const err = { message: 'skip fail' };
+    const chain = makeChain({ data: null, error: err });
+    fromMock.mockReturnValueOnce(chain);
+    await expect(
+      fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] }),
+    ).rejects.toBe(err);
+  });
+
+  it('returns [] when data is null and error is null', async () => {
+    const chain = makeChain({ data: null, error: null });
+    fromMock.mockReturnValueOnce(chain);
+    const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+    expect(result).toEqual([]);
   });
 });
 

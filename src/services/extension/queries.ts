@@ -223,6 +223,54 @@ export async function fetchLiveFeed(
 }
 
 /**
+ * category-filtered-batch — Skip-reason breakdown for /extension.
+ *
+ * Selects the 5 new top-level INT columns on `analytics_events` filtered to
+ * `event_type = 'catalog_batch'` (skip reasons only exist on batch events) and
+ * `app_source = 'tpc-extension'` (D-01). Date range gates via gte/lte on
+ * created_at.
+ *
+ * Filter contract matches the neighboring fetchers (see fetchRecentErrors):
+ * empty `users` / `versions` arrays are NO-OPS — .in('user_email', []) /
+ * .in('extension_version', []) would degenerate to "match nothing" and silently
+ * blank the chart.
+ *
+ * Historical rows (pre-migration 007) carry NULL for all 5 columns; client-
+ * side aggregation in `useSkipReasons` coerces nullish to 0 so the donut shows
+ * an empty-state instead of NaN.
+ */
+export type SkipReasonRow = Pick<
+  Database['public']['Tables']['analytics_events']['Row'],
+  | 'skipped_no_photos'
+  | 'skipped_fields_filled'
+  | 'skipped_manually'
+  | 'skipped_category_filter'
+  | 'skipped_classification_failed'
+>;
+
+export async function fetchSkipReasons(args: {
+  from: Date;
+  to: Date;
+  users: string[];
+  versions: string[];
+}): Promise<SkipReasonRow[]> {
+  let q = supabase
+    .from('analytics_events')
+    .select(
+      'skipped_no_photos, skipped_fields_filled, skipped_manually, skipped_category_filter, skipped_classification_failed',
+    )
+    .eq('app_source', 'tpc-extension') // D-01
+    .eq('event_type', 'catalog_batch') // skip reasons live only on batch events
+    .gte('created_at', args.from.toISOString())
+    .lte('created_at', args.to.toISOString());
+  if (args.users.length) q = q.in('user_email', args.users);
+  if (args.versions.length) q = q.in('extension_version', args.versions);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as SkipReasonRow[];
+}
+
+/**
  * D-19 — Lifetime emptiness probe for /extension.
  * Single SELECT with limit(1); the `useExtensionGate` hook caches the result
  * indefinitely (staleTime: Infinity) — see D-19 trade-off (CONTEXT § Deferred).
