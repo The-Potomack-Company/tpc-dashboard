@@ -12,14 +12,14 @@ export function AccessDenied() {
   }
 
   return (
-    <div className="flex items-center justify-center h-dvh bg-white dark:bg-gray-900">
+    <div className="flex items-center justify-center h-dvh bg-bg">
       <div className="w-full max-w-md mx-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 text-center">
+        <h1 className="text-2xl font-semibold text-ink text-center">
           Access denied
         </h1>
         <p
           role="alert"
-          className="text-sm text-red-600 dark:text-red-400 mt-2 text-center"
+          className="text-sm text-err mt-2 text-center"
         >
           This dashboard is restricted to admin accounts. You're signed in as{' '}
           {user?.email ?? 'unknown'}, which doesn't have dashboard access. Contact
@@ -28,7 +28,7 @@ export function AccessDenied() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="w-full min-h-12 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold mt-6 focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+          className="tpc-btn tpc-btn-secondary w-full min-h-12 mt-6 font-semibold"
         >
           Sign out
         </button>

@@ -8,7 +8,9 @@ describe('SortIndicator', () => {
     const svg = container.querySelector('svg');
     expect(svg).not.toBeNull();
     const cls = svg?.getAttribute('class') ?? '';
-    expect(cls).toContain('text-gray-400');
+    // Phase 7 unified-design: inactive color shifted from `text-gray-400`
+    // to the token-backed `text-ink-4` (resolves to var(--ink-4)).
+    expect(cls).toContain('text-ink-4');
     expect(cls).toContain('w-4');
     expect(cls).toContain('h-4');
   });

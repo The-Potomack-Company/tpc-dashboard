@@ -6,6 +6,8 @@
 //
 // `motion-safe:animate-pulse` respects prefers-reduced-motion (03-UI-SPEC.md
 // § Accessibility Floor).
+//
+// Phase 7: divider + bar colors shift to token-backed surfaces.
 
 interface TableSkeletonProps {
   /** Number of shimmer rows to render. */
@@ -20,13 +22,13 @@ interface TableSkeletonProps {
 export function TableSkeleton({ rows, columnWidths }: TableSkeletonProps) {
   const widths = columnWidths ?? Array(8).fill('w-full');
   return (
-    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+    <tbody className="divide-y divide-rule">
       {Array.from({ length: rows }).map((_, i) => (
         <tr key={i} className="h-11">
           {widths.map((w, j) => (
             <td key={j} className="px-4">
               <div
-                className={`h-4 ${w} bg-gray-200 dark:bg-gray-700 rounded motion-safe:animate-pulse`}
+                className={`h-4 ${w} bg-bg-3 rounded motion-safe:animate-pulse`}
               />
             </td>
           ))}

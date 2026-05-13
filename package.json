@@ -5,20 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/check-no-service-role-in-src.mjs && node scripts/verify-extension-app-source-scope.mjs && node scripts/verify-activity-rpc-shape.mjs && node scripts/verify-activity-app-source-scope.mjs && node scripts/verify-activity-bucket-tz.mjs && node scripts/verify-activity-stuck-threshold-hardcoded.mjs && node scripts/verify-activity-mode-filter-on-sessions.mjs && node scripts/verify-activity-table-readonly.mjs && node scripts/verify-activity-photos-ttl.mjs && node scripts/verify-activity-filter-scope.mjs && node scripts/verify-activity-error-state-contract.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest --run",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts",
-    "import:pdfs": "tsx scripts/import-pdfs.ts"
+    "db:types": "supabase gen types --lang=typescript --schema public --linked > src/db/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
     "@tanstack/react-query": "^5.99.2",
     "@tanstack/react-table": "^8.21.3",
-    "@tanstack/react-virtual": "^3.13.24",
-    "pdf-parse": "^2.4.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.13.1",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query-devtools": "^5.99.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -37,7 +39,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "dotenv": "^17.4.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
