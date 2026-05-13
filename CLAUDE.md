@@ -1,5 +1,35 @@
 
 
+# TPC Dashboard
+
+This repo is part of the **TPC workspace** at `..` — three apps (TPC_AI_Cataloger Chrome ext, TPC_App, this dashboard) sharing one Supabase project.
+
+## Cross-app coordination
+
+Before starting any GSD phase work, check whether the work is being driven from a cross-app feature note:
+
+```bash
+grep -l "dashboard:" ../_workspace/Features/*.md 2>/dev/null
+```
+
+If a feature note lists this app, **read it first** — it carries the cross-app spec, schema impact, and ship order that the per-repo phase plan won't. The PLAN.md should already have a `<context>` line pointing back to it; if you authored the phase manually, add one.
+
+For **shared decisions, conventions, schema, model routing, hooks**:
+- `../CLAUDE.md` — workspace router
+- `../_workspace/Decisions/_index.md` — cross-app ADRs (one file per decision)
+- `../_workspace/Architecture/{Stack,Conventions,Constants}.md`
+- `../_workspace/Schema/schema.md` (canonical) + `../_workspace/Schema/drift.md` (drift report)
+- `../_workspace/AI/routing.md` — Haiku / Sonnet / Opus / Codex routing
+- `../_workspace/AI/codex.md` — Codex gate matrix (schema work = MANDATORY `/codex:adversarial-review`)
+- `../_workspace/AI/agents.md` — A1–A5 always-on agent contracts
+- `../_workspace/State/dashboard.md` — vault mirror of this repo's `.planning/STATE.md`
+
+This app currently owns the cross-app prebuild verifications (`scripts/verify-*.mjs`) and is treated as the **schema-migration owner** for cross-app features by default. Single source of truth for schema is `../_workspace/Schema/schema.md` — update that file **before** writing migration SQL. Per [`D-003`](../_workspace/Decisions/D-003-anon-key-public-rls-boundary.md), service-role keys must never appear in client bundles (`scripts/prebuild/check-no-service-role-in-src.mjs` enforces).
+
+The sections below are GSD-managed (do not edit between `GSD:*-start` / `GSD:*-end` markers).
+
+---
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
