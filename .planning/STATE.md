@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: category-filtered-batch
 milestone_name: Category-Filtered Batch AI Generation
-status: planning
-stopped_at: "feat-capture scaffolded milestone, awaiting feat-plan"
-last_updated: "2026-05-13T18:20:00.000Z"
-last_activity: 2026-05-13 -- feat-capture category-filtered-batch
+status: ready_to_execute
+stopped_at: "Phase 01 stub PLAN.md ready (post-Codex pass 4 approval). BLOCKED on cataloger phase migration 007 landing in shared Supabase project — once that's pushed, run npm run db:types here then /gsd-plan-phase 01-category-filtered-batch."
+last_updated: "2026-05-13T19:20:00.000Z"
+last_activity: 2026-05-13 -- feat-spawn-phases category-filtered-batch
+current_phase: 01-category-filtered-batch
 progress:
-  total_phases: 0
+  total_phases: 1
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 0
 ---
