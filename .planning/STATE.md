@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: category-filtered-batch
 milestone_name: Category-Filtered Batch AI Generation
-status: ready_for_uat
+status: done
 stopped_at: "Phase 01 dashboard half implemented (01-02 queries+hook, 01-03 chart, 01-04 page insertion). Branch feat/category-filtered-batch pushed; awaiting Vercel preview + user smoke at <prod>/extension."
 last_updated: "2026-05-13T17:15:00.000Z"
 last_activity: 2026-05-13 -- executed phase 01 (Skip Reasons donut)
