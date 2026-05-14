@@ -620,6 +620,18 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_skip_reasons: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          count: number
+          reason: string
+        }[]
+      }
       get_stuck_items: {
         Args: {
           p_include_dev?: boolean

@@ -277,91 +277,62 @@ describe('fetchExtensionGate', () => {
 });
 
 describe('fetchSkipReasons (category-filtered-batch)', () => {
-  it('scopes by app_source=tpc-extension AND event_type=catalog_batch with date range', async () => {
-    const chain = makeChain({ data: [], error: null });
-    fromMock.mockReturnValueOnce(chain);
+  // Migration 20260514100000_get_skip_reasons moved aggregation server-side.
+  // D-01 + batch-only filters now live in the RPC body; tests assert the
+  // wire-level RPC contract instead.
+
+  it('invokes get_skip_reasons RPC with date range and empty filter arrays', async () => {
+    rpcMock.mockResolvedValueOnce({ data: [], error: null });
     await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
 
-    expect(fromMock).toHaveBeenCalledWith('analytics_events');
-    expect(chain.select).toHaveBeenCalledTimes(1);
-    // D-01 invariant + batch-only invariant: both .eq calls must fire.
-    expect(chain.eq).toHaveBeenCalledWith('app_source', 'tpc-extension');
-    expect(chain.eq).toHaveBeenCalledWith('event_type', 'catalog_batch');
-    expect(chain.gte).toHaveBeenCalledWith('created_at', FROM.toISOString());
-    expect(chain.lte).toHaveBeenCalledWith('created_at', TO.toISOString());
+    expect(rpcMock).toHaveBeenCalledWith('get_skip_reasons', {
+      p_from: FROM.toISOString(),
+      p_to: TO.toISOString(),
+      p_users: [],
+      p_versions: [],
+    });
   });
 
-  it('selects exactly the 5 skip-reason columns (no extra payload)', async () => {
-    const chain = makeChain({ data: [], error: null });
-    fromMock.mockReturnValueOnce(chain);
-    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+  it('passes users and versions arrays through verbatim (server-side filter)', async () => {
+    rpcMock.mockResolvedValueOnce({ data: [], error: null });
+    await fetchSkipReasons({
+      from: FROM,
+      to: TO,
+      users: ['a@x.com', 'b@x.com'],
+      versions: ['2.0.3', '2.0.4'],
+    });
 
-    const selectArg = chain.select.mock.calls[0][0] as string;
-    expect(selectArg).toContain('skipped_no_photos');
-    expect(selectArg).toContain('skipped_fields_filled');
-    expect(selectArg).toContain('skipped_manually');
-    expect(selectArg).toContain('skipped_category_filter');
-    expect(selectArg).toContain('skipped_classification_failed');
+    expect(rpcMock).toHaveBeenCalledWith('get_skip_reasons', {
+      p_from: FROM.toISOString(),
+      p_to: TO.toISOString(),
+      p_users: ['a@x.com', 'b@x.com'],
+      p_versions: ['2.0.3', '2.0.4'],
+    });
   });
 
-  it('does NOT call .in() when users and versions are empty (empty-filter no-op contract)', async () => {
-    const chain = makeChain({ data: [], error: null });
-    fromMock.mockReturnValueOnce(chain);
-    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
-
-    expect(chain.in).not.toHaveBeenCalled();
-  });
-
-  it('applies .in(user_email) only when users is non-empty', async () => {
-    const chain = makeChain({ data: [], error: null });
-    fromMock.mockReturnValueOnce(chain);
-    await fetchSkipReasons({ from: FROM, to: TO, users: ['a@x.com', 'b@x.com'], versions: [] });
-
-    const userCall = chain.in.mock.calls.find((c) => c[0] === 'user_email');
-    expect(userCall).toBeDefined();
-    expect(userCall![1]).toEqual(['a@x.com', 'b@x.com']);
-    const versionCall = chain.in.mock.calls.find((c) => c[0] === 'extension_version');
-    expect(versionCall).toBeUndefined();
-  });
-
-  it('applies .in(extension_version) only when versions is non-empty', async () => {
-    const chain = makeChain({ data: [], error: null });
-    fromMock.mockReturnValueOnce(chain);
-    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: ['2.0.3', '2.0.4'] });
-
-    const versionCall = chain.in.mock.calls.find((c) => c[0] === 'extension_version');
-    expect(versionCall).toBeDefined();
-    expect(versionCall![1]).toEqual(['2.0.3', '2.0.4']);
-    const userCall = chain.in.mock.calls.find((c) => c[0] === 'user_email');
-    expect(userCall).toBeUndefined();
-  });
-
-  it('returns rows from supabase response', async () => {
-    const row = {
-      skipped_no_photos: 1,
-      skipped_fields_filled: 2,
-      skipped_manually: 3,
-      skipped_category_filter: 4,
-      skipped_classification_failed: 5,
-    };
-    const chain = makeChain({ data: [row], error: null });
-    fromMock.mockReturnValueOnce(chain);
+  it('returns rows from RPC response', async () => {
+    const rows = [
+      { reason: 'no_photos', count: 1 },
+      { reason: 'fields_filled', count: 2 },
+      { reason: 'manually', count: 3 },
+      { reason: 'category_filter', count: 4 },
+      { reason: 'classification_failed', count: 5 },
+    ];
+    rpcMock.mockResolvedValueOnce({ data: rows, error: null });
     const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
-    expect(result).toEqual([row]);
+    expect(result).toEqual(rows);
   });
 
-  it('throws on supabase error', async () => {
+  it('throws on RPC error', async () => {
     const err = { message: 'skip fail' };
-    const chain = makeChain({ data: null, error: err });
-    fromMock.mockReturnValueOnce(chain);
+    rpcMock.mockResolvedValueOnce({ data: null, error: err });
     await expect(
       fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] }),
     ).rejects.toBe(err);
   });
 
   it('returns [] when data is null and error is null', async () => {
-    const chain = makeChain({ data: null, error: null });
-    fromMock.mockReturnValueOnce(chain);
+    rpcMock.mockResolvedValueOnce({ data: null, error: null });
     const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
     expect(result).toEqual([]);
   });

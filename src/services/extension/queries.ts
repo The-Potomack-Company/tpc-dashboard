@@ -239,14 +239,13 @@ export async function fetchLiveFeed(
  * side aggregation in `useSkipReasons` coerces nullish to 0 so the donut shows
  * an empty-state instead of NaN.
  */
-export type SkipReasonRow = Pick<
-  Database['public']['Tables']['analytics_events']['Row'],
-  | 'skipped_no_photos'
-  | 'skipped_fields_filled'
-  | 'skipped_manually'
-  | 'skipped_category_filter'
-  | 'skipped_classification_failed'
->;
+// Server-side aggregation. Migration 20260514100000_get_skip_reasons replaced
+// the prior raw select on analytics_events (which silently truncated at the
+// PostgREST 1000-row cap once a date range matched enough catalog_batch rows).
+// The RPC always returns exactly 5 rows, one per skip-reason bucket, zero-
+// padded. Filters live server-side; empty arrays = no filter (cardinality=0
+// branch in the function body).
+export type SkipReasonRow = Database['public']['Functions']['get_skip_reasons']['Returns'][number];
 
 export async function fetchSkipReasons(args: {
   from: Date;
@@ -254,20 +253,14 @@ export async function fetchSkipReasons(args: {
   users: string[];
   versions: string[];
 }): Promise<SkipReasonRow[]> {
-  let q = supabase
-    .from('analytics_events')
-    .select(
-      'skipped_no_photos, skipped_fields_filled, skipped_manually, skipped_category_filter, skipped_classification_failed',
-    )
-    .eq('app_source', 'tpc-extension') // D-01
-    .eq('event_type', 'catalog_batch') // skip reasons live only on batch events
-    .gte('created_at', args.from.toISOString())
-    .lte('created_at', args.to.toISOString());
-  if (args.users.length) q = q.in('user_email', args.users);
-  if (args.versions.length) q = q.in('extension_version', args.versions);
-  const { data, error } = await q;
+  const { data, error } = await supabase.rpc('get_skip_reasons', {
+    p_from: args.from.toISOString(),
+    p_to: args.to.toISOString(),
+    p_users: args.users,
+    p_versions: args.versions,
+  });
   if (error) throw error;
-  return (data ?? []) as unknown as SkipReasonRow[];
+  return data ?? [];
 }
 
 /**

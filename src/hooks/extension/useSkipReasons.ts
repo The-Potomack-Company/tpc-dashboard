@@ -11,10 +11,10 @@ import type { SkipReasonRow } from '../../services/extension/queries';
 // in the queryKey for cache stability (Pitfall 3); URL-order arrays at the
 // fetch boundary (proven by all-hooks-smoke.test.tsx).
 //
-// Aggregation is client-side because server-side row count is tiny — one row
-// per catalog_batch event, even on a busy week measured in hundreds. The 5
-// columns are summed across the result set; nullish coercion (`?? 0`) handles
-// historical rows that pre-date migration 007 (all 5 columns NULL there).
+// Aggregation moved server-side in migration 20260514100000 — the RPC returns
+// exactly 5 rows (one per bucket, zero-padded). This shape avoids the
+// PostgREST 1000-row truncation that the prior raw-select fetcher would hit
+// once a date range matched enough catalog_batch rows.
 
 export interface SkipReasonTotals {
   no_photos: number;
@@ -25,6 +25,14 @@ export interface SkipReasonTotals {
   total: number;
 }
 
+const REASON_KEYS = [
+  'no_photos',
+  'fields_filled',
+  'manually',
+  'category_filter',
+  'classification_failed',
+] as const satisfies readonly (keyof Omit<SkipReasonTotals, 'total'>)[];
+
 function aggregate(rows: SkipReasonRow[]): SkipReasonTotals {
   const totals: SkipReasonTotals = {
     no_photos: 0,
@@ -34,19 +42,20 @@ function aggregate(rows: SkipReasonRow[]): SkipReasonTotals {
     classification_failed: 0,
     total: 0,
   };
+  // Reason taxonomy mismatch detector: if the RPC ever adds or renames a
+  // bucket without the dashboard catching up, the donut would silently drop
+  // the new bucket from `total`. Log + skip rather than throw — the chart is
+  // analytics, not load-bearing on user flow.
   for (const r of rows) {
-    totals.no_photos += r.skipped_no_photos ?? 0;
-    totals.fields_filled += r.skipped_fields_filled ?? 0;
-    totals.manually += r.skipped_manually ?? 0;
-    totals.category_filter += r.skipped_category_filter ?? 0;
-    totals.classification_failed += r.skipped_classification_failed ?? 0;
+    if (!(REASON_KEYS as readonly string[]).includes(r.reason)) {
+      // eslint-disable-next-line no-console
+      console.warn('useSkipReasons: unknown reason from RPC', r.reason);
+      continue;
+    }
+    const key = r.reason as keyof Omit<SkipReasonTotals, 'total'>;
+    totals[key] = Number(r.count);
+    totals.total += Number(r.count);
   }
-  totals.total =
-    totals.no_photos +
-    totals.fields_filled +
-    totals.manually +
-    totals.category_filter +
-    totals.classification_failed;
   return totals;
 }
 
