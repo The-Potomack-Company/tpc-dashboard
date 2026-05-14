@@ -45,7 +45,12 @@ export type Database = {
           photo_count: number | null
           receipt_number: string | null
           session_id: string | null
+          skipped_category_filter: number | null
+          skipped_classification_failed: number | null
           skipped_count: number | null
+          skipped_fields_filled: number | null
+          skipped_manually: number | null
+          skipped_no_photos: number | null
           started_at: string | null
           success_count: number | null
           total_groups: number | null
@@ -83,7 +88,12 @@ export type Database = {
           photo_count?: number | null
           receipt_number?: string | null
           session_id?: string | null
+          skipped_category_filter?: number | null
+          skipped_classification_failed?: number | null
           skipped_count?: number | null
+          skipped_fields_filled?: number | null
+          skipped_manually?: number | null
+          skipped_no_photos?: number | null
           started_at?: string | null
           success_count?: number | null
           total_groups?: number | null
@@ -121,7 +131,12 @@ export type Database = {
           photo_count?: number | null
           receipt_number?: string | null
           session_id?: string | null
+          skipped_category_filter?: number | null
+          skipped_classification_failed?: number | null
           skipped_count?: number | null
+          skipped_fields_filled?: number | null
+          skipped_manually?: number | null
+          skipped_no_photos?: number | null
           started_at?: string | null
           success_count?: number | null
           total_groups?: number | null
@@ -406,7 +421,11 @@ export type Database = {
     }
     Functions: {
       get_active_sessions: {
-        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
+        Args: {
+          p_include_dev?: boolean
+          p_mode?: string
+          p_specialists?: string[]
+        }
         Returns: {
           assigned_to_display_name: string
           assigned_to_id: string
@@ -601,8 +620,24 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_skip_reasons: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_users?: string[]
+          p_versions?: string[]
+        }
+        Returns: {
+          count: number
+          reason: string
+        }[]
+      }
       get_stuck_items: {
-        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
+        Args: {
+          p_include_dev?: boolean
+          p_mode?: string
+          p_specialists?: string[]
+        }
         Returns: {
           age_seconds: number
           ai_status: string
@@ -620,7 +655,11 @@ export type Database = {
         }[]
       }
       get_today_kpis: {
-        Args: { p_include_dev?: boolean; p_mode?: string; p_specialists?: string[] }
+        Args: {
+          p_include_dev?: boolean
+          p_mode?: string
+          p_specialists?: string[]
+        }
         Returns: {
           exports_today: number
           exports_yday: number

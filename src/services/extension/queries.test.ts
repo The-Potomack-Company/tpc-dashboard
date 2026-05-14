@@ -64,6 +64,7 @@ import {
   fetchLiveFeed,
   fetchExtensionGate,
   fetchDistinctVersions,
+  fetchSkipReasons,
   EXTENSION_EVENT_TYPES,
 } from './queries';
 
@@ -272,6 +273,68 @@ describe('fetchExtensionGate', () => {
     fromMock.mockReturnValueOnce(chain);
     const result = await fetchExtensionGate();
     expect(result).toEqual({ hasAny: false });
+  });
+});
+
+describe('fetchSkipReasons (category-filtered-batch)', () => {
+  // Migration 20260514100000_get_skip_reasons moved aggregation server-side.
+  // D-01 + batch-only filters now live in the RPC body; tests assert the
+  // wire-level RPC contract instead.
+
+  it('invokes get_skip_reasons RPC with date range and empty filter arrays', async () => {
+    rpcMock.mockResolvedValueOnce({ data: [], error: null });
+    await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+
+    expect(rpcMock).toHaveBeenCalledWith('get_skip_reasons', {
+      p_from: FROM.toISOString(),
+      p_to: TO.toISOString(),
+      p_users: [],
+      p_versions: [],
+    });
+  });
+
+  it('passes users and versions arrays through verbatim (server-side filter)', async () => {
+    rpcMock.mockResolvedValueOnce({ data: [], error: null });
+    await fetchSkipReasons({
+      from: FROM,
+      to: TO,
+      users: ['a@x.com', 'b@x.com'],
+      versions: ['2.0.3', '2.0.4'],
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith('get_skip_reasons', {
+      p_from: FROM.toISOString(),
+      p_to: TO.toISOString(),
+      p_users: ['a@x.com', 'b@x.com'],
+      p_versions: ['2.0.3', '2.0.4'],
+    });
+  });
+
+  it('returns rows from RPC response', async () => {
+    const rows = [
+      { reason: 'no_photos', count: 1 },
+      { reason: 'fields_filled', count: 2 },
+      { reason: 'manually', count: 3 },
+      { reason: 'category_filter', count: 4 },
+      { reason: 'classification_failed', count: 5 },
+    ];
+    rpcMock.mockResolvedValueOnce({ data: rows, error: null });
+    const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+    expect(result).toEqual(rows);
+  });
+
+  it('throws on RPC error', async () => {
+    const err = { message: 'skip fail' };
+    rpcMock.mockResolvedValueOnce({ data: null, error: err });
+    await expect(
+      fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] }),
+    ).rejects.toBe(err);
+  });
+
+  it('returns [] when data is null and error is null', async () => {
+    rpcMock.mockResolvedValueOnce({ data: null, error: null });
+    const result = await fetchSkipReasons({ from: FROM, to: TO, users: [], versions: [] });
+    expect(result).toEqual([]);
   });
 });
 

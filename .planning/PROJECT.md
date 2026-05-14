@@ -19,7 +19,7 @@ Give the TPC team real-time awareness of team activity and live auctions — one
 Decisions that apply to **dashboard**. Bodies live in the vault — IDs only here.
 
 - **[D-001](../../_workspace/Decisions/D-001-shared-supabase.md)** — All three TPC apps read/write the same Supabase project; RLS is the only boundary.
-- **[D-002](../../_workspace/Decisions/D-002-tpc-app-owns-auth.md)** — TPC App is the auth-of-record; dashboard shares the same Supabase auth; cataloger maps Chrome Identity to Supabase users at write time.
+- **[D-002](../../_workspace/Decisions/D-002-tpc-app-owns-auth.md)** — TPC Voice Cataloger is the auth-of-record; dashboard shares the same Supabase auth; cataloger maps Chrome Identity to Supabase users at write time.
 - **[D-003](../../_workspace/Decisions/D-003-anon-key-public-rls-boundary.md)** _(scope: schema)_ — Treat the Supabase anon key as public; security comes entirely from RLS. Service-role keys never appear in client bundles.
 - **[D-004](../../_workspace/Decisions/D-004-cataloger-analytics-insert-only.md)** _(scope: schema)_ — Cataloger writes to an INSERT-only analytics surface; dashboard reads via SELECT-allowed views. Writes are fire-and-forget.
 

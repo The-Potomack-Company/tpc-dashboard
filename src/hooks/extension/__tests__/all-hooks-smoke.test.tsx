@@ -19,6 +19,7 @@ const fetchPerUserSummaryMock = vi.fn().mockResolvedValue([]);
 const fetchRecentErrorsMock = vi.fn().mockResolvedValue([]);
 const fetchDominantVersionMock = vi.fn().mockResolvedValue(null);
 const fetchCancellationRatesMock = vi.fn().mockResolvedValue([]);
+const fetchSkipReasonsMock = vi.fn().mockResolvedValue([]);
 
 vi.mock('../../../services/extension/queries', () => ({
   fetchEventVolume: (...args: unknown[]) => fetchEventVolumeMock(...args),
@@ -28,6 +29,7 @@ vi.mock('../../../services/extension/queries', () => ({
   fetchRecentErrors: (...args: unknown[]) => fetchRecentErrorsMock(...args),
   fetchDominantVersion: (...args: unknown[]) => fetchDominantVersionMock(...args),
   fetchCancellationRates: (...args: unknown[]) => fetchCancellationRatesMock(...args),
+  fetchSkipReasons: (...args: unknown[]) => fetchSkipReasonsMock(...args),
 }));
 
 // Mock the URL filter hooks with controlled return values. UNSORTED users/versions
@@ -60,6 +62,7 @@ import { usePerUserSummary } from '../usePerUserSummary';
 import { useRecentErrors } from '../useRecentErrors';
 import { useDominantVersion } from '../useDominantVersion';
 import { useCancellationRates } from '../useCancellationRates';
+import { useSkipReasons } from '../useSkipReasons';
 
 function makeWrapper() {
   const client = new QueryClient({
@@ -84,6 +87,7 @@ const cases: HookCase[] = [
   { name: 'useRecentErrors', hook: useRecentErrors, fetchMock: fetchRecentErrorsMock },
   { name: 'useDominantVersion', hook: useDominantVersion, fetchMock: fetchDominantVersionMock },
   { name: 'useCancellationRates', hook: useCancellationRates, fetchMock: fetchCancellationRatesMock },
+  { name: 'useSkipReasons', hook: useSkipReasons, fetchMock: fetchSkipReasonsMock },
 ];
 
 beforeEach(() => {

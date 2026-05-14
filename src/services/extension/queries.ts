@@ -223,6 +223,47 @@ export async function fetchLiveFeed(
 }
 
 /**
+ * category-filtered-batch — Skip-reason breakdown for /extension.
+ *
+ * Selects the 5 new top-level INT columns on `analytics_events` filtered to
+ * `event_type = 'catalog_batch'` (skip reasons only exist on batch events) and
+ * `app_source = 'tpc-extension'` (D-01). Date range gates via gte/lte on
+ * created_at.
+ *
+ * Filter contract matches the neighboring fetchers (see fetchRecentErrors):
+ * empty `users` / `versions` arrays are NO-OPS — .in('user_email', []) /
+ * .in('extension_version', []) would degenerate to "match nothing" and silently
+ * blank the chart.
+ *
+ * Historical rows (pre-migration 007) carry NULL for all 5 columns; client-
+ * side aggregation in `useSkipReasons` coerces nullish to 0 so the donut shows
+ * an empty-state instead of NaN.
+ */
+// Server-side aggregation. Migration 20260514100000_get_skip_reasons replaced
+// the prior raw select on analytics_events (which silently truncated at the
+// PostgREST 1000-row cap once a date range matched enough catalog_batch rows).
+// The RPC always returns exactly 5 rows, one per skip-reason bucket, zero-
+// padded. Filters live server-side; empty arrays = no filter (cardinality=0
+// branch in the function body).
+export type SkipReasonRow = Database['public']['Functions']['get_skip_reasons']['Returns'][number];
+
+export async function fetchSkipReasons(args: {
+  from: Date;
+  to: Date;
+  users: string[];
+  versions: string[];
+}): Promise<SkipReasonRow[]> {
+  const { data, error } = await supabase.rpc('get_skip_reasons', {
+    p_from: args.from.toISOString(),
+    p_to: args.to.toISOString(),
+    p_users: args.users,
+    p_versions: args.versions,
+  });
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
  * D-19 — Lifetime emptiness probe for /extension.
  * Single SELECT with limit(1); the `useExtensionGate` hook caches the result
  * indefinitely (staleTime: Infinity) — see D-19 trade-off (CONTEXT § Deferred).

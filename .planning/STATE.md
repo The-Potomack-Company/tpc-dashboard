@@ -1,18 +1,28 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Live Ops
-status: ready_to_execute
-stopped_at: Phase 3 plans approved (9 plans, 5 waves)
-last_updated: "2026-04-30T18:30:00.000Z"
-last_activity: 2026-04-30
+milestone: category-filtered-batch
+milestone_name: Category-Filtered Batch AI Generation
+status: done
+stopped_at: "Phase 01 dashboard half implemented (01-02 queries+hook, 01-03 chart, 01-04 page insertion). Branch feat/category-filtered-batch pushed; awaiting Vercel preview + user smoke at <prod>/extension."
+last_updated: "2026-05-13T17:15:00.000Z"
+last_activity: 2026-05-13 -- executed phase 01 (Skip Reasons donut)
+current_phase: 01-category-filtered-batch
 progress:
-  total_phases: 6
-  completed_phases: 2
-  total_plans: 24
-  completed_plans: 15
-  percent: 63
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 100
 ---
+
+# Project State
+
+## Project Reference
+
+See: `.planning/PROJECT.md`
+
+**Core value:** Single place to see extension analytics and team cataloging activity.
+**Current focus:** cross-app feature `category-filtered-batch` — new Skip Reasons panel on /extension. Workspace spec at `_workspace/Features/category-filtered-batch.md`
 
 # Project State
 

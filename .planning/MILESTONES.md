@@ -1,5 +1,14 @@
 # Milestones
 
+## category-filtered-batch milestone (in flight — Started: 2026-05-13)
+
+Cross-app feature. Workspace spec: `../../_workspace/Features/category-filtered-batch.md`.
+
+**Phases planned:** TBD (`feat-spawn-phases category-filtered-batch` will populate)
+**Status:** Active
+
+---
+
 ## v1.0 milestone (pivot-closed) (Shipped: 2026-04-24)
 
 **Phases completed:** 6 phases, 31 plans, 57 tasks

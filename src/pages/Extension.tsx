@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { EventVolumeChart } from '../components/extension/EventVolumeChart';
 import { KpiStrip } from '../components/extension/KpiStrip';
 import { ErrorRateChart } from '../components/extension/ErrorRateChart';
+import { SkipReasonsChart } from '../components/extension/SkipReasonsChart';
 import { PerUserTable } from '../components/extension/PerUserTable';
 import { RecentErrorsTable } from '../components/extension/RecentErrorsTable';
 import { LiveEventFeed } from '../components/extension/LiveEventFeed';
@@ -155,6 +156,26 @@ export function ExtensionPage() {
           </div>
         </section>
       )}
+
+      {/*
+        EXT-SKIP — Skip Reasons (admin-visible; category-filtered-batch).
+        Surfaces the 5 skipped_* columns added by extension migration 007.
+        NOT dev-gated — operations cares about why batches skip items.
+      */}
+      <section
+        className="tpc-card p-4 mt-6"
+        data-testid="ext-skip-reasons-card"
+      >
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-sm font-semibold text-ink-2">Skip reasons</h2>
+          <span className="text-sm text-ink-3">
+            Batches only — 5-bucket taxonomy
+          </span>
+        </div>
+        <div className="h-72">
+          <SkipReasonsChart />
+        </div>
+      </section>
 
       {/*
         EXT-04 — Per user (own row, full width).
