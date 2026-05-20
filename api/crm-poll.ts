@@ -190,73 +190,102 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
     errors: [],
   };
 
-  for (let index = 0; index < boxes.length; index += 1) {
-    const box = boxes[index];
+  // Process boxes in parallel batches so we stay inside the 60s function
+  // budget. Serial loop was timing out at ~8 boxes; concurrency 5 fits 10+
+  // boxes (gmail+LLM+supabase per box) comfortably.
+  const CONCURRENCY = Number(process.env.CRM_POLL_CONCURRENCY) || 5;
+  let budgetExceeded = false;
+
+  type BoxOutcome =
+    | { kind: 'classified' }
+    | { kind: 'skipped' }
+    | { kind: 'error'; message: string }
+    | { kind: 'deferred-budget' };
+
+  async function processBox(box: StreakBox): Promise<BoxOutcome> {
+    const gmailThreadId = box.gmailThreadIds?.[0];
+    if (!gmailThreadId) {
+      return { kind: 'error', message: 'No Gmail thread id found on Streak box' };
+    }
+
+    const bodyText = await getThreadBody(gmailThreadId);
+    const bodyHash = hashBody(bodyText);
+    const thread = await upsertThread(admin, box, gmailThreadId, bodyText);
+    response.polled += 1;
+
+    const latest = await getLatestClassification(admin, thread.id);
+    if (readBodyHash(latest?.metadata) === bodyHash) {
+      return { kind: 'skipped' };
+    }
+
+    const startedAt = Date.now();
+    let output: ClassifierOutput;
     try {
-      const gmailThreadId = box.gmailThreadIds?.[0];
-      if (!gmailThreadId) {
-        response.errors.push({ box_key: box.key, message: 'No Gmail thread id found on Streak box' });
-        continue;
+      output = applyPollerOverrides(
+        await classify({
+          boxKey: box.key,
+          boxName: box.name,
+          stageKey: box.stageKey,
+          stageName: box.stageName,
+          gmailBody: bodyText,
+          senderEmail: box.fromEmail,
+          lastUpdatedMs: box.lastUpdatedTimestamp,
+        }),
+        { bodyText, fromEmail: box.fromEmail },
+      );
+    } catch (error) {
+      if (error instanceof ClassifierBudgetExceeded) {
+        return { kind: 'deferred-budget' };
       }
 
-      const bodyText = await getThreadBody(gmailThreadId);
-      const bodyHash = hashBody(bodyText);
-      const thread = await upsertThread(admin, box, gmailThreadId, bodyText);
-      response.polled += 1;
-
-      const latest = await getLatestClassification(admin, thread.id);
-      if (readBodyHash(latest?.metadata) === bodyHash) {
-        response.skipped_unchanged += 1;
-        continue;
-      }
-
-      const startedAt = Date.now();
-      let output: ClassifierOutput | null = null;
-      try {
-        output = applyPollerOverrides(
-          await classify({
-            boxKey: box.key,
-            boxName: box.name,
-            stageKey: box.stageKey,
-            stageName: box.stageName,
-            gmailBody: bodyText,
-            senderEmail: box.fromEmail,
-            lastUpdatedMs: box.lastUpdatedTimestamp,
-          }),
-          { bodyText, fromEmail: box.fromEmail },
-        );
-      } catch (error) {
-        if (error instanceof ClassifierBudgetExceeded) {
-          response.deferred.push(...boxes.slice(index).map((deferredBox) => deferredBox.key));
-          break;
-        }
-
-        await logUsage(admin, {
-          model: 'gemini-2.5-flash',
-          userId: user.id,
-          durationMs: Date.now() - startedAt,
-          status: 'error',
-          errorMessage: error instanceof Error ? error.message : 'Unknown classifier error',
-        });
-        throw error;
-      }
-
-      await replaceCurrentClassification(admin, thread.id, output, bodyHash);
       await logUsage(admin, {
-        model: output.model,
+        model: 'gemini-2.5-flash',
         userId: user.id,
         durationMs: Date.now() - startedAt,
-        status: 'ok',
-        tokensIn: output.usage?.inputTokens,
-        tokensOut: output.usage?.outputTokens,
-        costUsd: output.usage?.costUsd,
+        status: 'error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown classifier error',
       });
-      response.classified += 1;
-    } catch (error) {
-      response.errors.push({
-        box_key: box.key,
-        message: error instanceof Error ? error.message : 'Unknown CRM poll error',
-      });
+      throw error;
+    }
+
+    await replaceCurrentClassification(admin, thread.id, output, bodyHash);
+    await logUsage(admin, {
+      model: output.model,
+      userId: user.id,
+      durationMs: Date.now() - startedAt,
+      status: 'ok',
+      tokensIn: output.usage?.inputTokens,
+      tokensOut: output.usage?.outputTokens,
+      costUsd: output.usage?.costUsd,
+    });
+    return { kind: 'classified' };
+  }
+
+  for (let i = 0; i < boxes.length && !budgetExceeded; i += CONCURRENCY) {
+    const batch = boxes.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(batch.map((b) => processBox(b)));
+    for (let j = 0; j < settled.length; j += 1) {
+      const box = batch[j];
+      const result = settled[j];
+      if (result.status === 'rejected') {
+        response.errors.push({
+          box_key: box.key,
+          message: result.reason instanceof Error ? result.reason.message : 'Unknown CRM poll error',
+        });
+        continue;
+      }
+      const outcome = result.value;
+      if (outcome.kind === 'classified') {
+        response.classified += 1;
+      } else if (outcome.kind === 'skipped') {
+        response.skipped_unchanged += 1;
+      } else if (outcome.kind === 'error') {
+        response.errors.push({ box_key: box.key, message: outcome.message });
+      } else if (outcome.kind === 'deferred-budget') {
+        budgetExceeded = true;
+        response.deferred.push(...boxes.slice(i + j).map((d) => d.key));
+        break;
+      }
     }
   }
 
