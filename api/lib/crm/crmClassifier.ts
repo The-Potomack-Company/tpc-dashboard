@@ -72,8 +72,18 @@ Priority signals:
 - sender identity: known VIP domain should be treated as high intent
 - scope: multi-department or estate-level breadth can raise priority when value supports it
 
+Rationale requirements (IMPORTANT):
+- Quote 1-2 specific phrases from the gmailBody in double quotes — these are the evidence
+- For each quoted phrase, name which signal it triggered (value/time/sender/scope)
+- If a phrase justifies the department tags, quote it too
+- If the body is empty or unreadable, say so explicitly and tag priority="low"
+- 2-3 sentences total, evidence-first, no generic hedging
+
+Example rationale:
+"Two signed Léger lithographs with COA and provenance docs" — high value + info completeness; multi-department implied by "plus dining room set and china collection" so tagged furniture, decarts, art_sculpture.
+
 Return JSON only:
-{"department":["furniture"],"priority":"high"|"standard"|"low","rationale":"1-2 sentences","model":"${MODEL}"}
+{"department":["furniture"],"priority":"high"|"standard"|"low","rationale":"evidence-first 2-3 sentences quoting specific phrases","model":"${MODEL}"}
 
 Thread:
 boxKey: ${input.boxKey}
