@@ -216,7 +216,11 @@ function toArray<T>(value: T[] | { results?: T[]; data?: T[] }): T[] {
 }
 
 function toStringValue(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
 }
 
 function toStringArray(value: unknown): string[] {
