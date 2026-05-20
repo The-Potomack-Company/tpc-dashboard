@@ -260,6 +260,14 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
     }
   }
 
+  console.error('[crm-debug] response →', JSON.stringify({
+    polled: response.polled,
+    classified: response.classified,
+    skipped_unchanged: response.skipped_unchanged,
+    deferred_count: response.deferred.length,
+    errors_count: response.errors.length,
+    sample_errors: response.errors.slice(0, 5),
+  }));
   res.status(200).json(response);
 }
 
