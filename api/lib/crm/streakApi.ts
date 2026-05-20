@@ -17,10 +17,22 @@ type StreakBoxApiRecord = {
   stageName?: unknown;
   lastUpdatedTimestamp?: unknown;
   assignedToSharingEntries?: unknown[];
+  gmailThreadId?: unknown;
+  gmailThreadIds?: unknown;
+  threadId?: unknown;
+  threadIds?: unknown;
+  subject?: unknown;
+  fromEmail?: unknown;
+  fromName?: unknown;
+  snippet?: unknown;
 };
 
-export async function listOpenBoxes(config: { pipelineKey: string }): Promise<StreakBox[]> {
-  const apiKey = readRequiredEnv('STREAK_API_KEY');
+export async function listOpenBoxes(config: {
+  apiKey?: string;
+  pipelineKey: string;
+  closedStageKeys?: string[];
+}): Promise<StreakBox[]> {
+  const apiKey = config.apiKey ?? readRequiredEnv('STREAK_API_KEY');
   const headers = {
     Authorization: `Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
   };
@@ -40,7 +52,7 @@ export async function listOpenBoxes(config: { pipelineKey: string }): Promise<St
     headers,
   );
 
-  const closedStageKeys = parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS);
+  const closedStageKeys = new Set(config.closedStageKeys ?? [...parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS)]);
 
   return toArray(boxes)
     .map((box) => normalizeBox(box, stageNameByKey))
@@ -73,6 +85,11 @@ async function streakFetch<T>(url: string, headers: Record<string, string>): Pro
 
 function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, string>): StreakBox {
   const stageKey = toStringValue(box.stageKey);
+  const gmailThreadIds = toStringArray(box.gmailThreadIds ?? box.threadIds ?? box.gmailThreadId ?? box.threadId);
+  const subject = toStringValue(box.subject);
+  const fromEmail = toStringValue(box.fromEmail);
+  const fromName = toStringValue(box.fromName);
+  const snippet = toStringValue(box.snippet);
 
   return {
     key: toStringValue(box.key ?? box.boxKey),
@@ -81,6 +98,11 @@ function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, strin
     stageName: toStringValue(box.stageName) || stageNameByKey.get(stageKey) || '',
     lastUpdatedTimestamp: toNumberValue(box.lastUpdatedTimestamp),
     assignedToSharingEntries: box.assignedToSharingEntries,
+    ...(gmailThreadIds.length > 0 ? { gmailThreadIds } : {}),
+    ...(subject ? { subject } : {}),
+    ...(fromEmail ? { fromEmail } : {}),
+    ...(fromName ? { fromName } : {}),
+    ...(snippet ? { snippet } : {}),
   };
 }
 
@@ -130,6 +152,14 @@ function toArray<T>(value: T[] | { results?: T[]; data?: T[] }): T[] {
 
 function toStringValue(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+  }
+
+  return typeof value === 'string' && value.length > 0 ? [value] : [];
 }
 
 function toNumberValue(value: unknown): number {

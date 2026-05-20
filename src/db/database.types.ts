@@ -152,6 +152,7 @@ export type Database = {
           department: string[]
           id: string
           is_current: boolean
+          metadata: Json
           model: string
           priority: string
           prompt_version: string
@@ -163,6 +164,7 @@ export type Database = {
           department: string[]
           id?: string
           is_current?: boolean
+          metadata?: Json
           model: string
           priority: string
           prompt_version?: string
@@ -174,6 +176,7 @@ export type Database = {
           department?: string[]
           id?: string
           is_current?: boolean
+          metadata?: Json
           model?: string
           priority?: string
           prompt_version?: string

@@ -5,6 +5,11 @@ export type StreakBox = {
   stageName: string;
   lastUpdatedTimestamp: number;
   assignedToSharingEntries?: unknown[];
+  gmailThreadIds?: string[];
+  subject?: string;
+  fromEmail?: string;
+  fromName?: string;
+  snippet?: string;
 };
 
 export type GmailMessage = {
@@ -30,6 +35,11 @@ export type ClassifierOutput = {
   rationale: string;
   model: string;
   needsReview?: boolean;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    costUsd?: number;
+  };
 };
 
 export type UsageRecord = {

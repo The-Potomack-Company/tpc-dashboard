@@ -50,6 +50,10 @@ export async function classify(input: ClassifierInput): Promise<ClassifierOutput
 }
 
 export function __resetClassifierInvocationCountForTests(): void {
+  resetClassifierInvocationBudget();
+}
+
+export function resetClassifierInvocationBudget(): void {
   invocationCount = 0;
 }
 

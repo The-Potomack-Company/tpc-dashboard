@@ -31,7 +31,7 @@ export async function getThreadBody(threadId: string): Promise<string> {
     readRequiredEnv('GMAIL_OAUTH_CLIENT_SECRET'),
   );
   oauth2Client.setCredentials({
-    refresh_token: readRequiredEnv('GMAIL_OAUTH_REFRESH_TOKEN'),
+    refresh_token: readRequiredEnv('GMAIL_REFRESH_TOKEN', 'GMAIL_OAUTH_REFRESH_TOKEN'),
   });
 
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
@@ -117,10 +117,10 @@ function stripHtml(value: string): string {
     .trim();
 }
 
-function readRequiredEnv(key: string): string {
-  const value = process.env[key];
+function readRequiredEnv(key: string, fallbackKey?: string): string {
+  const value = process.env[key] ?? (fallbackKey ? process.env[fallbackKey] : undefined);
   if (!value) {
-    throw new Error(`Missing required env var: ${key}`);
+    throw new Error(`Missing required env var: ${fallbackKey ? `${key} or ${fallbackKey}` : key}`);
   }
 
   return value;
