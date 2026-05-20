@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { GmailVerbForbidden } from './types';
+import { GmailVerbForbidden } from './types.js';
 
 const ALLOWED_VERBS = ['messages.list', 'messages.get'] as const;
 

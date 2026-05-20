@@ -1,4 +1,4 @@
-import { StreakRateLimited, type StreakBox } from './types';
+import { StreakRateLimited, type StreakBox } from './types.js';
 
 const STREAK_API_BASE = 'https://www.streak.com/api/v1';
 const CLOSED_STAGE_NAME_PATTERN = /^(closed|won|lost|archived|done|completed)/i;

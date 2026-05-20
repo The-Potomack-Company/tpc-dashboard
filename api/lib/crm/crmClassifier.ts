@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ClassifierBudgetExceeded, type ClassifierInput, type ClassifierOutput } from './types';
+import { ClassifierBudgetExceeded, type ClassifierInput, type ClassifierOutput } from './types.js';
 
 const MODEL = 'gemini-2.5-flash';
 const MAX_INVOCATIONS_PER_EXECUTION = 200;

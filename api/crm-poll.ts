@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { classify, resetClassifierInvocationBudget } from './lib/crm/crmClassifier';
-import { getThreadBody } from './lib/crm/gmailApi';
-import { listOpenBoxes } from './lib/crm/streakApi';
-import { ClassifierBudgetExceeded, StreakRateLimited, type ClassifierOutput, type StreakBox } from './lib/crm/types';
+import { classify, resetClassifierInvocationBudget } from './lib/crm/crmClassifier.js';
+import { getThreadBody } from './lib/crm/gmailApi.js';
+import { listOpenBoxes } from './lib/crm/streakApi.js';
+import { ClassifierBudgetExceeded, StreakRateLimited, type ClassifierOutput, type StreakBox } from './lib/crm/types.js';
 
 export const maxDuration = 60;
 
