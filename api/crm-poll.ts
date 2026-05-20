@@ -96,6 +96,19 @@ type ApiDatabase = {
 type AdminClient = SupabaseClient<ApiDatabase>;
 
 export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  try {
+    return await handleRequest(req, res);
+  } catch (error) {
+    console.error('[crm-poll] unhandled error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    res.status(500).json({
+      error: `Internal error: ${message}`,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+  }
+}
+
+async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (req.method !== 'POST') {
     res.setHeader?.('Allow', 'POST');
     res.status(405).json({ error: 'Method not allowed' });
