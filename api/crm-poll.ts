@@ -194,6 +194,7 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
   // budget. Serial loop was timing out at ~8 boxes; concurrency 5 fits 10+
   // boxes (gmail+LLM+supabase per box) comfortably.
   const CONCURRENCY = Number(process.env.CRM_POLL_CONCURRENCY) || 5;
+  const userId = user.id; // capture for use inside processBox closure (TS narrowing doesn't cross closures)
   let budgetExceeded = false;
 
   type BoxOutcome =
@@ -240,7 +241,7 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
 
       await logUsage(admin, {
         model: 'gemini-2.5-flash',
-        userId: user.id,
+        userId: userId,
         durationMs: Date.now() - startedAt,
         status: 'error',
         errorMessage: error instanceof Error ? error.message : 'Unknown classifier error',
@@ -251,7 +252,7 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
     await replaceCurrentClassification(admin, thread.id, output, bodyHash);
     await logUsage(admin, {
       model: output.model,
-      userId: user.id,
+      userId: userId,
       durationMs: Date.now() - startedAt,
       status: 'ok',
       tokensIn: output.usage?.inputTokens,
