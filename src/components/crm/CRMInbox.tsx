@@ -31,9 +31,34 @@ function formatReceived(value: string): string {
   return DATE_FORMAT.format(new Date(value));
 }
 
+function formatAge(ageDays: number): string {
+  if (ageDays < 1 / 24) return 'just now';
+  if (ageDays < 1) {
+    const hours = Math.round(ageDays * 24);
+    return `${hours}h ago`;
+  }
+  if (ageDays < 14) {
+    const days = Math.round(ageDays);
+    return `${days}d ago`;
+  }
+  if (ageDays < 60) {
+    const weeks = Math.round(ageDays / 7);
+    return `${weeks}w ago`;
+  }
+  const months = Math.round(ageDays / 30);
+  return `${months}mo ago`;
+}
+
 function sender(row: TriageRow): string {
   if (row.from_name && row.from_email) return `${row.from_name} <${row.from_email}>`;
   return row.from_name ?? row.from_email ?? 'Unknown sender';
+}
+
+function truncateRationale(value: string | null, max = 140): string {
+  if (!value) return '—';
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1)}…`;
 }
 
 function getPollMessage(response: PollResponse): string {
@@ -188,10 +213,11 @@ export function CRMInbox() {
               <thead className="bg-bg-2 text-left text-xs font-semibold uppercase text-ink-3">
                 <tr>
                   <th className="px-4 py-3">Priority</th>
-                  <th className="px-4 py-3">Subject</th>
+                  <th className="px-4 py-3">Stage</th>
+                  <th className="px-4 py-3">Subject / From</th>
                   <th className="px-4 py-3">Departments</th>
-                  <th className="px-4 py-3">From</th>
-                  <th className="px-4 py-3">Received</th>
+                  <th className="px-4 py-3">Age</th>
+                  <th className="px-4 py-3">Why</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rule bg-bg">
@@ -216,24 +242,36 @@ export function CRMInbox() {
                           <PriorityChip priority={thread.effective_priority} />
                           {thread.effective_priority !== thread.priority && (
                             <div className="mt-1 text-xs text-ink-3">
-                              Bumped from {thread.priority}
+                              ↑ from {thread.priority}
                             </div>
                           )}
+                          {thread.needs_review && (
+                            <div className="mt-1 text-xs text-ink-3">needs review</div>
+                          )}
                         </td>
-                        <td className="min-w-72 px-4 py-3 font-medium text-ink">
-                          {thread.subject}
+                        <td className="whitespace-nowrap px-4 py-3 text-ink-2">
+                          <span className="inline-block rounded-full bg-bg-2 px-2 py-1 text-xs text-ink-2">
+                            {thread.streak_stage_name ?? '—'}
+                          </span>
+                        </td>
+                        <td className="min-w-72 px-4 py-3">
+                          <div className="font-medium text-ink">{thread.subject}</div>
+                          <div className="mt-0.5 text-xs text-ink-3">{sender(thread)}</div>
                         </td>
                         <td className="min-w-56 px-4 py-3">
                           <DeptTags departments={thread.department} />
                         </td>
-                        <td className="min-w-64 px-4 py-3 text-ink-2">{sender(thread)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-ink-2">
-                          {formatReceived(thread.received_at)}
+                          <div>{formatAge(thread.age_days)}</div>
+                          <div className="text-xs text-ink-3">{formatReceived(thread.received_at)}</div>
+                        </td>
+                        <td className="min-w-64 max-w-96 px-4 py-3 text-sm text-ink-2">
+                          {truncateRationale(thread.rationale)}
                         </td>
                       </tr>
                       {expanded && (
                         <tr className="bg-bg-2">
-                          <td colSpan={5} className="px-4 py-4">
+                          <td colSpan={6} className="px-4 py-4">
                             <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
                               <div>
                                 <h2 className="mb-2 text-xs font-semibold uppercase text-ink-3">
@@ -245,7 +283,7 @@ export function CRMInbox() {
                               </div>
                               <div>
                                 <h2 className="mb-2 text-xs font-semibold uppercase text-ink-3">
-                                  Classifier rationale
+                                  Full rationale
                                 </h2>
                                 <p className="text-sm leading-6 text-ink-2">
                                   {thread.rationale ?? 'No rationale available.'}

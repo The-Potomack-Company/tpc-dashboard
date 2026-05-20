@@ -4,6 +4,7 @@ export type StreakBox = {
   stageKey: string;
   stageName: string;
   lastUpdatedTimestamp: number;
+  lastEmailReceivedTimestamp: number;
   assignedToSharingEntries?: unknown[];
   gmailThreadIds?: string[];
   subject?: string;
@@ -19,12 +20,23 @@ export type GmailMessage = {
   body: string;
 };
 
+export type GmailImageAttachment = {
+  mimeType: string;
+  data: string; // base64 (standard, not url-safe — Gemini inlineData spec)
+};
+
+export type GmailThreadContent = {
+  text: string;
+  images: GmailImageAttachment[];
+};
+
 export type ClassifierInput = {
   boxKey: string;
   boxName: string;
   stageKey: string;
   stageName: string;
   gmailBody?: string;
+  gmailImages?: GmailImageAttachment[];
   senderEmail?: string;
   lastUpdatedMs: number;
 };

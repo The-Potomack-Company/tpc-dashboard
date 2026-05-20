@@ -4,7 +4,7 @@ const STREAK_V1_BASE = 'https://www.streak.com/api/v1';
 const STREAK_V2_BASE = 'https://api.streak.com/api/v2';
 const CLOSED_STAGE_NAME_PATTERN = /^(closed|won|lost|archived|done|completed)/i;
 const BOXES_PAGE_LIMIT = 200;
-const DEFAULT_MAX_BOXES_PER_POLL = 25;
+const DEFAULT_MAX_BOXES_PER_POLL = 15;
 
 type StreakStageApiRecord = {
   key?: unknown;
@@ -19,6 +19,7 @@ type StreakBoxApiRecord = {
   stageKey?: unknown;
   stageName?: unknown;
   lastUpdatedTimestamp?: unknown;
+  lastEmailReceivedTimestamp?: unknown;
   assignedToSharingEntries?: unknown[];
   gmailThreadId?: unknown;
   gmailThreadIds?: unknown;
@@ -96,47 +97,58 @@ export async function listOpenBoxes(config: {
     allStageNames: [...stageNameByKey.entries()].map(([k, n]) => `${k}:${n}`),
   }));
 
-  // Use v2 per-stage paginated boxes — bounds payload size per stage so we
-  // never load the entire pipeline (16MB+ on this pipeline as of 2026-05).
-  // Cap total collected to keep us inside the Vercel function 60s window.
-  // Pipeline has thousands of open boxes; demo polls a recency-sorted slice.
+  // Fetch first page of each open stage in PARALLEL, merge, sort by
+  // lastEmailReceivedTimestamp desc, take top maxBoxes. Surfaces the
+  // most-recently-emailed leads across the pipeline rather than draining
+  // stage 5001's backlog first.
   const envMax = Number(process.env.STREAK_MAX_BOXES_PER_POLL);
-  const maxBoxes = config.maxBoxes ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : DEFAULT_MAX_BOXES_PER_POLL);
-  const collected: StreakBox[] = [];
-  outer: for (const stageKey of openStageKeys) {
-    let offset = 0;
-    // Hard cap on iterations to prevent runaway pagination if Streak misbehaves.
-    for (let safety = 0; safety < 100; safety += 1) {
+  const maxBoxes =
+    config.maxBoxes ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : DEFAULT_MAX_BOXES_PER_POLL);
+
+  const perStagePages = await Promise.all(
+    openStageKeys.map(async (stageKey) => {
       const url =
         `${STREAK_V2_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/boxes` +
         `?stageKey=${encodeURIComponent(stageKey)}` +
         `&limit=${BOXES_PAGE_LIMIT}` +
-        `&offset=${offset}`;
-      const page = await streakFetch<StreakV2BoxesPage>(url, headers);
-      const results = page.results ?? [];
-      if (safety === 0) {
-        console.error('[crm-debug] v2 boxes →', JSON.stringify({
+        `&offset=0`;
+      try {
+        const page = await streakFetch<StreakV2BoxesPage>(url, headers);
+        const results = page.results ?? [];
+        return { stageKey, results, resultsLength: results.length };
+      } catch (error) {
+        console.error(
+          '[crm-debug] stage fetch failed',
           stageKey,
-          resultsLength: results.length,
-          hasNextPage: page.hasNextPage,
-          firstBox: results[0] ? { key: results[0].key, stageKey: results[0].stageKey, name: results[0].name } : null,
-        }));
+          error instanceof Error ? error.message : String(error),
+        );
+        return { stageKey, results: [] as StreakBoxApiRecord[], resultsLength: 0 };
       }
-      for (const box of results) {
-        collected.push(normalizeBox(box, stageNameByKey));
-        if (collected.length >= maxBoxes) {
-          break outer;
-        }
-      }
-      if (!page.hasNextPage || results.length === 0) {
-        break;
-      }
-      offset += BOXES_PAGE_LIMIT;
-    }
-  }
-  // Sort by lastUpdatedTimestamp descending so demo surfaces newest activity first.
-  collected.sort((a, b) => (b.lastUpdatedTimestamp ?? 0) - (a.lastUpdatedTimestamp ?? 0));
-  console.error('[crm-debug] collected →', JSON.stringify({ length: collected.length, maxBoxes }));
+    }),
+  );
+
+  console.error(
+    '[crm-debug] per-stage fetch →',
+    JSON.stringify({
+      stages: perStagePages.map((p) => ({ stageKey: p.stageKey, count: p.resultsLength })),
+    }),
+  );
+
+  const merged: StreakBox[] = perStagePages.flatMap((page) =>
+    page.results.map((box) => normalizeBox(box, stageNameByKey)),
+  );
+
+  // Sort by last email received desc (falls back to lastUpdatedTimestamp).
+  merged.sort((a, b) => {
+    const av = a.lastEmailReceivedTimestamp || a.lastUpdatedTimestamp;
+    const bv = b.lastEmailReceivedTimestamp || b.lastUpdatedTimestamp;
+    return bv - av;
+  });
+  const collected = merged.slice(0, maxBoxes);
+  console.error(
+    '[crm-debug] collected →',
+    JSON.stringify({ mergedLength: merged.length, collectedLength: collected.length, maxBoxes }),
+  );
 
   // v2 /boxes does not include Gmail thread IDs (only gmailThreadCount).
   // Fetch them per box via v1 /boxes/<key>/threads. Skip boxes that already
@@ -199,6 +211,7 @@ function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, strin
     stageKey,
     stageName: toStringValue(box.stageName) || stageNameByKey.get(stageKey) || '',
     lastUpdatedTimestamp: toNumberValue(box.lastUpdatedTimestamp),
+    lastEmailReceivedTimestamp: toNumberValue(box.lastEmailReceivedTimestamp),
     assignedToSharingEntries: box.assignedToSharingEntries,
     ...(gmailThreadIds.length > 0 ? { gmailThreadIds } : {}),
     ...(subject ? { subject } : {}),

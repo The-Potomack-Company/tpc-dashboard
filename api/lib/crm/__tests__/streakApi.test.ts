@@ -37,6 +37,7 @@ describe('listOpenBoxes', () => {
         stageKey: 'open-stage',
         stageName: 'New',
         lastUpdatedTimestamp: 1000,
+        lastEmailReceivedTimestamp: 1000,
         assignedToSharingEntries: [{ email: 'owner@example.com' }],
         gmailThreadIds: ['thread-aaa', 'thread-bbb'],
         subject: 'Box box-1', // falls back to name when no real subject
@@ -110,39 +111,73 @@ describe('listOpenBoxes', () => {
     expect(boxes.map((item) => item.key)).toEqual(['box-2']);
   });
 
-  it('paginates v2 boxes endpoint via offset until hasNextPage is false', async () => {
-    const stages = [{ key: 'open-stage', name: 'New' }];
-    const page1 = Array.from({ length: 200 }, (_, i) => box({ key: `box-${i}`, stageKey: 'open-stage' }));
-    const page2 = Array.from({ length: 50 }, (_, i) => box({ key: `box-${200 + i}`, stageKey: 'open-stage' }));
-    const allBoxes = [...page1, ...page2];
+  it('fetches first page per open stage in parallel, merges, sorts by recency, slices maxBoxes', async () => {
+    const stages = [
+      { key: 'stage-a', name: 'New' },
+      { key: 'stage-b', name: 'Qualifying' },
+    ];
+    const stageA = [
+      box({ key: 'old-a', stageKey: 'stage-a', lastEmailReceivedTimestamp: 1000 }),
+      box({ key: 'mid-a', stageKey: 'stage-a', lastEmailReceivedTimestamp: 3000 }),
+    ];
+    const stageB = [
+      box({ key: 'new-b', stageKey: 'stage-b', lastEmailReceivedTimestamp: 5000 }),
+      box({ key: 'mid-b', stageKey: 'stage-b', lastEmailReceivedTimestamp: 2000 }),
+    ];
 
     mockFetchJson([
       stages,
-      pageResponse(page1, true),
-      pageResponse(page2, false),
-      // 250 threads-lookup calls — one per box
-      ...allBoxes.map(() => [{ threadGmailId: 'thread-x' }]),
+      // Parallel stage fetches resolve in registration order under the mock —
+      // both pages return single-page (no pagination) per new contract.
+      pageResponse(stageA, false),
+      pageResponse(stageB, false),
+      // Thread-id lookups: one per merged box. Order of these is the
+      // post-sort order: [new-b(5000), mid-a(3000), mid-b(2000), old-a(1000)].
+      [{ threadGmailId: 't-new-b' }],
+      [{ threadGmailId: 't-mid-a' }],
+      [{ threadGmailId: 't-mid-b' }],
+      [{ threadGmailId: 't-old-a' }],
     ]);
 
     const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key', maxBoxes: 1000 });
 
-    expect(boxes).toHaveLength(250);
-    expect(boxes.map((b) => b.key).sort()).toEqual(
-      Array.from({ length: 250 }, (_, i) => `box-${i}`).sort(),
-    );
-    // 1 stages + 2 box-pages + 250 thread-lookups = 253 fetches
-    expect(vi.mocked(fetch).mock.calls).toHaveLength(253);
-    const secondBoxesCall = vi.mocked(fetch).mock.calls[2][0] as string;
-    expect(secondBoxesCall).toContain('offset=200');
+    expect(boxes.map((b) => b.key)).toEqual(['new-b', 'mid-a', 'mid-b', 'old-a']);
+    // 1 stages + 2 per-stage boxes pages + 4 thread-lookups = 7 fetches
+    expect(vi.mocked(fetch).mock.calls).toHaveLength(7);
+    expect((vi.mocked(fetch).mock.calls[1][0] as string)).toContain('stageKey=stage-a');
+    expect((vi.mocked(fetch).mock.calls[2][0] as string)).toContain('stageKey=stage-b');
+  });
+
+  it('caps merged result to maxBoxes after sorting by recency', async () => {
+    const stages = [{ key: 'stage-x', name: 'New' }];
+    const records = [
+      box({ key: 'a', stageKey: 'stage-x', lastEmailReceivedTimestamp: 1 }),
+      box({ key: 'b', stageKey: 'stage-x', lastEmailReceivedTimestamp: 5 }),
+      box({ key: 'c', stageKey: 'stage-x', lastEmailReceivedTimestamp: 3 }),
+      box({ key: 'd', stageKey: 'stage-x', lastEmailReceivedTimestamp: 9 }),
+    ];
+
+    mockFetchJson([
+      stages,
+      pageResponse(records, false),
+      // Top 2 by recency: d(9), b(5) — only these get thread lookups
+      [{ threadGmailId: 't-d' }],
+      [{ threadGmailId: 't-b' }],
+    ]);
+
+    const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key', maxBoxes: 2 });
+
+    expect(boxes.map((b) => b.key)).toEqual(['d', 'b']);
   });
 });
 
-function box(input: { key: string; stageKey: string }) {
+function box(input: { key: string; stageKey: string; lastEmailReceivedTimestamp?: number }) {
   return {
     key: input.key,
     name: `Box ${input.key}`,
     stageKey: input.stageKey,
     lastUpdatedTimestamp: 1000,
+    lastEmailReceivedTimestamp: input.lastEmailReceivedTimestamp ?? 1000,
     assignedToSharingEntries: [{ email: 'owner@example.com' }],
   };
 }

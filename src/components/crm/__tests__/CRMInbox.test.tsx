@@ -50,6 +50,7 @@ function makeThread(input: {
     model: 'gemini-2.5-flash',
     last_polled_at: '2026-05-20T12:30:00.000Z',
     age_days: 0,
+    needs_review: false,
   };
 }
 
@@ -119,7 +120,7 @@ describe('CRMInbox', () => {
     expect(tableText.indexOf('Standard furniture inquiry')).toBeLessThan(
       tableText.indexOf('Low value books'),
     );
-    expect(screen.getByText('Bumped from standard')).toBeInTheDocument();
+    expect(screen.getByText('↑ from standard')).toBeInTheDocument();
   });
 
   it('posts to crm-poll and shows the success toast when Refresh is clicked', async () => {
@@ -145,6 +146,8 @@ describe('CRMInbox', () => {
     await user.click(screen.getByText('Stale signed painting'));
 
     expect(screen.getByText('Full stale painting body')).toBeInTheDocument();
-    expect(screen.getByText('Standard item aged into high priority.')).toBeInTheDocument();
+    // Rationale is now also rendered in the inline Why column. Two matches
+    // is the expected state (column + expanded panel).
+    expect(screen.getAllByText('Standard item aged into high priority.')).toHaveLength(2);
   });
 });

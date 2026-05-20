@@ -30,6 +30,7 @@ function row(input: {
     model: null,
     last_polled_at: null,
     age_days: 0,
+    needs_review: false,
   };
 }
 
@@ -38,19 +39,26 @@ describe('useCrmTriage age-bump rules', () => {
     expect(getEffectivePriority('high', 30)).toBe('high');
   });
 
-  it('bumps STANDARD at 5 days to HIGH', () => {
-    expect(getEffectivePriority('standard', 4.99)).toBe('standard');
-    expect(getEffectivePriority('standard', 5)).toBe('high');
+  // 2x age-bump ladder (locked 2026-05-20).
+  it('bumps STANDARD at 10 days to HIGH', () => {
+    expect(getEffectivePriority('standard', 9.99)).toBe('standard');
+    expect(getEffectivePriority('standard', 10)).toBe('high');
   });
 
-  it('bumps LOW at 7 days to STANDARD', () => {
-    expect(getEffectivePriority('low', 6.99)).toBe('low');
-    expect(getEffectivePriority('low', 7)).toBe('standard');
+  it('bumps LOW at 14 days to STANDARD', () => {
+    expect(getEffectivePriority('low', 13.99)).toBe('low');
+    expect(getEffectivePriority('low', 14)).toBe('standard');
   });
 
-  it('bumps LOW at 14 days to HIGH', () => {
-    expect(getEffectivePriority('low', 13.99)).toBe('standard');
-    expect(getEffectivePriority('low', 14)).toBe('high');
+  it('bumps LOW at 30 days to HIGH', () => {
+    expect(getEffectivePriority('low', 29.99)).toBe('standard');
+    expect(getEffectivePriority('low', 30)).toBe('high');
+  });
+
+  it('does not age-bump rows flagged needs_review', () => {
+    // Empty-body LOW row sitting 60 days stays LOW (no promotion on unreadable input).
+    expect(getEffectivePriority('low', 60, true)).toBe('low');
+    expect(getEffectivePriority('standard', 60, true)).toBe('standard');
   });
 
   it('sorts HIGH before STANDARD before LOW and oldest first inside each bucket', () => {

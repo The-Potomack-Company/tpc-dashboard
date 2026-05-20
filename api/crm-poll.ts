@@ -1,14 +1,16 @@
 import crypto from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { classify, resetClassifierInvocationBudget } from './lib/crm/crmClassifier.js';
-import { getThreadBody } from './lib/crm/gmailApi.js';
+import { getThreadContent } from './lib/crm/gmailApi.js';
 import { listOpenBoxes } from './lib/crm/streakApi.js';
 import { ClassifierBudgetExceeded, StreakRateLimited, type ClassifierOutput, type StreakBox } from './lib/crm/types.js';
 
 export const maxDuration = 60;
 
 const APP_SOURCE = 'tpc-dashboard-crm-poll';
-const PROMPT_VERSION = 'v0.5.0';
+// Bump on prompt/contract changes to cache-bust existing classifications.
+// v0.5.1: evidence-first rationale + multimodal photos + dropped VIP/deadline overrides.
+const PROMPT_VERSION = 'v0.5.1';
 const REQUIRED_ENV = [
   'STREAK_API_KEY',
   'STREAK_PIPELINE_KEY',
@@ -209,31 +211,32 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
       return { kind: 'error', message: 'No Gmail thread id found on Streak box' };
     }
 
-    const bodyText = await getThreadBody(gmailThreadId);
-    const bodyHash = hashBody(bodyText);
-    const thread = await upsertThread(admin, box, gmailThreadId, bodyText);
+    const content = await getThreadContent(gmailThreadId);
+    const bodyHash = hashContent(content.text, content.images);
+    const thread = await upsertThread(admin, box, gmailThreadId, content.text);
     response.polled += 1;
 
     const latest = await getLatestClassification(admin, thread.id);
-    if (readBodyHash(latest?.metadata) === bodyHash) {
+    if (
+      readBodyHash(latest?.metadata) === bodyHash &&
+      readPromptVersion(latest?.metadata) === PROMPT_VERSION
+    ) {
       return { kind: 'skipped' };
     }
 
     const startedAt = Date.now();
     let output: ClassifierOutput;
     try {
-      output = applyPollerOverrides(
-        await classify({
-          boxKey: box.key,
-          boxName: box.name,
-          stageKey: box.stageKey,
-          stageName: box.stageName,
-          gmailBody: bodyText,
-          senderEmail: box.fromEmail,
-          lastUpdatedMs: box.lastUpdatedTimestamp,
-        }),
-        { bodyText, fromEmail: box.fromEmail },
-      );
+      output = await classify({
+        boxKey: box.key,
+        boxName: box.name,
+        stageKey: box.stageKey,
+        stageName: box.stageName,
+        gmailBody: content.text,
+        gmailImages: content.images,
+        senderEmail: box.fromEmail,
+        lastUpdatedMs: box.lastUpdatedTimestamp,
+      });
     } catch (error) {
       if (error instanceof ClassifierBudgetExceeded) {
         return { kind: 'deferred-budget' };
@@ -307,7 +310,13 @@ async function upsertThread(
   gmailThreadId: string,
   bodyText: string,
 ): Promise<ThreadRow> {
-  const receivedAt = box.lastUpdatedTimestamp > 0 ? new Date(box.lastUpdatedTimestamp).toISOString() : null;
+  // received_at represents "last actual consignor email", not Streak's
+  // last-touch (stage changes / comments shouldn't reset the age clock).
+  // Fall back to lastUpdatedTimestamp if Streak didn't track the email yet.
+  const receivedMs = box.lastEmailReceivedTimestamp > 0
+    ? box.lastEmailReceivedTimestamp
+    : box.lastUpdatedTimestamp;
+  const receivedAt = receivedMs > 0 ? new Date(receivedMs).toISOString() : null;
   const { data, error } = await admin
     .from('crm_threads')
     .upsert(
@@ -382,6 +391,7 @@ async function replaceCurrentClassification(
     is_current: true,
     metadata: {
       body_hash: bodyHash,
+      prompt_version: PROMPT_VERSION,
       needs_review: output.needsReview === true,
     },
   });
@@ -427,8 +437,16 @@ function readBearerToken(value: string | string[] | undefined): string | null {
   return match?.[1] ?? null;
 }
 
-function hashBody(bodyText: string): string {
-  return crypto.createHash('sha256').update(bodyText).digest('hex');
+function hashContent(bodyText: string, images: ReadonlyArray<{ data: string }>): string {
+  const hash = crypto.createHash('sha256');
+  hash.update(bodyText);
+  // Image data is content-addressable (base64 of bytes), so hashing it cache-
+  // busts when attachments change while leaving pure-text threads stable.
+  for (const img of images) {
+    hash.update('\x00');
+    hash.update(img.data);
+  }
+  return hash.digest('hex');
 }
 
 function readBodyHash(metadata: unknown): string | null {
@@ -440,41 +458,13 @@ function readBodyHash(metadata: unknown): string | null {
   return typeof value === 'string' ? value : null;
 }
 
-function applyPollerOverrides(
-  output: ClassifierOutput,
-  input: { bodyText: string; fromEmail?: string },
-): ClassifierOutput {
-  if (isVipSender(input.fromEmail) || hasDeadlineWithinSevenDays(input.bodyText, new Date())) {
-    return { ...output, priority: 'high' };
+function readPromptVersion(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== 'object' || !('prompt_version' in metadata)) {
+    return null;
   }
 
-  return output;
-}
-
-function isVipSender(senderEmail: string | undefined): boolean {
-  const domain = senderEmail?.split('@').at(1)?.trim().toLowerCase();
-  if (!domain) {
-    return false;
-  }
-
-  return parseCsv(process.env.STREAK_VIP_DOMAINS).some((vipDomain) => {
-    const normalized = vipDomain.toLowerCase();
-    return domain === normalized || domain.endsWith(`.${normalized}`);
-  });
-}
-
-function hasDeadlineWithinSevenDays(body: string, now: Date): boolean {
-  if (!/\b(deadline|by|before|closing|moving|move|sale|pickup|quote|need)\b/i.test(body)) {
-    return false;
-  }
-
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const sevenDays = today + 7 * 24 * 60 * 60 * 1_000;
-  const dates = [...body.matchAll(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/g)].map((match) => {
-    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getTime();
-  });
-
-  return dates.some((dateMs) => Number.isFinite(dateMs) && dateMs >= today && dateMs <= sevenDays);
+  const value = (metadata as { prompt_version?: unknown }).prompt_version;
+  return typeof value === 'string' ? value : null;
 }
 
 function parseCsv(value: string | undefined): string[] {

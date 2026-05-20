@@ -19,11 +19,18 @@ const DEPARTMENTS: ReadonlySet<string> = new Set([
   'art_sculpture',
 ]);
 
-export function getEffectivePriority(priority: Priority, ageDays: number): Priority {
+// 2x age-bump ladder (locked 2026-05-20). needsReview rows don't age-bump —
+// unreadable inputs shouldn't be promoted just because they've been sitting.
+export function getEffectivePriority(
+  priority: Priority,
+  ageDays: number,
+  needsReview: boolean = false,
+): Priority {
   if (priority === 'high') return 'high';
-  if (priority === 'standard' && ageDays >= 5) return 'high';
-  if (priority === 'low' && ageDays >= 14) return 'high';
-  if (priority === 'low' && ageDays >= 7) return 'standard';
+  if (needsReview) return priority;
+  if (priority === 'standard' && ageDays >= 10) return 'high';
+  if (priority === 'low' && ageDays >= 30) return 'high';
+  if (priority === 'low' && ageDays >= 14) return 'standard';
   return priority;
 }
 
@@ -49,7 +56,8 @@ function normalizeRow(row: CrmTriageQueueRow, nowMs: number): TriageRow | null {
   }
 
   const ageDays = (nowMs - new Date(row.received_at).getTime()) / 86_400_000;
-  const effectivePriority = getEffectivePriority(row.priority, ageDays);
+  const needsReview = row.needs_review === true;
+  const effectivePriority = getEffectivePriority(row.priority, ageDays, needsReview);
 
   return {
     thread_id: row.thread_id,
@@ -73,6 +81,7 @@ function normalizeRow(row: CrmTriageQueueRow, nowMs: number): TriageRow | null {
     model: row.model,
     last_polled_at: row.last_polled_at,
     age_days: ageDays,
+    needs_review: needsReview,
   };
 }
 

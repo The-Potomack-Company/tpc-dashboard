@@ -1,13 +1,17 @@
 import { google } from 'googleapis';
-import { GmailVerbForbidden } from './types.js';
+import { GmailVerbForbidden, type GmailImageAttachment, type GmailThreadContent } from './types.js';
 
-const ALLOWED_VERBS = ['messages.list', 'messages.get'] as const;
+const ALLOWED_VERBS = ['messages.list', 'messages.get', 'messages.attachments.get'] as const;
+const MAX_IMAGES_PER_THREAD = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB cap per image (Gemini limit + cost guard)
+const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 
 type AllowedVerb = (typeof ALLOWED_VERBS)[number];
 
 type GmailPayloadPart = {
   mimeType?: string | null;
-  body?: { data?: string | null } | null;
+  filename?: string | null;
+  body?: { data?: string | null; attachmentId?: string | null; size?: number | null } | null;
   parts?: GmailPayloadPart[] | null;
 };
 
@@ -18,13 +22,15 @@ type GmailMessageResource = {
   payload?: GmailPayloadPart | null;
 };
 
+type GmailClient = ReturnType<typeof google.gmail>;
+
 export function assertAllowedGmailVerb(verb: string): asserts verb is AllowedVerb {
   if (!ALLOWED_VERBS.includes(verb as AllowedVerb)) {
     throw new GmailVerbForbidden(verb);
   }
 }
 
-export async function getThreadBody(threadId: string): Promise<string> {
+export async function getThreadContent(threadId: string): Promise<GmailThreadContent> {
   const userId = readRequiredEnv('GMAIL_USER_EMAIL');
   const oauth2Client = new google.auth.OAuth2(
     readRequiredEnv('GMAIL_OAUTH_CLIENT_ID'),
@@ -44,6 +50,7 @@ export async function getThreadBody(threadId: string): Promise<string> {
 
   const messageRefs = listResponse.data.messages ?? [];
   const bodies: string[] = [];
+  const images: GmailImageAttachment[] = [];
 
   for (const messageRef of messageRefs) {
     if (!messageRef.id) {
@@ -65,9 +72,71 @@ export async function getThreadBody(threadId: string): Promise<string> {
     if (body) {
       bodies.push(body);
     }
+
+    if (images.length < MAX_IMAGES_PER_THREAD) {
+      const imageRefs = collectImageRefs(message.payload).slice(0, MAX_IMAGES_PER_THREAD - images.length);
+      const fetched = await Promise.all(
+        imageRefs.map((ref) => fetchAttachment(gmail, userId, messageRef.id!, ref)),
+      );
+      for (const img of fetched) {
+        if (img) images.push(img);
+      }
+    }
   }
 
-  return bodies.join('\n\n').trim();
+  return { text: bodies.join('\n\n').trim(), images };
+}
+
+// Back-compat shim — older callers expect text-only.
+export async function getThreadBody(threadId: string): Promise<string> {
+  return (await getThreadContent(threadId)).text;
+}
+
+type ImageRef = { attachmentId: string; mimeType: string; size: number };
+
+function collectImageRefs(payload: GmailPayloadPart | null | undefined): ImageRef[] {
+  if (!payload) return [];
+  const refs: ImageRef[] = [];
+  const own = payload.mimeType ?? '';
+  const attId = payload.body?.attachmentId ?? null;
+  const size = payload.body?.size ?? 0;
+  if (
+    attId &&
+    ALLOWED_IMAGE_MIMES.has(own) &&
+    typeof size === 'number' &&
+    size > 0 &&
+    size <= MAX_IMAGE_BYTES
+  ) {
+    refs.push({ attachmentId: attId, mimeType: own, size });
+  }
+  for (const part of payload.parts ?? []) {
+    refs.push(...collectImageRefs(part));
+  }
+  return refs;
+}
+
+async function fetchAttachment(
+  gmail: GmailClient,
+  userId: string,
+  messageId: string,
+  ref: ImageRef,
+): Promise<GmailImageAttachment | null> {
+  assertAllowedGmailVerb('messages.attachments.get');
+  try {
+    const response = await gmail.users.messages.attachments.get({
+      userId,
+      messageId,
+      id: ref.attachmentId,
+    });
+    const urlSafe = response.data.data ?? '';
+    if (!urlSafe) return null;
+    // Gmail returns URL-safe base64; convert to standard base64 for Gemini.
+    const standard = urlSafe.replace(/-/g, '+').replace(/_/g, '/');
+    return { mimeType: ref.mimeType, data: standard };
+  } catch (error) {
+    console.error('[crm-debug] attachment fetch failed', ref.attachmentId, error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 function extractBodyText(payload: GmailPayloadPart | null | undefined): string {

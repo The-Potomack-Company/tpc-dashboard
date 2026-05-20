@@ -50,23 +50,26 @@ describe('classify', () => {
     });
   });
 
-  it("forces priority='high' for VIP sender domain", async () => {
+  it("preserves LLM priority without VIP override (override dropped 2026-05-20)", async () => {
     const { classify } = await import('../crmClassifier');
     process.env.STREAK_VIP_DOMAINS = 'vip-estates.com';
     mockGeminiJson({ department: ['books'], priority: 'low' });
 
     const output = await classify(input({ senderEmail: 'agent@vip-estates.com', gmailBody: 'Book collection.' }));
 
-    expect(output.priority).toBe('high');
+    // VIP-sender no longer auto-bumps to HIGH — LLM judgment wins.
+    expect(output.priority).toBe('low');
   });
 
-  it("forces priority='high' for explicit deadline within 7 days", async () => {
+  it("preserves LLM priority without deadline override (override dropped 2026-05-20)", async () => {
     const { classify } = await import('../crmClassifier');
     mockGeminiJson({ department: ['decarts'], priority: 'low' });
 
     const output = await classify(input({ gmailBody: 'We are moving and need a quote by 2026-05-23.' }));
 
-    expect(output.priority).toBe('high');
+    // Deadline-regex no longer auto-bumps to HIGH — LLM is responsible for
+    // picking up time-sensitivity directly from the body.
+    expect(output.priority).toBe('low');
   });
 
   it("forces priority='low' and needsReview=true for empty body", async () => {

@@ -29,4 +29,5 @@ export type TriageRow = {
   model: string | null;
   last_polled_at: string | null;
   age_days: number;
+  needs_review: boolean;
 };

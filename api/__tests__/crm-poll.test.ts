@@ -5,6 +5,7 @@ import { ClassifierBudgetExceeded, StreakRateLimited, type ClassifierOutput, typ
 const serviceMocks = vi.hoisted(() => ({
   listOpenBoxes: vi.fn(),
   getThreadBody: vi.fn(),
+  getThreadContent: vi.fn(),
   classify: vi.fn(),
   resetClassifierInvocationBudget: vi.fn(),
   createClient: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock('../lib/crm/streakApi', () => ({
 
 vi.mock('../lib/crm/gmailApi', () => ({
   getThreadBody: serviceMocks.getThreadBody,
+  getThreadContent: serviceMocks.getThreadContent,
 }));
 
 vi.mock('../lib/crm/crmClassifier', () => ({
@@ -49,6 +51,7 @@ describe('api/crm-poll', () => {
     supabase = new MockSupabase();
     serviceMocks.createClient.mockReturnValue(supabase.client);
     serviceMocks.getThreadBody.mockResolvedValue('Fresh consignment body.');
+    serviceMocks.getThreadContent.mockResolvedValue({ text: 'Fresh consignment body.', images: [] });
     serviceMocks.classify.mockResolvedValue(classification());
     serviceMocks.listOpenBoxes.mockResolvedValue([box('box-1')]);
   });
@@ -180,6 +183,7 @@ function box(key: string): StreakBox {
     stageKey: 'new',
     stageName: 'New',
     lastUpdatedTimestamp: Date.parse('2026-05-20T12:00:00-04:00'),
+    lastEmailReceivedTimestamp: Date.parse('2026-05-20T12:00:00-04:00'),
     gmailThreadIds: [`gmail-${key}`],
     subject: `Subject ${key}`,
     fromEmail: 'sender@example.com',

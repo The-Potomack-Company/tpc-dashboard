@@ -1,8 +1,12 @@
 declare module '@google/generative-ai' {
+  export type Part =
+    | { text: string }
+    | { inlineData: { mimeType: string; data: string } };
+
   export class GoogleGenerativeAI {
     constructor(apiKey: string);
     getGenerativeModel(config: { model: string }): {
-      generateContent(prompt: string): Promise<{
+      generateContent(input: string | Part[]): Promise<{
         response: {
           text(): string;
         };
@@ -29,6 +33,11 @@ declare module 'googleapis' {
           get(params: { userId: string; id: string; format: 'full' }): Promise<{
             data: unknown;
           }>;
+          attachments: {
+            get(params: { userId: string; messageId: string; id: string }): Promise<{
+              data: { data?: string | null; size?: number | null };
+            }>;
+          };
         };
       };
     };
