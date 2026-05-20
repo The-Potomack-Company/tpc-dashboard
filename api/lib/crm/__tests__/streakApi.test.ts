@@ -124,11 +124,12 @@ describe('listOpenBoxes', () => {
       ...allBoxes.map(() => [{ threadGmailId: 'thread-x' }]),
     ]);
 
-    const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key' });
+    const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key', maxBoxes: 1000 });
 
     expect(boxes).toHaveLength(250);
-    expect(boxes[0].key).toBe('box-0');
-    expect(boxes[249].key).toBe('box-249');
+    expect(boxes.map((b) => b.key).sort()).toEqual(
+      Array.from({ length: 250 }, (_, i) => `box-${i}`).sort(),
+    );
     // 1 stages + 2 box-pages + 250 thread-lookups = 253 fetches
     expect(vi.mocked(fetch).mock.calls).toHaveLength(253);
     const secondBoxesCall = vi.mocked(fetch).mock.calls[2][0] as string;

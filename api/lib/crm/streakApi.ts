@@ -4,6 +4,7 @@ const STREAK_V1_BASE = 'https://www.streak.com/api/v1';
 const STREAK_V2_BASE = 'https://api.streak.com/api/v2';
 const CLOSED_STAGE_NAME_PATTERN = /^(closed|won|lost|archived|done|completed)/i;
 const BOXES_PAGE_LIMIT = 200;
+const DEFAULT_MAX_BOXES_PER_POLL = 25;
 
 type StreakStageApiRecord = {
   key?: unknown;
@@ -44,6 +45,7 @@ export async function listOpenBoxes(config: {
   apiKey?: string;
   pipelineKey: string;
   closedStageKeys?: string[];
+  maxBoxes?: number;
 }): Promise<StreakBox[]> {
   const apiKey = config.apiKey ?? readRequiredEnv('STREAK_API_KEY');
   const headers = {
@@ -96,8 +98,12 @@ export async function listOpenBoxes(config: {
 
   // Use v2 per-stage paginated boxes — bounds payload size per stage so we
   // never load the entire pipeline (16MB+ on this pipeline as of 2026-05).
+  // Cap total collected to keep us inside the Vercel function 60s window.
+  // Pipeline has thousands of open boxes; demo polls a recency-sorted slice.
+  const envMax = Number(process.env.STREAK_MAX_BOXES_PER_POLL);
+  const maxBoxes = config.maxBoxes ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : DEFAULT_MAX_BOXES_PER_POLL);
   const collected: StreakBox[] = [];
-  for (const stageKey of openStageKeys) {
+  outer: for (const stageKey of openStageKeys) {
     let offset = 0;
     // Hard cap on iterations to prevent runaway pagination if Streak misbehaves.
     for (let safety = 0; safety < 100; safety += 1) {
@@ -113,11 +119,14 @@ export async function listOpenBoxes(config: {
           stageKey,
           resultsLength: results.length,
           hasNextPage: page.hasNextPage,
-          firstBox: results[0] ?? null,
+          firstBox: results[0] ? { key: results[0].key, stageKey: results[0].stageKey, name: results[0].name } : null,
         }));
       }
       for (const box of results) {
         collected.push(normalizeBox(box, stageNameByKey));
+        if (collected.length >= maxBoxes) {
+          break outer;
+        }
       }
       if (!page.hasNextPage || results.length === 0) {
         break;
@@ -125,7 +134,9 @@ export async function listOpenBoxes(config: {
       offset += BOXES_PAGE_LIMIT;
     }
   }
-  console.error('[crm-debug] collected →', JSON.stringify({ length: collected.length }));
+  // Sort by lastUpdatedTimestamp descending so demo surfaces newest activity first.
+  collected.sort((a, b) => (b.lastUpdatedTimestamp ?? 0) - (a.lastUpdatedTimestamp ?? 0));
+  console.error('[crm-debug] collected →', JSON.stringify({ length: collected.length, maxBoxes }));
 
   // v2 /boxes does not include Gmail thread IDs (only gmailThreadCount).
   // Fetch them per box via v1 /boxes/<key>/threads. Skip boxes that already

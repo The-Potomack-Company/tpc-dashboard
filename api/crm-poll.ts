@@ -166,6 +166,9 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
       apiKey: process.env.STREAK_API_KEY!,
       pipelineKey: process.env.STREAK_PIPELINE_KEY!,
       closedStageKeys: parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS),
+      maxBoxes: process.env.STREAK_MAX_BOXES_PER_POLL
+        ? Number(process.env.STREAK_MAX_BOXES_PER_POLL)
+        : undefined,
     });
   } catch (error) {
     if (error instanceof StreakRateLimited) {
