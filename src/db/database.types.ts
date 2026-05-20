@@ -539,6 +539,7 @@ export type Database = {
           from_name: string | null
           last_polled_at: string | null
           model: string | null
+          needs_review: boolean | null
           priority: string | null
           rationale: string | null
           received_at: string | null
