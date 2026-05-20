@@ -1,6 +1,15 @@
 # Milestones
 
-## category-filtered-batch milestone (in flight — Started: 2026-05-13)
+## crm-v05-demo milestone (in flight — Started: 2026-05-20)
+
+Cross-app feature. Workspace spec: `../../_workspace/Features/crm-v05-demo.md`.
+
+**Phases planned:** TBD (`feat-spawn-phases crm-v05-demo` will populate)
+**Status:** Active — D-042 one-time D-037 override for internal demo this week
+
+---
+
+## category-filtered-batch milestone (Shipped: 2026-05-14)
 
 Cross-app feature. Workspace spec: `../../_workspace/Features/category-filtered-batch.md`.
 
