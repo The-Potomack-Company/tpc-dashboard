@@ -16,18 +16,21 @@ describe('listOpenBoxes', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns filtered StreakBox array for open stages only', async () => {
-    // stages (v1) → only "open-stage" is open per heuristic; "closed-stage" name matches pattern
+  it('returns filtered StreakBox array with Gmail thread IDs resolved via per-box call', async () => {
     mockFetchJson([
+      // v1 stages — only "open-stage" is open per heuristic
       [
         { key: 'open-stage', name: 'New' },
         { key: 'closed-stage', name: 'Closed Won' },
       ],
       // v2 boxes for open-stage only (closed-stage is skipped client-side)
       pageResponse([box({ key: 'box-1', stageKey: 'open-stage' })]),
+      // v1 /boxes/box-1/threads — resolve gmail thread IDs
+      [{ threadGmailId: 'thread-aaa' }, { threadGmailId: 'thread-bbb' }],
     ]);
 
-    await expect(listOpenBoxes({ pipelineKey: 'pipe-key' })).resolves.toEqual([
+    const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key' });
+    expect(boxes).toEqual([
       {
         key: 'box-1',
         name: 'Box box-1',
@@ -35,6 +38,8 @@ describe('listOpenBoxes', () => {
         stageName: 'New',
         lastUpdatedTimestamp: 1000,
         assignedToSharingEntries: [{ email: 'owner@example.com' }],
+        gmailThreadIds: ['thread-aaa', 'thread-bbb'],
+        subject: 'Box box-1', // falls back to name when no real subject
       },
     ]);
 
@@ -44,13 +49,19 @@ describe('listOpenBoxes', () => {
       'https://www.streak.com/api/v1/pipelines/pipe-key/stages',
       { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
     );
-    // v2 boxes call only for the open stage (no call for the closed-stage)
+    // v2 boxes call for the open stage
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       'https://api.streak.com/api/v2/pipelines/pipe-key/boxes?stageKey=open-stage&limit=200&offset=0',
       { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
     );
-    expect(vi.mocked(fetch).mock.calls).toHaveLength(2);
+    // v1 threads call per box to resolve Gmail thread IDs (v2 boxes don't include them)
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
+      'https://www.streak.com/api/v1/boxes/box-1/threads',
+      { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
+    );
+    expect(vi.mocked(fetch).mock.calls).toHaveLength(3);
   });
 
   it('throws StreakRateLimited on 429 response', async () => {
@@ -74,13 +85,14 @@ describe('listOpenBoxes', () => {
         { key: 'closed-a', name: 'Qualifying' },
         { key: 'open-stage', name: 'Completed intake' },
       ],
-      // Only "open-stage" should be iterated (closed-a is in the blocklist)
       pageResponse([box({ key: 'box-2', stageKey: 'open-stage' })]),
+      [{ threadGmailId: 'thread-xyz' }],
     ]);
 
     const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key' });
 
     expect(boxes.map((item) => item.key)).toEqual(['box-2']);
+    expect(boxes[0].gmailThreadIds).toEqual(['thread-xyz']);
   });
 
   it('uses heuristic name-pattern filtering when env is not set', async () => {
@@ -90,6 +102,7 @@ describe('listOpenBoxes', () => {
         { key: 'open-stage', name: 'Qualifying' },
       ],
       pageResponse([box({ key: 'box-2', stageKey: 'open-stage' })]),
+      [{ threadGmailId: 'thread-xyz' }],
     ]);
 
     const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key' });
@@ -98,18 +111,17 @@ describe('listOpenBoxes', () => {
   });
 
   it('paginates v2 boxes endpoint via offset until hasNextPage is false', async () => {
+    const stages = [{ key: 'open-stage', name: 'New' }];
+    const page1 = Array.from({ length: 200 }, (_, i) => box({ key: `box-${i}`, stageKey: 'open-stage' }));
+    const page2 = Array.from({ length: 50 }, (_, i) => box({ key: `box-${200 + i}`, stageKey: 'open-stage' }));
+    const allBoxes = [...page1, ...page2];
+
     mockFetchJson([
-      [{ key: 'open-stage', name: 'New' }],
-      // page 1 — 200 results, hasNextPage true
-      pageResponse(
-        Array.from({ length: 200 }, (_, i) => box({ key: `box-${i}`, stageKey: 'open-stage' })),
-        true,
-      ),
-      // page 2 — 50 results, hasNextPage false
-      pageResponse(
-        Array.from({ length: 50 }, (_, i) => box({ key: `box-${200 + i}`, stageKey: 'open-stage' })),
-        false,
-      ),
+      stages,
+      pageResponse(page1, true),
+      pageResponse(page2, false),
+      // 250 threads-lookup calls — one per box
+      ...allBoxes.map(() => [{ threadGmailId: 'thread-x' }]),
     ]);
 
     const boxes = await listOpenBoxes({ pipelineKey: 'pipe-key' });
@@ -117,8 +129,8 @@ describe('listOpenBoxes', () => {
     expect(boxes).toHaveLength(250);
     expect(boxes[0].key).toBe('box-0');
     expect(boxes[249].key).toBe('box-249');
-    // two box-pagination calls plus the initial stages call = 3 fetches total
-    expect(vi.mocked(fetch).mock.calls).toHaveLength(3);
+    // 1 stages + 2 box-pages + 250 thread-lookups = 253 fetches
+    expect(vi.mocked(fetch).mock.calls).toHaveLength(253);
     const secondBoxesCall = vi.mocked(fetch).mock.calls[2][0] as string;
     expect(secondBoxesCall).toContain('offset=200');
   });

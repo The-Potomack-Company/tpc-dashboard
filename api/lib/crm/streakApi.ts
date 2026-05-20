@@ -25,8 +25,14 @@ type StreakBoxApiRecord = {
   threadIds?: unknown;
   subject?: unknown;
   fromEmail?: unknown;
+  firstEmailFrom?: unknown;
   fromName?: unknown;
   snippet?: unknown;
+};
+
+type StreakBoxThreadRecord = {
+  threadGmailId?: unknown;
+  gmailThreadId?: unknown;
 };
 
 type StreakV2BoxesPage = {
@@ -95,7 +101,29 @@ export async function listOpenBoxes(config: {
     }
   }
 
+  // v2 /boxes does not include Gmail thread IDs (only gmailThreadCount).
+  // Fetch them per box via v1 /boxes/<key>/threads. Skip boxes that already
+  // have thread IDs (defensive — older shapes may have them inline).
+  for (const box of collected) {
+    if (box.gmailThreadIds && box.gmailThreadIds.length > 0) {
+      continue;
+    }
+    box.gmailThreadIds = await fetchBoxThreadIds(box.key, headers);
+  }
+
   return collected;
+}
+
+async function fetchBoxThreadIds(
+  boxKey: string,
+  headers: Record<string, string>,
+): Promise<string[]> {
+  if (!boxKey) return [];
+  const url = `${STREAK_V1_BASE}/boxes/${encodeURIComponent(boxKey)}/threads`;
+  const records = await streakFetch<StreakBoxThreadRecord[]>(url, headers);
+  return toArray(records)
+    .map((thread) => toStringValue(thread.threadGmailId ?? thread.gmailThreadId))
+    .filter((id) => id.length > 0);
 }
 
 async function streakFetch<T>(url: string, headers: Record<string, string>): Promise<T> {
@@ -119,14 +147,18 @@ async function streakFetch<T>(url: string, headers: Record<string, string>): Pro
 function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, string>): StreakBox {
   const stageKey = toStringValue(box.stageKey);
   const gmailThreadIds = toStringArray(box.gmailThreadIds ?? box.threadIds ?? box.gmailThreadId ?? box.threadId);
-  const subject = toStringValue(box.subject);
-  const fromEmail = toStringValue(box.fromEmail);
+  const name = toStringValue(box.name);
+  // v2 boxes don't carry subject inline — fall back to box name (the consignor
+  // label staff use in Streak) so triage UI has something to display.
+  const subject = toStringValue(box.subject) || name;
+  // v2 boxes expose the consignor address as firstEmailFrom, not fromEmail.
+  const fromEmail = toStringValue(box.fromEmail) || toStringValue(box.firstEmailFrom);
   const fromName = toStringValue(box.fromName);
   const snippet = toStringValue(box.snippet);
 
   return {
     key: toStringValue(box.key ?? box.boxKey),
-    name: toStringValue(box.name),
+    name,
     stageKey,
     stageName: toStringValue(box.stageName) || stageNameByKey.get(stageKey) || '',
     lastUpdatedTimestamp: toNumberValue(box.lastUpdatedTimestamp),
