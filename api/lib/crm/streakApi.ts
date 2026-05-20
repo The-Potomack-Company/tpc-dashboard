@@ -56,6 +56,12 @@ export async function listOpenBoxes(config: {
     headers,
   );
   const stages = toArray(stagesRaw);
+  console.error('[crm-debug] v1 /stages →', JSON.stringify({
+    rawType: Array.isArray(stagesRaw) ? 'array' : typeof stagesRaw,
+    stagesLength: stages.length,
+    firstStage: stages[0] ?? null,
+  }));
+
   const stageNameByKey = new Map(
     stages
       .map((stage) => [toStringValue(stage.key ?? stage.stageKey), toStringValue(stage.name)] as const)
@@ -77,6 +83,14 @@ export async function listOpenBoxes(config: {
       return !CLOSED_STAGE_NAME_PATTERN.test(name);
     });
 
+  console.error('[crm-debug] openStageKeys →', JSON.stringify({
+    closedKeysSize: explicitClosedKeys.size,
+    closedKeys: [...explicitClosedKeys],
+    openCount: openStageKeys.length,
+    openKeys: openStageKeys.slice(0, 5),
+    allStageNames: [...stageNameByKey.entries()].map(([k, n]) => `${k}:${n}`),
+  }));
+
   // Use v2 per-stage paginated boxes — bounds payload size per stage so we
   // never load the entire pipeline (16MB+ on this pipeline as of 2026-05).
   const collected: StreakBox[] = [];
@@ -91,6 +105,14 @@ export async function listOpenBoxes(config: {
         `&offset=${offset}`;
       const page = await streakFetch<StreakV2BoxesPage>(url, headers);
       const results = page.results ?? [];
+      if (safety === 0) {
+        console.error('[crm-debug] v2 boxes →', JSON.stringify({
+          stageKey,
+          resultsLength: results.length,
+          hasNextPage: page.hasNextPage,
+          firstBox: results[0] ?? null,
+        }));
+      }
       for (const box of results) {
         collected.push(normalizeBox(box, stageNameByKey));
       }
@@ -100,6 +122,7 @@ export async function listOpenBoxes(config: {
       offset += BOXES_PAGE_LIMIT;
     }
   }
+  console.error('[crm-debug] collected →', JSON.stringify({ length: collected.length }));
 
   // v2 /boxes does not include Gmail thread IDs (only gmailThreadCount).
   // Fetch them per box via v1 /boxes/<key>/threads. Skip boxes that already
