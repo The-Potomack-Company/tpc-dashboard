@@ -1,7 +1,9 @@
 import { StreakRateLimited, type StreakBox } from './types.js';
 
-const STREAK_API_BASE = 'https://www.streak.com/api/v1';
+const STREAK_V1_BASE = 'https://www.streak.com/api/v1';
+const STREAK_V2_BASE = 'https://api.streak.com/api/v2';
 const CLOSED_STAGE_NAME_PATTERN = /^(closed|won|lost|archived|done|completed)/i;
+const BOXES_PAGE_LIMIT = 200;
 
 type StreakStageApiRecord = {
   key?: unknown;
@@ -27,6 +29,11 @@ type StreakBoxApiRecord = {
   snippet?: unknown;
 };
 
+type StreakV2BoxesPage = {
+  results?: StreakBoxApiRecord[];
+  hasNextPage?: boolean;
+};
+
 export async function listOpenBoxes(config: {
   apiKey?: string;
   pipelineKey: string;
@@ -37,32 +44,58 @@ export async function listOpenBoxes(config: {
     Authorization: `Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
   };
 
-  const stages = await streakFetch<StreakStageApiRecord[]>(
-    `${STREAK_API_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/stages`,
+  // v1 still owns /stages — v2 returns 400 on it as of 2026-05.
+  const stagesRaw = await streakFetch<StreakStageApiRecord[]>(
+    `${STREAK_V1_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/stages`,
     headers,
   );
+  const stages = toArray(stagesRaw);
   const stageNameByKey = new Map(
-    toArray(stages)
+    stages
       .map((stage) => [toStringValue(stage.key ?? stage.stageKey), toStringValue(stage.name)] as const)
       .filter(([key]) => key.length > 0),
   );
 
-  const boxes = await streakFetch<StreakBoxApiRecord[]>(
-    `${STREAK_API_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/boxes`,
-    headers,
-  );
+  const explicitClosedKeys = new Set(config.closedStageKeys ?? [...parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS)]);
 
-  const closedStageKeys = new Set(config.closedStageKeys ?? [...parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS)]);
-
-  return toArray(boxes)
-    .map((box) => normalizeBox(box, stageNameByKey))
-    .filter((box) => {
-      if (closedStageKeys.size > 0) {
-        return !closedStageKeys.has(box.stageKey);
+  // Determine open stages we should iterate. If env-configured closed keys are
+  // present, use those as a blocklist; otherwise fall back to the name pattern.
+  const openStageKeys = stages
+    .map((stage) => toStringValue(stage.key ?? stage.stageKey))
+    .filter((key) => key.length > 0)
+    .filter((key) => {
+      if (explicitClosedKeys.size > 0) {
+        return !explicitClosedKeys.has(key);
       }
-
-      return !CLOSED_STAGE_NAME_PATTERN.test(box.stageName);
+      const name = stageNameByKey.get(key) ?? '';
+      return !CLOSED_STAGE_NAME_PATTERN.test(name);
     });
+
+  // Use v2 per-stage paginated boxes — bounds payload size per stage so we
+  // never load the entire pipeline (16MB+ on this pipeline as of 2026-05).
+  const collected: StreakBox[] = [];
+  for (const stageKey of openStageKeys) {
+    let offset = 0;
+    // Hard cap on iterations to prevent runaway pagination if Streak misbehaves.
+    for (let safety = 0; safety < 100; safety += 1) {
+      const url =
+        `${STREAK_V2_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/boxes` +
+        `?stageKey=${encodeURIComponent(stageKey)}` +
+        `&limit=${BOXES_PAGE_LIMIT}` +
+        `&offset=${offset}`;
+      const page = await streakFetch<StreakV2BoxesPage>(url, headers);
+      const results = page.results ?? [];
+      for (const box of results) {
+        collected.push(normalizeBox(box, stageNameByKey));
+      }
+      if (!page.hasNextPage || results.length === 0) {
+        break;
+      }
+      offset += BOXES_PAGE_LIMIT;
+    }
+  }
+
+  return collected;
 }
 
 async function streakFetch<T>(url: string, headers: Record<string, string>): Promise<T> {
@@ -73,11 +106,11 @@ async function streakFetch<T>(url: string, headers: Record<string, string>): Pro
   }
 
   if (response.status >= 500) {
-    throw new Error(`Streak API request failed with ${response.status}`);
+    throw new Error(`Streak API request failed with ${response.status} on ${url}`);
   }
 
   if (!response.ok) {
-    throw new Error(`Streak API request failed with ${response.status}`);
+    throw new Error(`Streak API request failed with ${response.status} on ${url}`);
   }
 
   return (await response.json()) as T;
