@@ -55,7 +55,10 @@ export async function listOpenBoxes(config: {
     `${STREAK_V1_BASE}/pipelines/${encodeURIComponent(config.pipelineKey)}/stages`,
     headers,
   );
-  const stages = toArray(stagesRaw);
+  // Streak v1 /pipelines/<key>/stages returns an OBJECT keyed by stage key
+  // (e.g. {"5001":{...},"5020":{...}}), not an array. Older shapes may return
+  // an array directly or a {results:[]} wrapper.
+  const stages = normalizeStagesResponse(stagesRaw);
   console.error('[crm-debug] v1 /stages →', JSON.stringify({
     rawType: Array.isArray(stagesRaw) ? 'array' : typeof stagesRaw,
     stagesLength: stages.length,
@@ -236,6 +239,28 @@ function toArray<T>(value: T[] | { results?: T[]; data?: T[] }): T[] {
   }
 
   return Array.isArray(value.data) ? value.data : [];
+}
+
+function normalizeStagesResponse(value: unknown): StreakStageApiRecord[] {
+  if (Array.isArray(value)) {
+    return value as StreakStageApiRecord[];
+  }
+  if (value && typeof value === 'object') {
+    const maybeWrapped = value as { results?: unknown; data?: unknown };
+    if (Array.isArray(maybeWrapped.results)) {
+      return maybeWrapped.results as StreakStageApiRecord[];
+    }
+    if (Array.isArray(maybeWrapped.data)) {
+      return maybeWrapped.data as StreakStageApiRecord[];
+    }
+    // Object keyed by stage key — merge the key into the record under `key`
+    // so the downstream toStringValue(stage.key ?? stage.stageKey) call works.
+    return Object.entries(value as Record<string, StreakStageApiRecord>).map(([key, record]) => ({
+      ...(record ?? {}),
+      key: (record && typeof record === 'object' && 'key' in record ? record.key : undefined) ?? key,
+    }));
+  }
+  return [];
 }
 
 function toStringValue(value: unknown): string {
