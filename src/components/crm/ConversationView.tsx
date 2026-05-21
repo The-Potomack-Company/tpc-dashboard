@@ -8,14 +8,14 @@ type ConversationViewProps = {
 
 export function ConversationView({ raw, fallbackSnippet }: ConversationViewProps) {
   const source = raw || fallbackSnippet || '';
-  const parsed = useMemo(() => parseConversation(source), [source, source.length]);
+  const parsed = useMemo(() => parseConversation(source), [raw, fallbackSnippet]);
   const [showOriginal, setShowOriginal] = useState(false);
 
   if (parsed.isFallback) {
     return (
       <article className="text-sm leading-6 text-ink-2">
         <pre className="whitespace-pre-wrap font-sans">
-          {fallbackSnippet || raw || 'No body text available.'}
+          {raw || fallbackSnippet || 'No body text available.'}
         </pre>
         <button
           type="button"
