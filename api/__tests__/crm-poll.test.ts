@@ -168,6 +168,27 @@ describe('api/crm-poll', () => {
     ]);
   });
 
+  it('reports non-JSON Gemini output as a classifier failure without inserting a classification', async () => {
+    let parseError: unknown;
+    try {
+      JSON.parse('Sorry, I cannot help with that.');
+    } catch (error) {
+      parseError = error;
+    }
+    serviceMocks.classify.mockRejectedValue(parseError);
+
+    const res = await postPoll();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      polled: 1,
+      classified: 0,
+      skipped_unchanged: 0,
+      errors: [{ box_key: 'box-1', message: (parseError as Error).message }],
+    });
+    expect(supabase.currentClassifications.size).toBe(0);
+  });
+
   it('passes last-message context from structured Gmail messages into classify', async () => {
     const res = await postPoll();
 
