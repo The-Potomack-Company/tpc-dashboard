@@ -94,7 +94,7 @@ function matchesDepartment(rowDepartments: Department[], selected: Set<Departmen
 
 function matchesFilters(row: TriageRow, filters: FilterState): boolean {
   if (!matchesDepartment(row.department, filters.departments)) return false;
-  if (filters.stages.size > 0 && !filters.stages.has(row.streak_stage_name ?? '')) return false;
+  if (filters.stages.size > 0 && !filters.stages.has((row.streak_stage_name ?? '').trim())) return false;
   if (filters.minAgeDays !== null && row.age_days < filters.minAgeDays) return false;
   if (filters.maxAgeDays !== null && row.age_days > filters.maxAgeDays) return false;
 

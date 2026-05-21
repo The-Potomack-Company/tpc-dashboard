@@ -9,13 +9,26 @@ export type FilterState = {
   search: string;
 };
 
-export const EMPTY_FILTERS: FilterState = {
+export function createEmptyFilters(): FilterState {
+  return {
+    departments: new Set<Department>(),
+    stages: new Set<string>(),
+    minAgeDays: null,
+    maxAgeDays: null,
+    search: '',
+  };
+}
+
+// Frozen sentinel — safe to import for reference equality checks. Never
+// pass this directly to setState / onChange (the inner Sets are live and
+// would be mutated by any code that toggles values). Use createEmptyFilters().
+export const EMPTY_FILTERS: Readonly<FilterState> = Object.freeze({
   departments: new Set<Department>(),
   stages: new Set<string>(),
   minAgeDays: null,
   maxAgeDays: null,
   search: '',
-};
+});
 
 const DEPARTMENT_OPTIONS: { value: Department; label: string }[] = [
   { value: 'furniture', label: 'Furniture' },
@@ -182,7 +195,7 @@ export function FilterBar({ stages, filters, onChange }: FilterBarProps) {
           />
         </label>
 
-        <button type="button" onClick={() => onChange(EMPTY_FILTERS)} className="tpc-btn">
+        <button type="button" onClick={() => onChange(createEmptyFilters())} className="tpc-btn">
           Reset
         </button>
       </div>

@@ -62,10 +62,17 @@ function normalizeAttachments(payload: unknown): ImageAttachment[] {
       typeof value.mimeType === 'string' &&
       value.mimeType.startsWith('image/') &&
       typeof value.data === 'string' &&
-      value.data.length > 0
+      value.data.length > 0 &&
+      // Defense-in-depth: validate base64 before embedding into a data: URI.
+      // Gmail's API returns well-formed base64 today, but anything that lands
+      // outside that contract (proxy injection, content-encoding flip, etc.)
+      // should never reach an <img src>.
+      BASE64_RE.test(value.data)
     );
   });
 }
+
+const BASE64_RE = /^[A-Za-z0-9+/]*={0,2}$/;
 
 async function fetchAttachments(threadId: string, accessToken: string): Promise<ImageAttachment[]> {
   const response = await fetch(`/api/gmail-attachment?threadId=${encodeURIComponent(threadId)}`, {
@@ -115,7 +122,7 @@ export function ExpandedRow({ row }: ExpandedRowProps) {
                     src={`data:${attachment.mimeType};base64,${attachment.data}`}
                     className="max-h-56 rounded border border-rule object-contain"
                     loading="lazy"
-                    alt=""
+                    alt="Email attachment"
                   />
                 ))}
               </div>
