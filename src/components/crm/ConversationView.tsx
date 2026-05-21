@@ -14,8 +14,19 @@ const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
   minute: '2-digit',
 });
 
-export function ConversationView({ messages }: ConversationViewProps) {
+export function ConversationView({ raw, fallbackSnippet, messages }: ConversationViewProps) {
   if (!messages || messages.length === 0) {
+    // No structured messages — fall back to raw body or snippet if either
+    // is present (e.g. rows where parseMessages dropped malformed JSON).
+    // Codex review P2 fix 2026-05-21.
+    const fallback = raw || fallbackSnippet;
+    if (fallback) {
+      return (
+        <article className="rounded-md border border-rule bg-bg p-3 text-sm leading-6 text-ink-2">
+          <pre className="whitespace-pre-wrap font-sans">{fallback}</pre>
+        </article>
+      );
+    }
     return (
       <article className="rounded-md border border-dashed border-rule bg-bg px-4 py-5 text-sm text-ink-3">
         No messages loaded

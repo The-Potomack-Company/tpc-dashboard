@@ -220,7 +220,9 @@ export function extractInternalDate(message: gmail_v1.Schema$Message | null | un
       return new Date(parsed);
     }
   }
-  return new Date(Date.now());
+  // Unknown date → epoch so the message sorts as oldest (current-time fallback
+  // mis-orders historical messages as if they just arrived).
+  return new Date(0);
 }
 
 function readHeader(payload: gmail_v1.Schema$MessagePart | GmailPayloadPart | null | undefined, name: string): string {
@@ -230,11 +232,13 @@ function readHeader(payload: gmail_v1.Schema$MessagePart | GmailPayloadPart | nu
 }
 
 function parseFromHeader(raw: string): { name: string; email: string } {
-  const match = raw.match(/^(.*?)\s*<([^>]+)>$/);
+  const match = raw.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
   if (match) {
-    return { name: match[1].trim(), email: match[2] };
+    return { name: match[1].trim(), email: match[2].trim() };
   }
-  return { name: raw, email: raw };
+  // No brackets — treat the whole value as the email; name unknown.
+  // Display layer falls back to "Unknown sender" when name is empty.
+  return { name: '', email: raw.trim() };
 }
 
 function isForwardMessage(payload: GmailPayloadPart | null | undefined, subject: string): boolean {

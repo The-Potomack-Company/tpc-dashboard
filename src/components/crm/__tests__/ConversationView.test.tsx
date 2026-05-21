@@ -50,8 +50,20 @@ describe('ConversationView', () => {
     expect(screen.getByText('Forward')).toBeInTheDocument();
   });
 
-  it('shows an empty state when structured messages are missing', () => {
+  it('falls back to raw body when structured messages are missing', () => {
     render(<ConversationView raw="Readable message." fallbackSnippet={null} />);
+
+    expect(screen.getByText('Readable message.')).toBeInTheDocument();
+  });
+
+  it('falls back to snippet when structured messages and raw are both missing', () => {
+    render(<ConversationView raw={null} fallbackSnippet="Short snippet." />);
+
+    expect(screen.getByText('Short snippet.')).toBeInTheDocument();
+  });
+
+  it('shows the empty state only when nothing is available', () => {
+    render(<ConversationView raw={null} fallbackSnippet={null} />);
 
     expect(screen.getByText('No messages loaded')).toBeInTheDocument();
   });
