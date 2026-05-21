@@ -37,6 +37,7 @@ function makeThread(input: {
   received_at: string;
   body_text?: string;
   rationale?: string;
+  age_days?: number;
 }): TriageRow {
   return {
     thread_id: input.id,
@@ -72,7 +73,7 @@ function makeThread(input: {
     model: 'gemini-2.5-flash',
     gmail_thread_id: null,
     last_polled_at: '2026-05-20T12:30:00.000Z',
-    age_days: 0,
+    age_days: input.age_days ?? 0,
     needs_review: false,
   };
 }
@@ -137,10 +138,14 @@ beforeEach(() => {
 });
 
 describe('CRMInbox', () => {
-  it('renders rows in priority order and marks age-bumped rows in the HIGH bucket', () => {
+  it('renders priority sections in order and marks age-bumped rows in the HIGH bucket', () => {
     renderWithClient(<CRMInbox />);
 
     const tableText = screen.getByTestId('crm-inbox-table').textContent ?? '';
+    expect(screen.getByText('HIGH (2)')).toBeInTheDocument();
+    expect(screen.getByText('STANDARD (1)')).toBeInTheDocument();
+    expect(screen.getByText('LOW (1)')).toBeInTheDocument();
+    expect(screen.queryByText('Priority')).not.toBeInTheDocument();
     expect(tableText.indexOf('Stale signed painting')).toBeLessThan(
       tableText.indexOf('Fresh estate deadline'),
     );
@@ -150,7 +155,35 @@ describe('CRMInbox', () => {
     expect(tableText.indexOf('Standard furniture inquiry')).toBeLessThan(
       tableText.indexOf('Low value books'),
     );
-    expect(screen.getByText('↑ from standard')).toBeInTheDocument();
+    expect(screen.getByText('↑ bumped (was standard)')).toBeInTheDocument();
+  });
+
+  it('hides empty priority sections', () => {
+    useCrmTriageMock.mockReturnValue({
+      threads: [threads[1]],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderWithClient(<CRMInbox />);
+
+    expect(screen.getByText('HIGH (1)')).toBeInTheDocument();
+    expect(screen.queryByText('STANDARD (0)')).not.toBeInTheDocument();
+    expect(screen.queryByText('LOW (0)')).not.toBeInTheDocument();
+  });
+
+  it('filters rows by search text', async () => {
+    const user = userEvent.setup();
+    renderWithClient(<CRMInbox />);
+
+    await user.type(screen.getByPlaceholderText('Search subject, sender, or body'), 'estate');
+
+    expect(screen.getByText('Fresh estate deadline')).toBeInTheDocument();
+    expect(screen.queryByText('Stale signed painting')).not.toBeInTheDocument();
+    expect(screen.queryByText('Standard furniture inquiry')).not.toBeInTheDocument();
+    expect(screen.queryByText('Low value books')).not.toBeInTheDocument();
+    expect(screen.getByText('HIGH (1)')).toBeInTheDocument();
   });
 
   it('posts to crm-poll, shows the success toast, and invalidates the triage query', async () => {

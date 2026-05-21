@@ -1,9 +1,9 @@
 import type { Priority } from '../../services/crm/types';
 
 const PRIORITY_CLASSES: Record<Priority, string> = {
-  high: 'bg-red-500 text-white',
-  standard: 'bg-yellow-500 text-black',
-  low: 'bg-green-500 text-white',
+  high: 'bg-err-wash text-err',
+  standard: 'bg-bg-3 text-ink',
+  low: 'bg-ok-wash text-ok',
 };
 
 export function PriorityChip({ priority }: { priority: Priority }) {
