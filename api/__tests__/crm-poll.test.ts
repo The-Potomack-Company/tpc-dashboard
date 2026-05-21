@@ -35,6 +35,8 @@ describe('api/crm-poll', () => {
   let supabase: MockSupabase;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-21T12:00:00.000Z'));
     process.env = {
       ...OLD_ENV,
       STREAK_API_KEY: 'streak-key',
@@ -56,6 +58,15 @@ describe('api/crm-poll', () => {
       images: [],
       messages: [
         {
+          messageId: 'msg-0',
+          from: { name: 'Sender', email: 'sender@example.com' },
+          date: new Date('2026-05-18T12:00:00.000Z'),
+          snippet: 'Earlier snippet',
+          bodyText: 'Earlier consignment context.',
+          hasAttachments: false,
+          isForward: false,
+        },
+        {
           messageId: 'msg-1',
           from: { name: 'Sender', email: 'sender@example.com' },
           date: new Date('2026-05-20T12:00:00.000Z'),
@@ -72,6 +83,7 @@ describe('api/crm-poll', () => {
 
   afterEach(() => {
     process.env = OLD_ENV;
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -156,6 +168,20 @@ describe('api/crm-poll', () => {
     ]);
   });
 
+  it('passes last-message context from structured Gmail messages into classify', async () => {
+    const res = await postPoll();
+
+    expect(res.statusCode).toBe(200);
+    expect(serviceMocks.classify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastMessageBody: 'Fresh consignment body.',
+        lastMessageDate: '2026-05-20T12:00:00.000Z',
+        daysSinceLastMessage: 1,
+        threadAgeDays: 3,
+      }),
+    );
+  });
+
   it('returns 503 when Streak is rate-limited', async () => {
     serviceMocks.listOpenBoxes.mockRejectedValue(new StreakRateLimited(3000));
 
@@ -219,7 +245,7 @@ function classification(overrides: Partial<ClassifierOutput> = {}): ClassifierOu
 class MockSupabase {
   profile = { role: 'admin', is_active: true };
   threads = new Map<string, { id: string }>();
-  currentClassifications = new Map<string, { metadata: { body_hash: string } }>();
+  currentClassifications = new Map<string, { metadata: { body_hash: string; prompt_version?: string } }>();
   privateApiUsageInserts: Record<string, unknown>[] = [];
 
   client = {

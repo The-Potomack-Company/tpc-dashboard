@@ -101,6 +101,65 @@ describe('classify', () => {
     expect(output.department).toEqual(['furniture', 'art_sculpture']);
     expect(output.department.every((department) => VALID_DEPARTMENTS.includes(department))).toBe(true);
   });
+
+  it('returns an empty department array and needsReview=true when the LLM returns no valid tags', async () => {
+    const { classify } = await import('../crmClassifier');
+    mockGeminiJson({ department: ['cars', 'wine'], priority: 'standard' });
+
+    const output = await classify(input({ gmailBody: 'Possible consignment, unclear category.' }));
+
+    expect(output.department).toEqual([]);
+    expect(output.needsReview).toBe(true);
+  });
+
+  it('falls back to standard and needsReview=true when the LLM returns an invalid priority', async () => {
+    const { classify } = await import('../crmClassifier');
+    mockGeminiJson({ department: ['decarts'], priority: 'urgent' });
+
+    const output = await classify(input({ gmailBody: 'Decorative arts lot.' }));
+
+    expect(output.priority).toBe('standard');
+    expect(output.needsReview).toBe(true);
+  });
+
+  it("allows holding-phase last-message context to classify as priority='low'", async () => {
+    const { classify } = await import('../crmClassifier');
+    mockGeminiJson({
+      department: ['art_sculpture'],
+      priority: 'low',
+      rationale: '"sent the items to the appraiser and will follow up" is a last-message/time holding signal.',
+    });
+
+    const output = await classify(
+      input({
+        gmailBody: 'Two signed prints. sent the items to the appraiser and will follow up.',
+        lastMessageBody: 'sent the items to the appraiser and will follow up.',
+        daysSinceLastMessage: 3,
+      }),
+    );
+
+    expect(output).toMatchObject({ priority: 'low', needsReview: undefined });
+  });
+
+  it('does not force stale holding-phase threads to low when the model resurfaces them', async () => {
+    const { classify } = await import('../crmClassifier');
+    mockGeminiJson({
+      department: ['art_sculpture'],
+      priority: 'standard',
+      rationale: '"sent the items to the appraiser and will follow up" is stale after 20 days, so resurface.',
+    });
+
+    const output = await classify(
+      input({
+        gmailBody: 'Two signed prints. sent the items to the appraiser and will follow up.',
+        lastMessageBody: 'sent the items to the appraiser and will follow up.',
+        daysSinceLastMessage: 20,
+      }),
+    );
+
+    expect(output.needsReview).toBeUndefined();
+    expect(['standard', 'high']).toContain(output.priority);
+  });
 });
 
 function input(overrides: Partial<Parameters<typeof import('../crmClassifier').classify>[0]> = {}) {
@@ -110,6 +169,10 @@ function input(overrides: Partial<Parameters<typeof import('../crmClassifier').c
     stageKey: 'new',
     stageName: 'New',
     gmailBody: 'A standard consignment email.',
+    lastMessageBody: 'A standard consignment email.',
+    lastMessageDate: new Date('2026-05-20T16:00:00.000Z').toISOString(),
+    daysSinceLastMessage: 0,
+    threadAgeDays: 0,
     senderEmail: 'sender@example.com',
     lastUpdatedMs: Date.now(),
     ...overrides,
@@ -117,7 +180,7 @@ function input(overrides: Partial<Parameters<typeof import('../crmClassifier').c
 }
 
 function mockGeminiJson(
-  output: { department: string[]; priority: 'high' | 'standard' | 'low'; rationale?: string; model?: string },
+  output: { department: string[]; priority: string; rationale?: string; model?: string },
   times = 1,
 ): void {
   for (let count = 0; count < times; count += 1) {
