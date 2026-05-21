@@ -7,6 +7,7 @@ import { useCrmTriage } from '../../hooks/useCrmTriage';
 import type { TriageRow } from '../../services/crm/types';
 import { DeptTags } from './DeptTags';
 import { PriorityChip } from './PriorityChip';
+import { ConversationView } from './ConversationView';
 
 type PollResponse = {
   classified?: number;
@@ -311,9 +312,10 @@ export function CRMInbox() {
                                 <h2 className="mb-2 text-xs font-semibold uppercase text-ink-3">
                                   Body
                                 </h2>
-                                <p className="whitespace-pre-wrap text-sm leading-6 text-ink-2">
-                                  {thread.body_text || thread.snippet || 'No body text available.'}
-                                </p>
+                                <ConversationView
+                                  raw={thread.body_text}
+                                  fallbackSnippet={thread.snippet}
+                                />
                               </div>
                               <div>
                                 <h2 className="mb-2 text-xs font-semibold uppercase text-ink-3">
