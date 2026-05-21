@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { parseMessages, type CrmMessage } from '../lib/crm';
 import type { Database } from '../db/database.types';
 import type { Department, Priority, TriageRow } from '../services/crm/types';
 
@@ -47,6 +48,18 @@ export function sortTriageRows(rows: TriageRow[]): TriageRow[] {
   });
 }
 
+export function getLatestMessage(messages: CrmMessage[]): CrmMessage | undefined {
+  return messages[messages.length - 1];
+}
+
+export function getMessageCount(messages: CrmMessage[]): number {
+  return messages.length;
+}
+
+export function hasAnyAttachment(messages: CrmMessage[]): boolean {
+  return messages.some((message) => message.hasAttachments === true);
+}
+
 function isPriority(value: string | null): value is Priority {
   return value === 'high' || value === 'standard' || value === 'low';
 }
@@ -63,6 +76,7 @@ function normalizeRow(row: CrmTriageQueueRow, nowMs: number): TriageRow | null {
   const ageDays = (nowMs - new Date(row.received_at).getTime()) / 86_400_000;
   const needsReview = row.needs_review === true;
   const effectivePriority = getEffectivePriority(row.priority, ageDays, needsReview);
+  const messages = parseMessages(row.messages);
 
   return {
     thread_id: row.thread_id,
@@ -77,6 +91,7 @@ function normalizeRow(row: CrmTriageQueueRow, nowMs: number): TriageRow | null {
     snippet: row.snippet,
     body_text: row.body_text,
     body_source: row.body_source,
+    messages,
     classification_id: row.classification_id,
     classified_at: row.classified_at,
     department: normalizeDepartments(row.department),

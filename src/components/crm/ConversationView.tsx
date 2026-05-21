@@ -1,136 +1,68 @@
-import { Fragment, useMemo, useState } from 'react';
-import { parseConversation, type ParsedMessage, type ParsedSegment } from '../../lib/crm-text';
+import type { CrmMessage } from '../../lib/crm';
 
 type ConversationViewProps = {
   raw: string | null;
   fallbackSnippet: string | null;
+  messages?: CrmMessage[];
 };
 
-export function ConversationView({ raw, fallbackSnippet }: ConversationViewProps) {
-  const source = raw || fallbackSnippet || '';
-  const parsed = useMemo(() => parseConversation(source), [raw, fallbackSnippet]);
-  const [showOriginal, setShowOriginal] = useState(false);
+const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
 
-  if (parsed.isFallback) {
+export function ConversationView({ messages }: ConversationViewProps) {
+  if (!messages || messages.length === 0) {
     return (
-      <article className="text-sm leading-6 text-ink-2">
-        <pre className="whitespace-pre-wrap font-sans">
-          {raw || fallbackSnippet || 'No body text available.'}
-        </pre>
-        <button
-          type="button"
-          className="mt-3 text-xs font-medium text-accent hover:underline"
-          onClick={() => setShowOriginal((current) => !current)}
-        >
-          {showOriginal ? 'Hide original' : 'Show original'}
-        </button>
-        {showOriginal && (
-          <pre className="mt-3 whitespace-pre-wrap rounded-md bg-bg p-3 font-sans text-xs text-ink-2">
-            {parsed.raw || 'No body text available.'}
-          </pre>
-        )}
+      <article className="rounded-md border border-dashed border-rule bg-bg px-4 py-5 text-sm text-ink-3">
+        No messages loaded
       </article>
     );
   }
 
   return (
-    <article className="text-sm leading-6 text-ink-2">
-      {parsed.messages.map((message, index) => (
-        <Fragment key={message.id}>
-          {index > 0 && <hr className="my-3 border-bg-3" />}
-          <MessageSection message={message} />
-        </Fragment>
+    <article className="space-y-3 text-sm leading-6 text-ink-2">
+      {messages.map((message) => (
+        <MessageCard key={message.messageId || `${message.from.email}-${message.date}`} message={message} />
       ))}
     </article>
   );
 }
 
-function MessageSection({ message }: { message: ParsedMessage }) {
-  const [showQuoted, setShowQuoted] = useState(false);
-  const [showSignature, setShowSignature] = useState(false);
-
+function MessageCard({ message }: { message: CrmMessage }) {
   return (
-    <section>
-      {message.body.map((segment, index) => (
-        <Fragment key={`${segment.kind}-${index}`}>
-          {renderSegment({
-            segment,
-            showQuoted,
-            showSignature,
-            onToggleQuoted: () => setShowQuoted((current) => !current),
-            onToggleSignature: () => setShowSignature((current) => !current),
-          })}
-        </Fragment>
-      ))}
+    <section className="rounded-md border border-rule bg-bg p-3 shadow-sm">
+      <header className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+        <span className="font-semibold text-ink">{message.from.name || 'Unknown sender'}</span>
+        {message.from.email && <span className="text-ink-3">&lt;{message.from.email}&gt;</span>}
+        <span className="text-ink-4">-</span>
+        <time className="text-ink-3" dateTime={message.date}>
+          {formatDate(message.date)}
+        </time>
+        {message.hasAttachments && (
+          <span className="rounded-full bg-bg-2 px-2 py-0.5 font-medium text-ink-2">
+            Attachment
+          </span>
+        )}
+        {message.isForward && (
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
+            Forward
+          </span>
+        )}
+      </header>
+      <pre className="whitespace-pre-wrap font-sans text-sm leading-6 text-ink-2">
+        {message.bodyText || message.snippet || 'No body text available.'}
+      </pre>
     </section>
   );
 }
 
-function renderSegment({
-  segment,
-  showQuoted,
-  showSignature,
-  onToggleQuoted,
-  onToggleSignature,
-}: {
-  segment: ParsedSegment;
-  showQuoted: boolean;
-  showSignature: boolean;
-  onToggleQuoted: () => void;
-  onToggleSignature: () => void;
-}) {
-  if (segment.kind === 'text') {
-    return <span className="whitespace-pre-wrap">{segment.value}</span>;
-  }
-
-  if (segment.kind === 'link') {
-    return (
-      <a
-        className="text-accent hover:underline"
-        href={segment.href}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {segment.label}
-      </a>
-    );
-  }
-
-  if (segment.kind === 'quoted') {
-    return (
-      <div className="mt-3">
-        <button
-          type="button"
-          className="text-xs font-medium text-accent hover:underline"
-          onClick={onToggleQuoted}
-        >
-          {showQuoted ? 'Hide quoted text' : 'Show quoted text'}
-        </button>
-        {showQuoted && (
-          <pre className="mt-2 whitespace-pre-wrap rounded-md bg-bg p-3 font-sans text-xs text-ink-3">
-            {segment.raw}
-          </pre>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-3">
-      <button
-        type="button"
-        className="text-xs font-medium text-accent hover:underline"
-        onClick={onToggleSignature}
-      >
-        {showSignature ? 'Hide signature' : 'Show signature'}
-      </button>
-      {showSignature && (
-        <pre className="mt-2 whitespace-pre-wrap rounded-md bg-bg p-3 font-sans text-xs text-ink-3">
-          {segment.raw}
-        </pre>
-      )}
-    </div>
-  );
+function formatDate(value: string): string {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? DATE_FORMAT.format(date) : value;
 }
 
 export default ConversationView;

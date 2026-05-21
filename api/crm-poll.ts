@@ -213,7 +213,7 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
 
     const content = await getThreadContent(gmailThreadId);
     const bodyHash = hashContent(content.text, content.images);
-    const thread = await upsertThread(admin, box, gmailThreadId, content.text);
+    const thread = await upsertThread(admin, box, gmailThreadId, content.text, content.messages ?? []);
     response.polled += 1;
 
     const latest = await getLatestClassification(admin, thread.id);
@@ -314,6 +314,15 @@ async function upsertThread(
   box: StreakBox,
   gmailThreadId: string,
   bodyText: string,
+  messages: ReadonlyArray<{
+    messageId: string;
+    from: { name: string; email: string };
+    date: Date;
+    snippet: string;
+    bodyText: string;
+    hasAttachments: boolean;
+    isForward: boolean;
+  }>,
 ): Promise<ThreadRow> {
   // received_at represents "last actual consignor email", not Streak's
   // last-touch (stage changes / comments shouldn't reset the age clock).
@@ -322,6 +331,17 @@ async function upsertThread(
     ? box.lastEmailReceivedTimestamp
     : box.lastUpdatedTimestamp;
   const receivedAt = receivedMs > 0 ? new Date(receivedMs).toISOString() : null;
+  const serializedMessages = [...messages]
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map((message) => ({
+      messageId: message.messageId,
+      from: message.from,
+      date: message.date.toISOString(),
+      snippet: message.snippet,
+      bodyText: message.bodyText,
+      hasAttachments: message.hasAttachments,
+      isForward: message.isForward,
+    }));
   const { data, error } = await admin
     .from('crm_threads')
     .upsert(
@@ -337,6 +357,7 @@ async function upsertThread(
         received_at: receivedAt,
         snippet: box.snippet || null,
         body_text: bodyText,
+        messages: serializedMessages,
         body_source: 'gmail',
         last_polled_at: new Date().toISOString(),
       },

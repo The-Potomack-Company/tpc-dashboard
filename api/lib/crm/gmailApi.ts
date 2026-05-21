@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import type { gmail_v1 } from 'googleapis/build/src/apis/gmail/v1.js';
-import { GmailVerbForbidden, type GmailImageAttachment, type GmailThreadContent } from './types.js';
+import { GmailVerbForbidden, type GmailImageAttachment, type GmailThreadContent, type GmailThreadMessage } from './types.js';
 
 const ALLOWED_VERBS = ['messages.get', 'messages.attachments.get', 'threads.get'] as const;
 const MAX_IMAGES_PER_THREAD = 4;
@@ -14,6 +14,12 @@ type GmailPayloadPart = {
   filename?: string | null;
   body?: { data?: string | null; attachmentId?: string | null; size?: number | null } | null;
   parts?: GmailPayloadPart[] | null;
+};
+
+type BodyExtraction = {
+  text: string;
+  hasAttachments: boolean;
+  internalDate: Date;
 };
 
 export function assertAllowedGmailVerb(verb: string): asserts verb is AllowedVerb {
@@ -42,11 +48,13 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
   });
 
   const messages = (threadResponse.data.messages ?? []) as gmail_v1.Schema$Message[];
-  const recentMessages = messages.slice(-20); // large escalation threads can be 100+ messages; Gemini doesn't usefully consume more than ~20
+  const recentStart = Math.max(messages.length - 20, 0);
+  const recentMessages = messages.slice(recentStart); // large escalation threads can be 100+ messages; Gemini doesn't usefully consume more than ~20
   const bodies: string[] = [];
   const images: GmailImageAttachment[] = [];
+  const structuredMessages: GmailThreadMessage[] = [];
 
-  for (const message of recentMessages) {
+  for (const [index, message] of messages.entries()) {
     if (!message.payload) {
       continue;
     }
@@ -55,9 +63,23 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
     }
     const messageId = message.id;
 
-    const body = extractBodyText(message.payload);
-    if (body) {
-      bodies.push(body);
+    const body = extractBodyText(message.payload, message);
+    structuredMessages.push({
+      messageId,
+      from: parseFromHeader(readHeader(message.payload, 'From')),
+      date: body.internalDate,
+      snippet: message.snippet ?? '',
+      bodyText: body.text,
+      hasAttachments: body.hasAttachments,
+      isForward: isForwardMessage(message.payload, readHeader(message.payload, 'Subject')),
+    });
+
+    if (index < recentStart) {
+      continue;
+    }
+
+    if (body.text) {
+      bodies.push(body.text);
     }
 
     if (images.length < MAX_IMAGES_PER_THREAD) {
@@ -80,7 +102,8 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
     });
   }
 
-  return { text, images };
+  structuredMessages.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return { text, images, messages: structuredMessages };
 }
 
 // Back-compat shim — older callers expect text-only.
@@ -135,20 +158,33 @@ async function fetchAttachment(
   }
 }
 
-function extractBodyText(payload: GmailPayloadPart | null | undefined): string {
+function extractBodyText(
+  payload: GmailPayloadPart | null | undefined,
+  message?: gmail_v1.Schema$Message,
+): BodyExtraction {
   const plain = collectMimeParts(payload, 'text/plain')
     .map(decodeBase64Url)
     .filter(Boolean);
   if (plain.length > 0) {
-    return plain.join('\n').trim();
+    return {
+      text: plain.join('\n').trim(),
+      hasAttachments: hasAttachments(payload),
+      internalDate: extractInternalDate(message),
+    };
   }
 
-  return collectMimeParts(payload, 'text/html')
+  const text = collectMimeParts(payload, 'text/html')
     .map(decodeBase64Url)
     .map(stripHtml)
     .filter(Boolean)
     .join('\n')
     .trim();
+
+  return {
+    text,
+    hasAttachments: hasAttachments(payload),
+    internalDate: extractInternalDate(message),
+  };
 }
 
 function collectMimeParts(
@@ -162,6 +198,53 @@ function collectMimeParts(
   const ownData = payload.mimeType === mimeType && payload.body?.data ? [payload.body.data] : [];
   const nestedData = (payload.parts ?? []).flatMap((part) => collectMimeParts(part, mimeType));
   return [...ownData, ...nestedData];
+}
+
+export function hasAttachments(payload: GmailPayloadPart | null | undefined): boolean {
+  if (!payload) return false;
+  const mimeType = payload.mimeType ?? '';
+  if (mimeType.startsWith('image/') || mimeType.startsWith('application/')) {
+    return true;
+  }
+  if ((payload.filename ?? '').trim() !== '') {
+    return true;
+  }
+  return (payload.parts ?? []).some((part) => hasAttachments(part));
+}
+
+export function extractInternalDate(message: gmail_v1.Schema$Message | null | undefined): Date {
+  const value = message?.internalDate;
+  if (value) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return new Date(parsed);
+    }
+  }
+  return new Date(Date.now());
+}
+
+function readHeader(payload: gmail_v1.Schema$MessagePart | GmailPayloadPart | null | undefined, name: string): string {
+  const headers = 'headers' in (payload ?? {}) ? (payload as gmail_v1.Schema$MessagePart).headers : undefined;
+  const header = headers?.find((item) => item.name?.toLowerCase() === name.toLowerCase());
+  return header?.value ?? '';
+}
+
+function parseFromHeader(raw: string): { name: string; email: string } {
+  const match = raw.match(/^(.*?)\s*<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim(), email: match[2] };
+  }
+  return { name: raw, email: raw };
+}
+
+function isForwardMessage(payload: GmailPayloadPart | null | undefined, subject: string): boolean {
+  return /^(fwd|fw):/i.test(subject.trim()) || hasMimePart(payload, 'message/rfc822');
+}
+
+function hasMimePart(payload: GmailPayloadPart | null | undefined, mimeType: string): boolean {
+  if (!payload) return false;
+  if (payload.mimeType === mimeType) return true;
+  return (payload.parts ?? []).some((part) => hasMimePart(part, mimeType));
 }
 
 function decodeBase64Url(value: string): string {

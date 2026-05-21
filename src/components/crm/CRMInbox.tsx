@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AccessDenied } from '../AccessDenied';
 import { EmptyState } from '../EmptyState';
 import { useAuthStore } from '../../stores/authStore';
-import { useCrmTriage } from '../../hooks/useCrmTriage';
+import { getMessageCount, hasAnyAttachment, useCrmTriage } from '../../hooks/useCrmTriage';
 import type { TriageRow } from '../../services/crm/types';
 import { DeptTags } from './DeptTags';
 import { PriorityChip } from './PriorityChip';
@@ -290,7 +290,25 @@ export function CRMInbox() {
                           </span>
                         </td>
                         <td className="min-w-72 px-4 py-3">
-                          <div className="font-medium text-ink">{thread.subject}</div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-ink">{thread.subject}</span>
+                            <span className="rounded-full bg-bg-2 px-2 py-0.5 text-xs font-medium text-ink-3">
+                              {getMessageCount(thread.messages)}
+                            </span>
+                            {hasAnyAttachment(thread.messages) && (
+                              <span className="text-ink-3" aria-label="Has attachment" title="Has attachment">
+                                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                  <path
+                                    d="M7 10.5l4.95-4.95a2.47 2.47 0 013.5 3.5L8.75 15.75a4 4 0 01-5.66-5.66l7.07-7.07"
+                                    className="stroke-current"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </span>
+                            )}
+                          </div>
                           <div className="mt-0.5 text-xs text-ink-3">{sender(thread)}</div>
                         </td>
                         <td className="min-w-56 px-4 py-3">
@@ -315,6 +333,7 @@ export function CRMInbox() {
                                 <ConversationView
                                   raw={thread.body_text}
                                   fallbackSnippet={thread.snippet}
+                                  messages={thread.messages}
                                 />
                               </div>
                               <div>

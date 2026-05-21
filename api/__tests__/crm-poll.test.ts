@@ -51,7 +51,21 @@ describe('api/crm-poll', () => {
     supabase = new MockSupabase();
     serviceMocks.createClient.mockReturnValue(supabase.client);
     serviceMocks.getThreadBody.mockResolvedValue('Fresh consignment body.');
-    serviceMocks.getThreadContent.mockResolvedValue({ text: 'Fresh consignment body.', images: [] });
+    serviceMocks.getThreadContent.mockResolvedValue({
+      text: 'Fresh consignment body.',
+      images: [],
+      messages: [
+        {
+          messageId: 'msg-1',
+          from: { name: 'Sender', email: 'sender@example.com' },
+          date: new Date('2026-05-20T12:00:00.000Z'),
+          snippet: 'Snippet',
+          bodyText: 'Fresh consignment body.',
+          hasAttachments: false,
+          isForward: false,
+        },
+      ],
+    });
     serviceMocks.classify.mockResolvedValue(classification());
     serviceMocks.listOpenBoxes.mockResolvedValue([box('box-1')]);
   });

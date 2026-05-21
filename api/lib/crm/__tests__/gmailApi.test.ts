@@ -61,6 +61,7 @@ describe('getThreadBody', () => {
           {
             id: 'msg-1',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
             payload: { mimeType: 'text/plain', body: { data: encodeBody('First body') } },
           },
         ],
@@ -78,11 +79,13 @@ describe('getThreadBody', () => {
           {
             id: 'msg-1',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
             payload: { mimeType: 'text/plain', body: { data: encodeBody('First body') } },
           },
           {
             id: 'msg-2',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T13:00:00.000Z')),
             payload: {
               mimeType: 'multipart/alternative',
               parts: [{ mimeType: 'text/html', body: { data: encodeBody('<p>Second &amp; body</p>') } }],
@@ -103,6 +106,7 @@ describe('getThreadBody', () => {
           {
             id: 'msg-1',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
             payload: { mimeType: 'application/json', body: { data: encodeBody('{"not":"email"}') } },
           },
         ],
@@ -119,7 +123,21 @@ describe('getThreadBody', () => {
     });
 
     vi.mocked(console.warn).mockClear();
-    await expect(getThreadContent('thread-1')).resolves.toEqual({ text: '', images: [] });
+    await expect(getThreadContent('thread-1')).resolves.toEqual({
+      text: '',
+      images: [],
+      messages: [
+        {
+          messageId: 'msg-1',
+          from: { name: '', email: '' },
+          date: new Date('2026-05-20T12:00:00.000Z'),
+          snippet: '',
+          bodyText: '',
+          hasAttachments: true,
+          isForward: false,
+        },
+      ],
+    });
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith('[crm-debug] empty body extracted', {
       threadId: 'thread-1',
@@ -136,6 +154,7 @@ describe('getThreadBody', () => {
           {
             id: 'msg-1',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
             payload: {
               mimeType: 'multipart/mixed',
               parts: [
@@ -156,6 +175,17 @@ describe('getThreadBody', () => {
     await expect(getThreadContent('thread-1')).resolves.toEqual({
       text: '',
       images: [{ mimeType: 'image/jpeg', data: Buffer.from('image-bytes', 'utf8').toString('base64url') }],
+      messages: [
+        {
+          messageId: 'msg-1',
+          from: { name: '', email: '' },
+          date: new Date('2026-05-20T12:00:00.000Z'),
+          snippet: '',
+          bodyText: '',
+          hasAttachments: true,
+          isForward: false,
+        },
+      ],
     });
 
     expect(googleMocks.attachmentsGet).toHaveBeenCalledWith({
@@ -192,6 +222,7 @@ describe('getThreadBody', () => {
           {
             id: 'msg-1',
             threadId: 'thread-1',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
             payload: { mimeType: 'text/plain', body: { data: encodeBody('Credential check') } },
           },
         ],

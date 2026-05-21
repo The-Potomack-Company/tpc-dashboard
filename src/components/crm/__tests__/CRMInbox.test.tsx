@@ -12,6 +12,9 @@ const useCrmTriageMock = vi.fn<(options?: UseCrmTriageOptions) => unknown>();
 const lastInsertCallback = { current: undefined as (() => void) | undefined };
 
 vi.mock('../../../hooks/useCrmTriage', () => ({
+  getMessageCount: (messages: TriageRow['messages']) => messages.length,
+  hasAnyAttachment: (messages: TriageRow['messages']) =>
+    messages.some((message) => message.hasAttachments),
   useCrmTriage: (options?: UseCrmTriageOptions) => {
     lastInsertCallback.current = options?.onClassificationInsert;
     return useCrmTriageMock(options);
@@ -48,6 +51,17 @@ function makeThread(input: {
     snippet: null,
     body_text: input.body_text ?? `Body for ${input.subject}`,
     body_source: 'gmail',
+    messages: [
+      {
+        messageId: `${input.id}-message`,
+        from: { name: `Sender ${input.id}`, email: `${input.id}@example.com` },
+        date: input.received_at,
+        snippet: null ?? '',
+        bodyText: input.body_text ?? `Body for ${input.subject}`,
+        hasAttachments: false,
+        isForward: false,
+      },
+    ],
     classification_id: `${input.id}-classification`,
     classified_at: '2026-05-20T12:00:00.000Z',
     department: ['furniture'],

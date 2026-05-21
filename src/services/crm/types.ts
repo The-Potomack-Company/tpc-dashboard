@@ -1,3 +1,5 @@
+import type { CrmMessage } from '../../lib/crm';
+
 export type Department =
   | 'furniture'
   | 'decarts'
@@ -20,6 +22,7 @@ export type TriageRow = {
   snippet: string | null;
   body_text: string | null;
   body_source: string | null;
+  messages: CrmMessage[];
   classification_id: string | null;
   classified_at: string | null;
   department: Department[];

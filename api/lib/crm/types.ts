@@ -20,6 +20,19 @@ export type GmailMessage = {
   body: string;
 };
 
+export type GmailThreadMessage = {
+  messageId: string;
+  from: {
+    name: string;
+    email: string;
+  };
+  date: Date;
+  snippet: string;
+  bodyText: string;
+  hasAttachments: boolean;
+  isForward: boolean;
+};
+
 export type GmailImageAttachment = {
   mimeType: string;
   data: string; // base64 (standard, not url-safe — Gemini inlineData spec)
@@ -28,6 +41,7 @@ export type GmailImageAttachment = {
 export type GmailThreadContent = {
   text: string;
   images: GmailImageAttachment[];
+  messages: GmailThreadMessage[];
 };
 
 export type ClassifierInput = {

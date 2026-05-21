@@ -2,7 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { getEffectivePriority, sortTriageRows, useCrmTriage } from './useCrmTriage';
+import {
+  getEffectivePriority,
+  getLatestMessage,
+  getMessageCount,
+  hasAnyAttachment,
+  sortTriageRows,
+  useCrmTriage,
+} from './useCrmTriage';
 import type { Priority, TriageRow } from '../services/crm/types';
 
 type ChannelHandler = (payload: { new: { is_current: boolean } }) => void;
@@ -56,6 +63,7 @@ function row(input: {
     snippet: null,
     body_text: null,
     body_source: null,
+    messages: [],
     classification_id: null,
     classified_at: null,
     department: [],
@@ -137,6 +145,35 @@ describe('useCrmTriage age-bump rules', () => {
       'standard-newer',
       'low',
     ]);
+  });
+});
+
+describe('useCrmTriage message helpers', () => {
+  const messages = [
+    {
+      messageId: 'msg-1',
+      from: { name: 'Sender', email: 'sender@example.com' },
+      date: '2026-05-20T12:00:00.000Z',
+      snippet: 'First',
+      bodyText: 'First body',
+      hasAttachments: false,
+      isForward: false,
+    },
+    {
+      messageId: 'msg-2',
+      from: { name: 'Sender', email: 'sender@example.com' },
+      date: '2026-05-20T13:00:00.000Z',
+      snippet: 'Second',
+      bodyText: 'Second body',
+      hasAttachments: true,
+      isForward: false,
+    },
+  ];
+
+  it('summarizes already-sorted structured messages', () => {
+    expect(getLatestMessage(messages)?.messageId).toBe('msg-2');
+    expect(getMessageCount(messages)).toBe(2);
+    expect(hasAnyAttachment(messages)).toBe(true);
   });
 });
 
