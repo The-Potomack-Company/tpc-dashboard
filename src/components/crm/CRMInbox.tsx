@@ -1,4 +1,5 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AccessDenied } from '../AccessDenied';
 import { EmptyState } from '../EmptyState';
 import { useAuthStore } from '../../stores/authStore';
@@ -68,7 +69,15 @@ function getPollMessage(response: PollResponse): string {
   return `Classified ${classified} (${unchanged} unchanged, ${deferred} deferred)`;
 }
 
-function EmptyInbox({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefreshing: boolean }) {
+function EmptyInbox({
+  onRefresh,
+  isRefreshing,
+  buttonLabel,
+}: {
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  buttonLabel: string;
+}) {
   return (
     <div className="flex items-center justify-center py-20" data-testid="crm-inbox-empty">
       <EmptyState heading="Inbox zero — no open consignments to triage">
@@ -100,7 +109,7 @@ function EmptyInbox({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefr
           disabled={isRefreshing}
           className="tpc-btn tpc-btn-primary mt-1"
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          {buttonLabel}
         </button>
       </EmptyState>
     </div>
@@ -108,31 +117,33 @@ function EmptyInbox({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefr
 }
 
 export function CRMInbox() {
+  const queryClient = useQueryClient();
   const isAdmin = useAuthStore((s) => s.profile?.role === 'admin' && s.profile.is_active === true);
   const accessToken = useAuthStore((s) => s.session?.access_token);
-  const { threads, isLoading, error, refetch } = useCrmTriage();
   const [expandedThreadId, setExpandedThreadId] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [liveCount, setLiveCount] = useState(0);
+
+  // Each crm_classifications INSERT bumps the live counter so the Refresh
+  // button shows live progress instead of an opaque spinner. The hook also
+  // invalidates the table query on each event so rows appear as the poller
+  // writes them.
+  const onClassificationInsert = useCallback(() => {
+    setLiveCount((prev) => prev + 1);
+  }, []);
+
+  const { threads, isLoading, error } = useCrmTriage({ onClassificationInsert });
 
   const expandedRow = useMemo(
     () => threads.find((thread) => thread.thread_id === expandedThreadId) ?? null,
     [threads, expandedThreadId],
   );
 
-  if (!isAdmin) {
-    return <AccessDenied />;
-  }
-
-  async function handleRefresh() {
-    setIsRefreshing(true);
-    setToast(null);
-
-    try {
+  const refreshMutation = useMutation<PollResponse, Error>({
+    mutationFn: async () => {
       if (!accessToken) {
         throw new Error('Missing admin session. Sign in again and retry.');
       }
-
       const response = await fetch('/api/crm-poll', {
         method: 'POST',
         headers: {
@@ -140,24 +151,43 @@ export function CRMInbox() {
         },
       });
       const payload = (await response.json().catch(() => ({}))) as PollResponse;
-
       if (!response.ok) {
         if (response.status === 503 || /streak/i.test(payload.error ?? '')) {
           throw new Error('Streak unavailable, try again');
         }
         throw new Error(payload.error ?? `Refresh failed with HTTP ${response.status}`);
       }
-
+      return payload;
+    },
+    onMutate: () => {
+      setToast(null);
+      setLiveCount(0);
+    },
+    onSuccess: (payload) => {
       setToast({ tone: 'ok', message: getPollMessage(payload) });
-      await refetch();
-    } catch (err) {
+      void queryClient.invalidateQueries({ queryKey: ['crm', 'triage'] });
+    },
+    onError: (err) => {
       setToast({
         tone: 'err',
         message: err instanceof Error ? err.message : 'Refresh failed',
       });
-    } finally {
-      setIsRefreshing(false);
-    }
+    },
+  });
+
+  if (!isAdmin) {
+    return <AccessDenied />;
+  }
+
+  const isRefreshing = refreshMutation.isPending;
+  const buttonLabel = isRefreshing
+    ? liveCount > 0
+      ? `Polling… ${liveCount}`
+      : 'Polling…'
+    : 'Refresh';
+
+  function handleRefresh() {
+    refreshMutation.mutate();
   }
 
   return (
@@ -171,12 +201,12 @@ export function CRMInbox() {
         </div>
         <button
           type="button"
-          onClick={() => void handleRefresh()}
+          onClick={handleRefresh}
           disabled={isRefreshing}
           className="tpc-btn tpc-btn-primary"
           aria-busy={isRefreshing}
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          {buttonLabel}
         </button>
       </header>
 
@@ -205,7 +235,11 @@ export function CRMInbox() {
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-accent" />
         </div>
       ) : threads.length === 0 ? (
-        <EmptyInbox onRefresh={() => void handleRefresh()} isRefreshing={isRefreshing} />
+        <EmptyInbox
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
+          buttonLabel={buttonLabel}
+        />
       ) : (
         <section className="tpc-card overflow-hidden" data-testid="crm-inbox-table">
           <div className="overflow-x-auto">
