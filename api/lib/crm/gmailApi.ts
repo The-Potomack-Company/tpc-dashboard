@@ -27,9 +27,12 @@ const ORIGINAL_BANNER  = /^-{2,}\s*Original Message\s*-{2,}\s*$/im;
 // 4. Gmail's invisible reply-anchor separator (U+1427) — single char line.
 const GMAIL_SEPARATOR = /^\s*ᐧ\s*$/m;
 
-// 5. Quoted-line block (≥2 contiguous lines starting with "> ") — conservative
-//    so a single inline "> quote" isn't treated as the chain.
+// 5. Quoted-line block (≥3 contiguous lines starting with "> ") — conservative
+//    so a single inline "> quote" or a two-line legitimate blockquote in fresh
+//    content isn't treated as the chain. Real reply chains are always many
+//    lines (the entire prior message gets quoted). Codex review P2 2026-05-21.
 const QUOTED_LINE = /^>+ ?/;
+const QUOTED_BLOCK_MIN = 3;
 
 type AllowedVerb = (typeof ALLOWED_VERBS)[number];
 
@@ -57,10 +60,11 @@ export function stripReplyChain(text: string): string {
   const lines = text.split('\n');
   let cut = lines.length;
 
-  // Single-line tail markers (per-line line scan).
+  // Single-line tail markers (per-line scan). OUTLOOK_HEADER_BLOCK is multi-
+  // line and lives in the joined-text pass below — keeping it out of this
+  // array (Claude review nit 2026-05-21).
   const lineMarkers = [
-    APPLE_MAIL_INTRO,                    // matches single line
-    OUTLOOK_HEADER_BLOCK,                // multi-line; handled below
+    APPLE_MAIL_INTRO,
     FORWARDED_BANNER,
     ORIGINAL_BANNER,
     GMAIL_SEPARATOR,
@@ -76,8 +80,9 @@ export function stripReplyChain(text: string): string {
     if (cut <= i) break;
   }
 
-  // Multi-line wrapping intros — match against the JOINED text (with offsets
-  // mapped back to line index) so wrapped attributions are caught.
+  // Multi-line wrapping intros + Outlook header block — match against the
+  // JOINED text (with offsets mapped back to line index) so wrapped
+  // attributions and contiguous header blocks are caught.
   for (const re of [REPLY_INTRO, FR_INTRO, ES_INTRO, DE_INTRO, OUTLOOK_HEADER_BLOCK]) {
     const m = re.exec(text);
     if (m && typeof m.index === 'number') {
@@ -86,11 +91,13 @@ export function stripReplyChain(text: string): string {
     }
   }
 
-  // Outlook header block — already covered by OUTLOOK_HEADER_BLOCK multi-line regex above.
-
-  // Quoted-block — ≥2 contiguous "> " lines (conservative).
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (QUOTED_LINE.test(lines[i]) && QUOTED_LINE.test(lines[i + 1])) {
+  // Quoted-block — ≥QUOTED_BLOCK_MIN contiguous "> " lines. Real reply
+  // chains are always long; raising the threshold avoids trimming
+  // legitimate two-line blockquotes inside fresh content.
+  for (let i = 0; i <= lines.length - QUOTED_BLOCK_MIN; i++) {
+    let run = 0;
+    while (i + run < lines.length && QUOTED_LINE.test(lines[i + run])) run++;
+    if (run >= QUOTED_BLOCK_MIN) {
       cut = Math.min(cut, i);
       break;
     }
