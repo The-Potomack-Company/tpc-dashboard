@@ -89,12 +89,14 @@ function parseClassifierJson(text: string): ClassifierOutput {
       })
     : [];
 
+  const hasValidPriority = isPriority(parsed.priority);
+
   return {
-    department: department.length > 0 ? department : ['decarts'],
-    priority: isPriority(parsed.priority) ? parsed.priority : 'standard',
+    department,
+    priority: hasValidPriority ? parsed.priority : 'standard',
     rationale: typeof parsed.rationale === 'string' ? parsed.rationale : 'Classifier returned incomplete rationale.',
     model: typeof parsed.model === 'string' ? parsed.model : MODEL,
-    needsReview: department.length === 0 ? true : parsed.needsReview,
+    needsReview: department.length === 0 || !hasValidPriority ? true : parsed.needsReview,
   };
 }
 
