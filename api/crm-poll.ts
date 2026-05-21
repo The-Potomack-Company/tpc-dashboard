@@ -509,7 +509,7 @@ function daysBetween(startMs: number | undefined, endMs: number): number {
     return 0;
   }
 
-  return Math.max(0, Math.floor((endMs - startMs) / 86_400_000));
+  return Math.max(0, Math.ceil((endMs - startMs) / 86_400_000));
 }
 
 function readBodyHash(metadata: unknown): string | null {
