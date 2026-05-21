@@ -56,7 +56,7 @@ function makeThread(input: {
         messageId: `${input.id}-message`,
         from: { name: `Sender ${input.id}`, email: `${input.id}@example.com` },
         date: input.received_at,
-        snippet: null ?? '',
+        snippet: '',
         bodyText: input.body_text ?? `Body for ${input.subject}`,
         hasAttachments: false,
         isForward: false,
