@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import type { gmail_v1 } from 'googleapis/build/src/apis/gmail/v1.js';
 import { GmailVerbForbidden, type GmailImageAttachment, type GmailThreadContent } from './types.js';
 
 const ALLOWED_VERBS = ['messages.get', 'messages.attachments.get', 'threads.get'] as const;
@@ -13,30 +14,6 @@ type GmailPayloadPart = {
   filename?: string | null;
   body?: { data?: string | null; attachmentId?: string | null; size?: number | null } | null;
   parts?: GmailPayloadPart[] | null;
-};
-
-type GmailMessageResource = {
-  id?: string | null;
-  threadId?: string | null;
-  snippet?: string | null;
-  payload?: GmailPayloadPart | null;
-};
-
-type GmailClient = {
-  users: {
-    threads: {
-      get(params: { userId: string; id: string; format: 'full' }): Promise<{
-        data: { messages?: GmailMessageResource[] | null };
-      }>;
-    };
-    messages: {
-      attachments: {
-        get(params: { userId: string; messageId: string; id: string }): Promise<{
-          data: { data?: string | null };
-        }>;
-      };
-    };
-  };
 };
 
 export function assertAllowedGmailVerb(verb: string): asserts verb is AllowedVerb {
@@ -55,7 +32,7 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
     refresh_token: readRequiredEnv('GMAIL_REFRESH_TOKEN', 'GMAIL_OAUTH_REFRESH_TOKEN'),
   });
 
-  const gmail = google.gmail({ version: 'v1', auth: oauth2Client }) as unknown as GmailClient;
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client }) as gmail_v1.Gmail;
 
   assertAllowedGmailVerb('threads.get');
   const threadResponse = await gmail.users.threads.get({
@@ -64,14 +41,19 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
     format: 'full',
   });
 
-  const messages = (threadResponse.data.messages ?? []) as GmailMessageResource[];
+  const messages = (threadResponse.data.messages ?? []) as gmail_v1.Schema$Message[];
+  const recentMessages = messages.slice(-20); // large escalation threads can be 100+ messages; Gemini doesn't usefully consume more than ~20
   const bodies: string[] = [];
   const images: GmailImageAttachment[] = [];
 
-  for (const message of messages) {
+  for (const message of recentMessages) {
+    if (!message.payload) {
+      continue;
+    }
     if (!message.id) {
       continue;
     }
+    const messageId = message.id;
 
     const body = extractBodyText(message.payload);
     if (body) {
@@ -81,7 +63,7 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
     if (images.length < MAX_IMAGES_PER_THREAD) {
       const imageRefs = collectImageRefs(message.payload).slice(0, MAX_IMAGES_PER_THREAD - images.length);
       const fetched = await Promise.all(
-        imageRefs.map((ref) => fetchAttachment(gmail, userId, message.id!, ref)),
+        imageRefs.map((ref) => fetchAttachment(gmail, userId, messageId, ref)),
       );
       for (const img of fetched) {
         if (img) images.push(img);
@@ -90,8 +72,12 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
   }
 
   const text = bodies.join('\n\n').trim();
-  if (!text) {
-    console.warn('[crm-poll] empty body extracted', { threadId, messageCount: messages.length });
+  if (!text && images.length === 0) {
+    console.warn('[crm-debug] empty body extracted', {
+      threadId,
+      messageCount: recentMessages.length,
+      imageCount: images.length,
+    });
   }
 
   return { text, images };
@@ -126,7 +112,7 @@ function collectImageRefs(payload: GmailPayloadPart | null | undefined): ImageRe
 }
 
 async function fetchAttachment(
-  gmail: GmailClient,
+  gmail: gmail_v1.Gmail,
   userId: string,
   messageId: string,
   ref: ImageRef,

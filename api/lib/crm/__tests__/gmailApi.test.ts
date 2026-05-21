@@ -45,10 +45,12 @@ describe('getThreadBody', () => {
       GMAIL_USER_EMAIL: 'consign@example.com',
     };
     vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
     process.env = OLD_ENV;
+    vi.restoreAllMocks();
   });
 
   it('returns body string', async () => {
@@ -94,9 +96,8 @@ describe('getThreadBody', () => {
   });
 
   it('warns when thread body extraction returns empty text', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const { getThreadBody } = await import('../gmailApi');
-    googleMocks.threadsGet.mockResolvedValueOnce({
+    const { getThreadBody, getThreadContent } = await import('../gmailApi');
+    const emptyThreadResponse = {
       data: {
         messages: [
           {
@@ -106,15 +107,63 @@ describe('getThreadBody', () => {
           },
         ],
       },
-    });
+    };
+    googleMocks.threadsGet.mockResolvedValueOnce(emptyThreadResponse).mockResolvedValueOnce(emptyThreadResponse);
 
     await expect(getThreadBody('thread-1')).resolves.toBe('');
-
-    expect(warn).toHaveBeenCalledWith('[crm-poll] empty body extracted', {
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('[crm-debug] empty body extracted', {
       threadId: 'thread-1',
       messageCount: 1,
+      imageCount: 0,
     });
-    warn.mockRestore();
+
+    vi.mocked(console.warn).mockClear();
+    await expect(getThreadContent('thread-1')).resolves.toEqual({ text: '', images: [] });
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('[crm-debug] empty body extracted', {
+      threadId: 'thread-1',
+      messageCount: 1,
+      imageCount: 0,
+    });
+  });
+
+  it('fetches image attachments with the source message id', async () => {
+    const { getThreadContent } = await import('../gmailApi');
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            payload: {
+              mimeType: 'multipart/mixed',
+              parts: [
+                {
+                  mimeType: 'image/jpeg',
+                  body: { attachmentId: 'att-1', size: 1000 },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    googleMocks.attachmentsGet.mockResolvedValueOnce({
+      data: { data: Buffer.from('image-bytes', 'utf8').toString('base64url') },
+    });
+
+    await expect(getThreadContent('thread-1')).resolves.toEqual({
+      text: '',
+      images: [{ mimeType: 'image/jpeg', data: Buffer.from('image-bytes', 'utf8').toString('base64url') }],
+    });
+
+    expect(googleMocks.attachmentsGet).toHaveBeenCalledWith({
+      userId: 'consign@example.com',
+      messageId: 'msg-1',
+      id: 'att-1',
+    });
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it('throws GmailVerbForbidden for disallowed message modification verb', async () => {

@@ -27,5 +27,5 @@ STREAK_VIP_DOMAINS=example.com,vip-estates.com
 ```
 
 `GMAIL_REFRESH_TOKEN` is read-only OAuth for the consign mailbox. The Gmail
-service enforces a read-only verb allowlist (`messages.list`, `messages.get`)
+service enforces a read-only verb allowlist (`messages.get`, `messages.attachments.get`, `threads.get`)
 for the demo.
