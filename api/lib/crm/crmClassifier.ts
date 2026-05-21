@@ -101,9 +101,12 @@ function parseClassifierJson(text: string): ClassifierOutput {
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```$/i, '');
   const parsed = JSON.parse(json) as Partial<ClassifierOutput>;
+  let hadInvalidDepartment = false;
   const department = Array.isArray(parsed.department)
     ? parsed.department.filter((value): value is string => {
-        return typeof value === 'string' && VALID_DEPARTMENT_SET.has(value);
+        const isValidDepartment = typeof value === 'string' && VALID_DEPARTMENT_SET.has(value);
+        hadInvalidDepartment ||= !isValidDepartment;
+        return isValidDepartment;
       })
     : [];
 
@@ -114,7 +117,7 @@ function parseClassifierJson(text: string): ClassifierOutput {
     priority: hasValidPriority ? parsed.priority : 'standard',
     rationale: typeof parsed.rationale === 'string' ? parsed.rationale : 'Classifier returned incomplete rationale.',
     model: typeof parsed.model === 'string' ? parsed.model : MODEL,
-    needsReview: department.length === 0 || !hasValidPriority ? true : parsed.needsReview,
+    needsReview: department.length === 0 || hadInvalidDepartment || !hasValidPriority ? true : parsed.needsReview,
   };
 }
 
