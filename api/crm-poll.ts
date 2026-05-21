@@ -9,8 +9,8 @@ export const maxDuration = 60;
 
 const APP_SOURCE = 'tpc-dashboard-crm-poll';
 // Bump on prompt/contract changes to cache-bust existing classifications.
-// v0.5.1: evidence-first rationale + multimodal photos + dropped VIP/deadline overrides.
-const PROMPT_VERSION = 'v0.5.1';
+// v0.5.2: signal-ranked prompt + last-message recency context.
+const PROMPT_VERSION = 'v0.5.2';
 const REQUIRED_ENV = [
   'STREAK_API_KEY',
   'STREAK_PIPELINE_KEY',
