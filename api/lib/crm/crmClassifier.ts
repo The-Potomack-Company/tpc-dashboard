@@ -45,22 +45,34 @@ furniture | decarts | books | fashion | art_sculpture
 Priority calibration target:
 ~10% HIGH / 60% STD / 30% LOW. HIGH is exceptional.
 
-Priority signals:
-- deal value + completeness: signed art, antiques, jewelry, photos attached, dimensions, provenance docs
-- time-sensitivity: explicit deadlines, moving dates, estate sale dates, quote needed by a date
-- scope: multi-department or estate-level breadth can raise priority when value supports it
-- visual evidence: if photos are attached (see image parts in this request), inspect them and treat clear shots of items as info-completeness signals; describe what you see in the rationale
+Priority signal ranking:
+1. Value dominates. Value is per-lot, not gross: 1 x $800 item outranks 10 x $100 items because fewer larger lots are cheaper to process.
+2. Time is co-dominant only when present:
+   - explicit deadline, moving date, estate-sale date, or quote-needed-by date in the body
+   - thread staleness; long-quiet threads may need a probe
+   - last-message intent: if the most recent message says items were sent for estimates, waiting on an appraiser, or "will let you know when...", treat as holding-phase -> LOW unless daysSinceLastMessage > 14, then resurface to STD or HIGH if other signals support it
+3. Scope is a tiebreaker. Multi-department breadth raises priority only when value already supports it.
+4. Visual evidence multiplies confidence. Photos verify weak text claims; clear photos may move vague value language to the next higher bin. Example: "two signed lithographs" with photos > "some old paintings" with photos > the same text without photos.
+
+Department tiebreakers:
+- art_sculpture: fine-art originals, signed prints, sculpture as fine art.
+- decarts: decorative or functional decorative arts, including ceramics, glassware, metalwork, lighting.
+- furniture: case goods, seating, tables. Carved decorative chairs are furniture; if also signed as fine art, multi-tag with art_sculpture.
+- Multi-tag genuinely ambiguous lots, and quote the phrase that triggered each department tag.
 
 Rationale requirements (IMPORTANT):
 - Quote 1-2 specific phrases from the gmailBody in double quotes — these are the evidence
 - For each quoted phrase, name which signal it triggered (value/time/scope/visual)
 - If photos were attached (${imageCount} image(s) included), describe what you see in 1 short clause and weigh it
 - If a phrase justifies the department tags, quote it too
+- If lastMessageBody changes the priority, quote that phrase and name the last-message/time signal
 - If the body is empty or unreadable AND no photos attached, say so explicitly and tag priority="low"
 - 2-3 sentences total, evidence-first, no generic hedging
 
-Example rationale:
-"Two signed Léger lithographs with COA and provenance docs" — high value + info completeness; image part 1 shows a framed signed print matching the description; multi-department implied by "plus dining room set and china collection" so tagged furniture, decarts, art_sculpture.
+Few-shot examples:
+HIGH: "Two signed Leger lithographs with COA and provenance docs" signals high per-lot value and complete evidence; "moving on June 3" adds explicit time pressure; image part 1 shows a framed signed print matching the description, so tagged art_sculpture.
+STANDARD: "estate contents include a mahogany table, china service, and several lamps" is a normal estate inquiry with decent value and furniture/decarts scope, but no deadline and no photos, so priority standard.
+LOW: Last message says "sent the items to the appraiser and will follow up" and daysSinceLastMessage=3, so this is holding-phase LOW; resurface to standard if daysSinceLastMessage > 14 and the thread still needs a nudge.
 
 Return JSON only:
 {"department":["furniture"],"priority":"high"|"standard"|"low","rationale":"evidence-first 2-3 sentences quoting specific phrases","model":"${MODEL}"}
@@ -73,6 +85,12 @@ stageName: ${input.stageName}
 senderEmail: ${input.senderEmail ?? ''}
 lastUpdatedMs: ${input.lastUpdatedMs}
 attachedImageCount: ${imageCount}
+lastMessageDate: ${input.lastMessageDate}
+daysSinceLastMessage: ${input.daysSinceLastMessage}
+threadAgeDays: ${input.threadAgeDays}
+lastMessageBody:
+${input.lastMessageBody}
+
 gmailBody:
 ${input.gmailBody ?? ''}`;
 }
