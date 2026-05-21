@@ -51,6 +51,10 @@ export type ClassifierInput = {
   stageName: string;
   gmailBody?: string;
   gmailImages?: GmailImageAttachment[];
+  lastMessageBody: string;
+  lastMessageDate: string;
+  daysSinceLastMessage: number;
+  threadAgeDays: number;
   senderEmail?: string;
   lastUpdatedMs: number;
 };

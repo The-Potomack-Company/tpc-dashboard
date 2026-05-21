@@ -214,6 +214,7 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
     const content = await getThreadContent(gmailThreadId);
     const bodyHash = hashContent(content.text, content.images);
     const thread = await upsertThread(admin, box, gmailThreadId, content.text, content.messages ?? []);
+    const threadContext = buildThreadContext(content.messages ?? []);
     response.polled += 1;
 
     const latest = await getLatestClassification(admin, thread.id);
@@ -234,6 +235,10 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
         stageName: box.stageName,
         gmailBody: content.text,
         gmailImages: content.images,
+        lastMessageBody: threadContext.lastMessageBody,
+        lastMessageDate: threadContext.lastMessageDate,
+        daysSinceLastMessage: threadContext.daysSinceLastMessage,
+        threadAgeDays: threadContext.threadAgeDays,
         senderEmail: box.fromEmail,
         lastUpdatedMs: box.lastUpdatedTimestamp,
       });
@@ -473,6 +478,38 @@ function hashContent(bodyText: string, images: ReadonlyArray<{ data: string }>):
     hash.update(img.data);
   }
   return hash.digest('hex');
+}
+
+function buildThreadContext(
+  messages: ReadonlyArray<{
+    date: Date;
+    bodyText: string;
+  }>,
+): {
+  lastMessageBody: string;
+  lastMessageDate: string;
+  daysSinceLastMessage: number;
+  threadAgeDays: number;
+} {
+  const sorted = [...messages].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const firstMessage = sorted[0];
+  const lastMessage = sorted[sorted.length - 1];
+  const nowMs = Date.now();
+
+  return {
+    lastMessageBody: lastMessage?.bodyText ?? '',
+    lastMessageDate: lastMessage?.date.toISOString() ?? '',
+    daysSinceLastMessage: daysBetween(lastMessage?.date.getTime(), nowMs),
+    threadAgeDays: daysBetween(firstMessage?.date.getTime(), nowMs),
+  };
+}
+
+function daysBetween(startMs: number | undefined, endMs: number): number {
+  if (startMs === undefined || Number.isNaN(startMs)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor((endMs - startMs) / 86_400_000));
 }
 
 function readBodyHash(metadata: unknown): string | null {
