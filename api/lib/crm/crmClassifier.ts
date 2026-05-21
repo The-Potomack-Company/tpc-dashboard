@@ -115,14 +115,14 @@ function parseClassifierJson(text: string): ClassifierOutput {
       })
     : [];
 
-  const hasValidPriority = isPriority(parsed.priority);
+  const validPriority = isPriority(parsed.priority) ? parsed.priority : null;
 
   return {
     department,
-    priority: hasValidPriority ? parsed.priority : 'standard',
+    priority: validPriority ?? 'standard',
     rationale: typeof parsed.rationale === 'string' ? parsed.rationale : 'Classifier returned incomplete rationale.',
     model: typeof parsed.model === 'string' ? parsed.model : MODEL,
-    needsReview: department.length === 0 || hadInvalidDepartment || !hasValidPriority ? true : parsed.needsReview,
+    needsReview: department.length === 0 || hadInvalidDepartment || validPriority === null ? true : parsed.needsReview,
   };
 }
 
