@@ -44,11 +44,16 @@ function ageBumpExplanation(row: TriageRow): string | null {
 }
 
 function normalizeAttachments(payload: unknown): ImageAttachment[] {
+  // /api/gmail-attachment returns { images: [...] }. Also accepts a bare
+  // array or { attachments: [...] } defensively so the UI doesn't lock
+  // to a single envelope shape during demo iteration.
   const rawAttachments = Array.isArray(payload)
     ? payload
-    : payload && typeof payload === 'object' && Array.isArray((payload as { attachments?: unknown }).attachments)
-      ? (payload as { attachments: unknown[] }).attachments
-      : [];
+    : payload && typeof payload === 'object' && Array.isArray((payload as { images?: unknown }).images)
+      ? (payload as { images: unknown[] }).images
+      : payload && typeof payload === 'object' && Array.isArray((payload as { attachments?: unknown }).attachments)
+        ? (payload as { attachments: unknown[] }).attachments
+        : [];
 
   return rawAttachments.filter((attachment): attachment is ImageAttachment => {
     if (!attachment || typeof attachment !== 'object') return false;
