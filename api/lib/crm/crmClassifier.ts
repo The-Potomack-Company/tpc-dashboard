@@ -51,6 +51,7 @@ Priority signal ranking:
    - explicit deadline, moving date, estate-sale date, or quote-needed-by date in the body
    - thread staleness; long-quiet threads may need a probe
    - last-message intent: if the most recent message says items were sent for estimates, waiting on an appraiser, or "will let you know when...", treat as holding-phase -> LOW unless daysSinceLastMessage > 14, then resurface to STD or HIGH if other signals support it
+   - precedence: the holding-phase clause wins over value when daysSinceLastMessage <= 14, except when the body contains an explicit deadline date within the next 7 days; then value+time win
 3. Scope is a tiebreaker. Multi-department breadth raises priority only when value already supports it.
 4. Visual evidence multiplies confidence. Photos verify weak text claims; clear photos may move vague value language to the next higher bin. Example: "two signed lithographs" with photos > "some old paintings" with photos > the same text without photos.
 
