@@ -215,6 +215,7 @@ export type Database = {
           snippet: string | null
           streak_box_key: string
           streak_pipeline_key: string
+          streak_stage_color: string | null
           streak_stage_key: string | null
           streak_stage_name: string | null
           subject: string | null
@@ -234,6 +235,7 @@ export type Database = {
           snippet?: string | null
           streak_box_key: string
           streak_pipeline_key: string
+          streak_stage_color?: string | null
           streak_stage_key?: string | null
           streak_stage_name?: string | null
           subject?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           snippet?: string | null
           streak_box_key?: string
           streak_pipeline_key?: string
+          streak_stage_color?: string | null
           streak_stage_key?: string | null
           streak_stage_name?: string | null
           subject?: string | null
@@ -540,6 +543,7 @@ export type Database = {
           department: string[] | null
           from_email: string | null
           from_name: string | null
+          gmail_thread_id: string | null
           last_polled_at: string | null
           messages: Json | null
           model: string | null
@@ -550,6 +554,7 @@ export type Database = {
           snippet: string | null
           streak_box_key: string | null
           streak_pipeline_key: string | null
+          streak_stage_color: string | null
           streak_stage_key: string | null
           streak_stage_name: string | null
           subject: string | null

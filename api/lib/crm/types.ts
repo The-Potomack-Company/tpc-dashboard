@@ -3,6 +3,7 @@ export type StreakBox = {
   name: string;
   stageKey: string;
   stageName: string;
+  stageColor?: string;
   lastUpdatedTimestamp: number;
   lastEmailReceivedTimestamp: number;
   assignedToSharingEntries?: unknown[];

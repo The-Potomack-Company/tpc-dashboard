@@ -15,6 +15,7 @@ export type TriageRow = {
   streak_pipeline_key: string | null;
   streak_stage_key: string | null;
   streak_stage_name: string | null;
+  streak_stage_color: string | null;
   subject: string;
   from_email: string | null;
   from_name: string | null;
@@ -30,6 +31,7 @@ export type TriageRow = {
   effective_priority: Priority;
   rationale: string | null;
   model: string | null;
+  gmail_thread_id: string | null;
   last_polled_at: string | null;
   age_days: number;
   needs_review: boolean;

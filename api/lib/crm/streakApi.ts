@@ -10,6 +10,14 @@ type StreakStageApiRecord = {
   key?: unknown;
   stageKey?: unknown;
   name?: unknown;
+  // Streak v1 /stages may return color under any of these names depending on
+  // pipeline vintage. Extract whichever is present; persist as a normalized
+  // hex string in crm_threads.streak_stage_color. NULL when none present →
+  // UI falls back to a deterministic hash-from-stage-name palette.
+  color?: unknown;
+  colorHex?: unknown;
+  hexColor?: unknown;
+  hex?: unknown;
 };
 
 type StreakBoxApiRecord = {
@@ -74,6 +82,18 @@ export async function listOpenBoxes(config: {
       .filter(([key]) => key.length > 0),
   );
 
+  const stageColorByKey = new Map(
+    stages
+      .map(
+        (stage) =>
+          [
+            toStringValue(stage.key ?? stage.stageKey),
+            normalizeStageColor(stage.colorHex ?? stage.color ?? stage.hexColor ?? stage.hex),
+          ] as const,
+      )
+      .filter(([key, color]) => key.length > 0 && color.length > 0),
+  );
+
   const explicitClosedKeys = new Set(config.closedStageKeys ?? [...parseCsv(process.env.STREAK_CLOSED_STAGE_KEYS)]);
 
   // Determine open stages we should iterate. If env-configured closed keys are
@@ -135,7 +155,7 @@ export async function listOpenBoxes(config: {
   );
 
   const merged: StreakBox[] = perStagePages.flatMap((page) =>
-    page.results.map((box) => normalizeBox(box, stageNameByKey)),
+    page.results.map((box) => normalizeBox(box, stageNameByKey, stageColorByKey)),
   );
 
   // Sort by last email received desc (falls back to lastUpdatedTimestamp).
@@ -193,7 +213,11 @@ async function streakFetch<T>(url: string, headers: Record<string, string>): Pro
   return (await response.json()) as T;
 }
 
-function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, string>): StreakBox {
+function normalizeBox(
+  box: StreakBoxApiRecord,
+  stageNameByKey: Map<string, string>,
+  stageColorByKey: Map<string, string>,
+): StreakBox {
   const stageKey = toStringValue(box.stageKey);
   const gmailThreadIds = toStringArray(box.gmailThreadIds ?? box.threadIds ?? box.gmailThreadId ?? box.threadId);
   const name = toStringValue(box.name);
@@ -204,6 +228,7 @@ function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, strin
   const fromEmail = toStringValue(box.fromEmail) || toStringValue(box.firstEmailFrom);
   const fromName = toStringValue(box.fromName);
   const snippet = toStringValue(box.snippet);
+  const stageColor = stageColorByKey.get(stageKey) ?? '';
 
   return {
     key: toStringValue(box.key ?? box.boxKey),
@@ -213,6 +238,7 @@ function normalizeBox(box: StreakBoxApiRecord, stageNameByKey: Map<string, strin
     lastUpdatedTimestamp: toNumberValue(box.lastUpdatedTimestamp),
     lastEmailReceivedTimestamp: toNumberValue(box.lastEmailReceivedTimestamp),
     assignedToSharingEntries: box.assignedToSharingEntries,
+    ...(stageColor ? { stageColor } : {}),
     ...(gmailThreadIds.length > 0 ? { gmailThreadIds } : {}),
     ...(subject ? { subject } : {}),
     ...(fromEmail ? { fromEmail } : {}),
@@ -285,6 +311,24 @@ function normalizeStagesResponse(value: unknown): StreakStageApiRecord[] {
     }));
   }
   return [];
+}
+
+// Normalize a Streak stage color value into a 7-char hex string (#RRGGBB).
+// Streak APIs have been observed returning bare 6-char hex (no #), #RRGGBB,
+// rgb()-style strings, and integer-encoded colors depending on pipeline age.
+// Returns '' (treated as absent) when input doesn't parse to a hex color.
+function normalizeStageColor(value: unknown): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^#?[0-9a-fA-F]{6}$/.test(trimmed)) {
+      return trimmed.startsWith('#') ? trimmed.toLowerCase() : `#${trimmed.toLowerCase()}`;
+    }
+    return '';
+  }
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 0xffffff) {
+    return `#${value.toString(16).padStart(6, '0')}`;
+  }
+  return '';
 }
 
 function toStringValue(value: unknown): string {

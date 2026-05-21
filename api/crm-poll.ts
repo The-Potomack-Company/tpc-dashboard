@@ -355,6 +355,7 @@ async function upsertThread(
         streak_pipeline_key: process.env.STREAK_PIPELINE_KEY!,
         streak_stage_key: box.stageKey || null,
         streak_stage_name: box.stageName || null,
+        streak_stage_color: box.stageColor || null,
         gmail_thread_id: gmailThreadId,
         subject: box.subject || box.name || null,
         from_email: box.fromEmail || null,
