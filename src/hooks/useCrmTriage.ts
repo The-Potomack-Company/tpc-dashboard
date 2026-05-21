@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../db/database.types';
 import type { Department, Priority, TriageRow } from '../services/crm/types';
+
+export type UseCrmTriageOptions = {
+  onClassificationInsert?: () => void;
+};
 
 type CrmTriageQueueRow = Database['public']['Views']['crm_triage_queue']['Row'];
 
@@ -102,11 +107,42 @@ async function fetchTriageRows(): Promise<TriageRow[]> {
   return sortTriageRows(rows);
 }
 
-export function useCrmTriage() {
+export function useCrmTriage(options?: UseCrmTriageOptions) {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ['crm', 'triage'] as const,
     queryFn: fetchTriageRows,
   });
+
+  // Keep latest callback in a ref so the realtime subscription effect doesn't
+  // re-subscribe when the caller passes an inline function each render.
+  const onInsertRef = useRef(options?.onClassificationInsert);
+  useEffect(() => {
+    onInsertRef.current = options?.onClassificationInsert;
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('crm-classifications-live')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'crm_classifications',
+          filter: 'is_current=eq.true',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['crm', 'triage'] });
+          onInsertRef.current?.();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return {
     threads: query.data ?? [],
