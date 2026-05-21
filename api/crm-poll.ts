@@ -242,18 +242,23 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
         return { kind: 'deferred-budget' };
       }
 
-      await logUsage(admin, {
+      // Fire-and-forget: audit-log writes aren't on the critical path. Awaiting
+      // them keeps the function on the line for an extra Supabase round-trip
+      // per box, which the demo's snappy-refresh budget can't afford.
+      void logUsage(admin, {
         model: 'gemini-2.5-flash',
         userId: userId,
         durationMs: Date.now() - startedAt,
         status: 'error',
         errorMessage: error instanceof Error ? error.message : 'Unknown classifier error',
+      }).catch((err) => {
+        console.error('[crm-debug] logUsage(error) failed', err);
       });
       throw error;
     }
 
     await replaceCurrentClassification(admin, thread.id, output, bodyHash);
-    await logUsage(admin, {
+    void logUsage(admin, {
       model: output.model,
       userId: userId,
       durationMs: Date.now() - startedAt,
@@ -261,6 +266,8 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
       tokensIn: output.usage?.inputTokens,
       tokensOut: output.usage?.outputTokens,
       costUsd: output.usage?.costUsd,
+    }).catch((err) => {
+      console.error('[crm-debug] logUsage(ok) failed', err);
     });
     return { kind: 'classified' };
   }
