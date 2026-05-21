@@ -6,18 +6,22 @@ const googleMocks = vi.hoisted(() => {
   const oauth2 = vi.fn(function OAuth2() {
     return { setCredentials };
   });
-  const list = vi.fn();
-  const get = vi.fn();
+  const threadsGet = vi.fn();
+  const attachmentsGet = vi.fn();
   const gmail = vi.fn(() => ({
     users: {
+      threads: {
+        get: threadsGet,
+      },
       messages: {
-        list,
-        get,
+        attachments: {
+          get: attachmentsGet,
+        },
       },
     },
   }));
 
-  return { setCredentials, oauth2, list, get, gmail };
+  return { setCredentials, oauth2, threadsGet, attachmentsGet, gmail };
 });
 
 vi.mock('googleapis', () => ({
@@ -47,31 +51,70 @@ describe('getThreadBody', () => {
     process.env = OLD_ENV;
   });
 
-  it('returns concatenated body string', async () => {
+  it('returns body string', async () => {
     const { getThreadBody } = await import('../gmailApi');
-    googleMocks.list.mockResolvedValueOnce({
-      data: { messages: [{ id: 'msg-1' }, { id: 'msg-2' }] },
-    });
-    googleMocks.get
-      .mockResolvedValueOnce({
-        data: {
-          id: 'msg-1',
-          threadId: 'thread-1',
-          payload: { mimeType: 'text/plain', body: { data: encodeBody('First body') } },
-        },
-      })
-      .mockResolvedValueOnce({
-        data: {
-          id: 'msg-2',
-          threadId: 'thread-1',
-          payload: {
-            mimeType: 'multipart/alternative',
-            parts: [{ mimeType: 'text/html', body: { data: encodeBody('<p>Second &amp; body</p>') } }],
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            payload: { mimeType: 'text/plain', body: { data: encodeBody('First body') } },
           },
-        },
-      });
+        ],
+      },
+    });
+
+    await expect(getThreadBody('thread-1')).resolves.toBe('First body');
+  });
+
+  it('returns concatenated bodies for a multi-message thread', async () => {
+    const { getThreadBody } = await import('../gmailApi');
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            payload: { mimeType: 'text/plain', body: { data: encodeBody('First body') } },
+          },
+          {
+            id: 'msg-2',
+            threadId: 'thread-1',
+            payload: {
+              mimeType: 'multipart/alternative',
+              parts: [{ mimeType: 'text/html', body: { data: encodeBody('<p>Second &amp; body</p>') } }],
+            },
+          },
+        ],
+      },
+    });
 
     await expect(getThreadBody('thread-1')).resolves.toBe('First body\n\nSecond & body');
+  });
+
+  it('warns when thread body extraction returns empty text', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { getThreadBody } = await import('../gmailApi');
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            payload: { mimeType: 'application/json', body: { data: encodeBody('{"not":"email"}') } },
+          },
+        ],
+      },
+    });
+
+    await expect(getThreadBody('thread-1')).resolves.toBe('');
+
+    expect(warn).toHaveBeenCalledWith('[crm-poll] empty body extracted', {
+      threadId: 'thread-1',
+      messageCount: 1,
+    });
+    warn.mockRestore();
   });
 
   it('throws GmailVerbForbidden for disallowed message modification verb', async () => {
@@ -94,7 +137,17 @@ describe('getThreadBody', () => {
 
   it('sets OAuth refresh token credentials', async () => {
     const { getThreadBody } = await import('../gmailApi');
-    googleMocks.list.mockResolvedValueOnce({ data: { messages: [] } });
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            payload: { mimeType: 'text/plain', body: { data: encodeBody('Credential check') } },
+          },
+        ],
+      },
+    });
 
     await getThreadBody('thread-1');
 
