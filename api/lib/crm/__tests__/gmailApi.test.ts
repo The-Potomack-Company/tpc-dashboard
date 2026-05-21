@@ -35,6 +35,126 @@ vi.mock('googleapis', () => ({
 
 const OLD_ENV = process.env;
 
+describe('stripReplyChain', () => {
+  it('single-message-no-chain', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `Hello Albert,
+
+Thank you for reaching out. We will review the items and follow up shortly.`;
+
+    expect(stripReplyChain(input)).toBe(input);
+  });
+
+  it('gmail-intro-singleline', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `Thanks, we can take a look.
+
+On Tue, May 19, 2026 at 2:23 PM Foo <foo@x.com> wrote:
+> quoted
+> stuff`;
+
+    expect(stripReplyChain(input)).toBe('Thanks, we can take a look.');
+  });
+
+  it('gmail-intro-wrapped', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `Sincerely,
+The Potomack Company
+
+1120 North Fairfax St.
+
+ᐧ
+
+On Tue, May 19, 2026 at 2:23 PM Invaluable Private Label <
+admin@invaluable.com> wrote:
+
+> Name: Albert Missirlian
+> Email: alm@example.com`;
+
+    expect(stripReplyChain(input)).toBe(`Sincerely,
+The Potomack Company
+
+1120 North Fairfax St.`);
+  });
+
+  it('apple-mail-intro', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `I will send photos this afternoon.
+
+On May 19, 2026, at 3:40 PM, Jane <jane@x.com> wrote:
+> Can you send photos?`;
+
+    expect(stripReplyChain(input)).toBe('I will send photos this afternoon.');
+  });
+
+  it('outlook-header-block', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `Please see my response above.
+
+From: Jane Smith <jane@x.com>
+Sent: Tuesday, May 19, 2026 3:40 PM
+To: Consign <consign@example.com>
+Subject: Re: Appraisal
+
+Earlier message text`;
+
+    expect(stripReplyChain(input)).toBe('Please see my response above.');
+  });
+
+  it('forwarded-banner', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `Forwarding this for your review.
+
+---------- Forwarded message ---------
+From: Jane Smith <jane@x.com>
+Date: Tue, May 19, 2026 at 3:40 PM`;
+
+    expect(stripReplyChain(input)).toBe('Forwarding this for your review.');
+  });
+
+  it('gmail-separator-only', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `This is the new reply.
+
+ᐧ
+
+On Tue, May 19, 2026 at 2:23 PM Foo <foo@x.com> wrote:
+> quoted chain`;
+
+    expect(stripReplyChain(input)).toBe('This is the new reply.');
+  });
+
+  it('single-quote-inline', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `I agree with this line:
+> quoted phrase
+That is the relevant part.`;
+
+    expect(stripReplyChain(input)).toBe(input);
+  });
+
+  it('signature-preserved', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `We can include this in the next sale.
+
+Sincerely,
+The Potomack Company
+
+NOTE: This e-mail is confidential and intended only for the recipient.`;
+
+    expect(stripReplyChain(input)).toBe(input);
+  });
+
+  it('empty-after-strip', async () => {
+    const { stripReplyChain } = await import('../gmailApi');
+    const input = `On Tue, May 19, 2026 at 2:23 PM Foo <foo@x.com> wrote:
+> quoted
+> stuff`;
+
+    expect(stripReplyChain(input)).toBe('');
+  });
+});
+
 describe('getThreadBody', () => {
   beforeEach(() => {
     process.env = {
@@ -232,6 +352,51 @@ describe('getThreadBody', () => {
     await getThreadBody('thread-1');
 
     expect(googleMocks.setCredentials).toHaveBeenCalledWith({ refresh_token: 'refresh-token' });
+  });
+
+  it('extractMessages returns trimmed bodyText while keeping raw text', async () => {
+    const { getThreadContent } = await import('../gmailApi');
+    const rawBody = `Current sender content.
+
+On Tue, May 19, 2026 at 2:23 PM Foo <foo@x.com> wrote:
+> quoted
+> stuff`;
+    googleMocks.threadsGet.mockResolvedValueOnce({
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            threadId: 'thread-1',
+            snippet: 'Current sender content.',
+            internalDate: String(Date.parse('2026-05-20T12:00:00.000Z')),
+            payload: {
+              mimeType: 'text/plain',
+              headers: [
+                { name: 'From', value: 'Consign <consign@example.com>' },
+                { name: 'Subject', value: 'Re: Appraisal' },
+              ],
+              body: { data: encodeBody(rawBody) },
+            },
+          },
+        ],
+      },
+    });
+
+    await expect(getThreadContent('thread-1')).resolves.toEqual({
+      text: rawBody,
+      images: [],
+      messages: [
+        {
+          messageId: 'msg-1',
+          from: { name: 'Consign', email: 'consign@example.com' },
+          date: new Date('2026-05-20T12:00:00.000Z'),
+          snippet: 'Current sender content.',
+          bodyText: 'Current sender content.',
+          hasAttachments: false,
+          isForward: false,
+        },
+      ],
+    });
   });
 });
 

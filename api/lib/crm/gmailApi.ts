@@ -7,6 +7,30 @@ const MAX_IMAGES_PER_THREAD = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB cap per image (Gemini limit + cost guard)
 const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 
+// 1. Gmail / Apple Mail attribution intros (English, Spanish, French, German).
+//    Allow up to 2 lines of wrapping before "wrote:" because long sender names
+//    + email wrap onto the next line (real-world example: "On <date>
+//    <very long sender name> <\nverylongemail@x.com> wrote:").
+const REPLY_INTRO = /^On .+(?:\n.+){0,2}\s*(?:wrote|escribió|a écrit):\s*$/m;
+const APPLE_MAIL_INTRO = /^On .+,\s+at\s+.+,\s+.+\s+wrote:\s*$/m;
+const FR_INTRO = /^Le .+(?:\n.+){0,2}\s+a écrit\s*:\s*$/m;
+const ES_INTRO = /^El .+(?:\n.+){0,2}\s+escribió\s*:\s*$/m;
+const DE_INTRO = /^Am .+(?:\n.+){0,2}\s+schrieb .+:\s*$/m;
+
+// 2. Outlook / Exchange header block.
+const OUTLOOK_HEADER_BLOCK = /^From: .+\n(?:Sent|Date): .+\nTo: .+/m;
+
+// 3. Forwarded / Original Message banners.
+const FORWARDED_BANNER = /^-{2,}\s*Forwarded message\s*-{2,}\s*$/im;
+const ORIGINAL_BANNER  = /^-{2,}\s*Original Message\s*-{2,}\s*$/im;
+
+// 4. Gmail's invisible reply-anchor separator (U+1427) — single char line.
+const GMAIL_SEPARATOR = /^\s*ᐧ\s*$/m;
+
+// 5. Quoted-line block (≥2 contiguous lines starting with "> ") — conservative
+//    so a single inline "> quote" isn't treated as the chain.
+const QUOTED_LINE = /^>+ ?/;
+
 type AllowedVerb = (typeof ALLOWED_VERBS)[number];
 
 type GmailPayloadPart = {
@@ -26,6 +50,53 @@ export function assertAllowedGmailVerb(verb: string): asserts verb is AllowedVer
   if (!ALLOWED_VERBS.includes(verb as AllowedVerb)) {
     throw new GmailVerbForbidden(verb);
   }
+}
+
+export function stripReplyChain(text: string): string {
+  if (!text) return text;
+  const lines = text.split('\n');
+  let cut = lines.length;
+
+  // Single-line tail markers (per-line line scan).
+  const lineMarkers = [
+    APPLE_MAIL_INTRO,                    // matches single line
+    OUTLOOK_HEADER_BLOCK,                // multi-line; handled below
+    FORWARDED_BANNER,
+    ORIGINAL_BANNER,
+    GMAIL_SEPARATOR,
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    for (const re of lineMarkers) {
+      if (re.test(lines[i])) {
+        cut = Math.min(cut, i);
+        break;
+      }
+    }
+    if (cut <= i) break;
+  }
+
+  // Multi-line wrapping intros — match against the JOINED text (with offsets
+  // mapped back to line index) so wrapped attributions are caught.
+  for (const re of [REPLY_INTRO, FR_INTRO, ES_INTRO, DE_INTRO, OUTLOOK_HEADER_BLOCK]) {
+    const m = re.exec(text);
+    if (m && typeof m.index === 'number') {
+      const lineIdx = text.slice(0, m.index).split('\n').length - 1;
+      cut = Math.min(cut, lineIdx);
+    }
+  }
+
+  // Outlook header block — already covered by OUTLOOK_HEADER_BLOCK multi-line regex above.
+
+  // Quoted-block — ≥2 contiguous "> " lines (conservative).
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (QUOTED_LINE.test(lines[i]) && QUOTED_LINE.test(lines[i + 1])) {
+      cut = Math.min(cut, i);
+      break;
+    }
+  }
+
+  return lines.slice(0, cut).join('\n').trimEnd();
 }
 
 export async function getThreadContent(threadId: string): Promise<GmailThreadContent> {
@@ -69,7 +140,7 @@ export async function getThreadContent(threadId: string): Promise<GmailThreadCon
       from: parseFromHeader(readHeader(message.payload, 'From')),
       date: body.internalDate,
       snippet: message.snippet ?? '',
-      bodyText: body.text,
+      bodyText: stripReplyChain(body.text),
       hasAttachments: body.hasAttachments,
       isForward: isForwardMessage(message.payload, readHeader(message.payload, 'Subject')),
     });
