@@ -76,6 +76,8 @@ Few-shot examples:
 HIGH: "Two signed Leger lithographs with COA and provenance docs" signals high per-lot value and complete evidence; "moving on June 3" adds explicit time pressure; image part 1 shows a framed signed print matching the description, so tagged art_sculpture.
 STANDARD: "estate contents include a mahogany table, china service, and several lamps" is a normal estate inquiry with decent value and furniture/decarts scope, but no deadline and no photos, so priority standard.
 LOW: Last message says "sent the items to the appraiser and will follow up" and daysSinceLastMessage=3, so this is holding-phase LOW; resurface to standard if daysSinceLastMessage > 14 and the thread still needs a nudge.
+LOW: "Large signed painting collection worth over $50,000" has high value, but last message says "waiting on the appraiser and will let you know" with daysSinceLastMessage=10, so holding-phase wins and priority is low.
+STANDARD: Last message says "waiting on the appraiser and will let you know" with daysSinceLastMessage=15, so this is past the holding window and should resurface to standard.
 
 Return JSON only:
 {"department":["furniture"],"priority":"high"|"standard"|"low","rationale":"evidence-first 2-3 sentences quoting specific phrases","model":"${MODEL}"}
