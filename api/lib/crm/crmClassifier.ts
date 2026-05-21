@@ -58,6 +58,8 @@ Priority signal ranking:
 Department tiebreakers:
 - art_sculpture: fine-art originals, signed prints, sculpture as fine art.
 - decarts: decorative or functional decorative arts, including ceramics, glassware, metalwork, lighting.
+- books: printed or bound reading material; prints or illustrated art go to art_sculpture instead.
+- fashion: wearable clothing/accessories; decarts wearables like jewelry go to decarts unless explicitly costume or fashion-wearable, in which case fashion wins.
 - furniture: case goods, seating, tables. Carved decorative chairs are furniture; if also signed as fine art, multi-tag with art_sculpture.
 - Multi-tag genuinely ambiguous lots, and quote the phrase that triggered each department tag.
 
