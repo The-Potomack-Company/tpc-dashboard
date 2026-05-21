@@ -210,6 +210,7 @@ export type Database = {
           gmail_thread_id: string | null
           id: string
           last_polled_at: string
+          messages: Json
           received_at: string | null
           snippet: string | null
           streak_box_key: string
@@ -228,6 +229,7 @@ export type Database = {
           gmail_thread_id?: string | null
           id?: string
           last_polled_at?: string
+          messages?: Json
           received_at?: string | null
           snippet?: string | null
           streak_box_key: string
@@ -246,6 +248,7 @@ export type Database = {
           gmail_thread_id?: string | null
           id?: string
           last_polled_at?: string
+          messages?: Json
           received_at?: string | null
           snippet?: string | null
           streak_box_key?: string
@@ -538,6 +541,7 @@ export type Database = {
           from_email: string | null
           from_name: string | null
           last_polled_at: string | null
+          messages: Json | null
           model: string | null
           needs_review: boolean | null
           priority: string | null
