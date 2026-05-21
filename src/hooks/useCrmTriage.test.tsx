@@ -1,6 +1,41 @@
-import { describe, expect, it } from 'vitest';
-import { getEffectivePriority, sortTriageRows } from './useCrmTriage';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import { getEffectivePriority, sortTriageRows, useCrmTriage } from './useCrmTriage';
 import type { Priority, TriageRow } from '../services/crm/types';
+
+type ChannelHandler = (payload: { new: { is_current: boolean } }) => void;
+
+const { capturedHandlers } = vi.hoisted(() => ({
+  capturedHandlers: [] as ChannelHandler[],
+}));
+
+vi.mock('../lib/supabase', () => {
+  return {
+    supabase: {
+      channel: (_name: string) => {
+        const builder: {
+          on: (event: string, filter: unknown, handler: ChannelHandler) => typeof builder;
+          subscribe: () => { unsubscribe: () => void };
+        } = {
+          on(_event, _filter, handler) {
+            capturedHandlers.push(handler);
+            return builder;
+          },
+          subscribe() {
+            return { unsubscribe: () => undefined };
+          },
+        };
+        return builder;
+      },
+      removeChannel: () => undefined,
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: null }),
+      }),
+    },
+  };
+});
 
 function row(input: {
   id: string;
@@ -102,5 +137,46 @@ describe('useCrmTriage age-bump rules', () => {
       'standard-newer',
       'low',
     ]);
+  });
+});
+
+describe('useCrmTriage realtime subscription', () => {
+  function makeWrapper() {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    }
+    return { Wrapper, queryClient, invalidateSpy };
+  }
+
+  it('invalidates the triage query when a crm_classifications INSERT arrives', async () => {
+    capturedHandlers.length = 0;
+    const { Wrapper, invalidateSpy } = makeWrapper();
+
+    renderHook(() => useCrmTriage(), { wrapper: Wrapper });
+
+    // The realtime subscription registers a postgres_changes handler on mount.
+    await waitFor(() => expect(capturedHandlers.length).toBeGreaterThan(0));
+    const handler = capturedHandlers[capturedHandlers.length - 1];
+
+    handler({ new: { is_current: true } });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['crm', 'triage'] });
+  });
+
+  it('fires onClassificationInsert callback alongside invalidation', async () => {
+    capturedHandlers.length = 0;
+    const { Wrapper } = makeWrapper();
+    const onInsert = vi.fn();
+
+    renderHook(() => useCrmTriage({ onClassificationInsert: onInsert }), { wrapper: Wrapper });
+
+    await waitFor(() => expect(capturedHandlers.length).toBeGreaterThan(0));
+    const handler = capturedHandlers[capturedHandlers.length - 1];
+
+    handler({ new: { is_current: true } });
+
+    expect(onInsert).toHaveBeenCalledTimes(1);
   });
 });
