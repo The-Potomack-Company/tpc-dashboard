@@ -47,6 +47,7 @@ type ThreadRow = {
 };
 
 type ClassificationRow = {
+  id?: string;
   thread_id?: string;
   is_current?: boolean;
   metadata?: unknown;
@@ -105,7 +106,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     const message = error instanceof Error ? error.message : String(error);
     res.status(500).json({
       error: `Internal error: ${message}`,
-      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }
@@ -404,6 +404,13 @@ async function replaceCurrentClassification(
   output: ClassifierOutput,
   bodyHash: string,
 ): Promise<void> {
+  // Migration 20260520120000 requires array_length(department, 1) >= 1.
+  // Coerce empty/invalid classifier output to a safe catch-all bucket and
+  // force needs_review so a human sees it instead of failing the insert
+  // (which would leave the thread with no current classification).
+  const safeDepartment = output.department.length > 0 ? output.department : ['decarts'];
+  const safeNeedsReview = output.department.length === 0 ? true : output.needsReview === true;
+
   const updateResult = await admin
     .from('crm_classifications')
     .update({ is_current: false })
@@ -415,7 +422,7 @@ async function replaceCurrentClassification(
 
   const insertResult = await admin.from('crm_classifications').insert({
     thread_id: threadId,
-    department: output.department,
+    department: safeDepartment,
     priority: output.priority,
     rationale: output.rationale,
     model: output.model,
@@ -424,10 +431,33 @@ async function replaceCurrentClassification(
     metadata: {
       body_hash: bodyHash,
       prompt_version: PROMPT_VERSION,
-      needs_review: output.needsReview === true,
+      needs_review: safeNeedsReview,
     },
   });
   if (insertResult.error) {
+    // Roll back the retire so the thread does not end up with no current row.
+    // The unique partial index `crm_classifications_current_per_thread_idx`
+    // allows only one is_current=true per thread, so we restore exactly the
+    // most-recently-retired row by id.
+    const { data: priorRow, error: priorError } = await admin
+      .from('crm_classifications')
+      .select('id')
+      .eq('thread_id', threadId)
+      .eq('is_current', false)
+      .order('classified_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (priorError) {
+      console.error('[crm-poll] rollback lookup failed after insert error:', priorError.message);
+    } else if (priorRow) {
+      const rollback = await admin
+        .from('crm_classifications')
+        .update({ is_current: true })
+        .eq('id', (priorRow as { id: string }).id);
+      if (rollback.error) {
+        console.error('[crm-poll] rollback failed after insert error:', rollback.error.message);
+      }
+    }
     throw new Error(`Failed to insert crm_classifications row: ${insertResult.error.message}`);
   }
 }

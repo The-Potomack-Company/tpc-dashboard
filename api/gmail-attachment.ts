@@ -108,6 +108,24 @@ async function handleRequest(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
+  // Gate on crm_threads row existence. Without this an admin token could pull
+  // attachments for any Gmail thread the consign@ mailbox can see, not just
+  // the CRM-tracked ones. RLS doesn't protect us here because we're calling
+  // Gmail directly with a server-side OAuth token, not via Supabase.
+  const { data: threadRow, error: threadLookupError } = await admin
+    .from('crm_threads' as never)
+    .select('id')
+    .eq('gmail_thread_id', threadId)
+    .maybeSingle();
+  if (threadLookupError) {
+    res.status(500).json({ error: 'Failed to verify thread' });
+    return;
+  }
+  if (!threadRow) {
+    res.status(404).json({ error: 'Thread not found' });
+    return;
+  }
+
   // getThreadContent enforces the gmail.readonly verb allowlist internally
   // (messages.get, messages.attachments.get, threads.get only). No write
   // verbs reachable — preserves the CRM v0.5 read-only invariant per

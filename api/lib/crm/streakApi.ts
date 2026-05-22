@@ -196,7 +196,11 @@ async function fetchBoxThreadIds(
 }
 
 async function streakFetch<T>(url: string, headers: Record<string, string>): Promise<T> {
-  const response = await fetch(url, { headers });
+  // Explicit method:'GET' enforces read-only at the transport layer — defense
+  // in depth on the CRM v0.5 read-only invariant per
+  // [[feedback_crm_v05_readonly_invariant]]. fetch() defaults to GET, but
+  // pinning it forecloses any future caller from passing through a write verb.
+  const response = await fetch(url, { method: 'GET', headers });
 
   if (response.status === 429) {
     throw new StreakRateLimited(parseRetryAfterMs(response.headers.get('retry-after')));

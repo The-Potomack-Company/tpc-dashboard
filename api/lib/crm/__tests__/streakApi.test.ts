@@ -48,19 +48,19 @@ describe('listOpenBoxes', () => {
     expect(fetch).toHaveBeenNthCalledWith(
       1,
       'https://www.streak.com/api/v1/pipelines/pipe-key/stages',
-      { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
+      { method: 'GET', headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
     );
     // v2 boxes call for the open stage
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       'https://api.streak.com/api/v2/pipelines/pipe-key/boxes?stageKey=open-stage&limit=200&offset=0',
-      { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
+      { method: 'GET', headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
     );
     // v1 threads call per box to resolve Gmail thread IDs (v2 boxes don't include them)
     expect(fetch).toHaveBeenNthCalledWith(
       3,
       'https://www.streak.com/api/v1/boxes/box-1/threads',
-      { headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
+      { method: 'GET', headers: { Authorization: `Basic ${Buffer.from('streak-key:').toString('base64')}` } },
     );
     expect(vi.mocked(fetch).mock.calls).toHaveLength(3);
   });
