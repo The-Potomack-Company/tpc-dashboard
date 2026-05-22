@@ -1,0 +1,357 @@
+import { google } from 'googleapis';
+import type { gmail_v1 } from 'googleapis/build/src/apis/gmail/v1.js';
+import { GmailVerbForbidden, type GmailImageAttachment, type GmailThreadContent, type GmailThreadMessage } from './types.js';
+
+const ALLOWED_VERBS = ['messages.get', 'messages.attachments.get', 'threads.get'] as const;
+const MAX_IMAGES_PER_THREAD = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB cap per image (Gemini limit + cost guard)
+const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+
+// 1. Gmail / Apple Mail attribution intros (English, Spanish, French, German).
+//    Allow up to 2 lines of wrapping before "wrote:" because long sender names
+//    + email wrap onto the next line (real-world example: "On <date>
+//    <very long sender name> <\nverylongemail@x.com> wrote:").
+const REPLY_INTRO = /^On .+(?:\n.+){0,2}\s*(?:wrote|escribió|a écrit):\s*$/m;
+const APPLE_MAIL_INTRO = /^On .+,\s+at\s+.+,\s+.+\s+wrote:\s*$/m;
+const FR_INTRO = /^Le .+(?:\n.+){0,2}\s+a écrit\s*:\s*$/m;
+const ES_INTRO = /^El .+(?:\n.+){0,2}\s+escribió\s*:\s*$/m;
+const DE_INTRO = /^Am .+(?:\n.+){0,2}\s+schrieb .+:\s*$/m;
+
+// 2. Outlook / Exchange header block.
+const OUTLOOK_HEADER_BLOCK = /^From: .+\n(?:Sent|Date): .+\nTo: .+/m;
+
+// 3. Forwarded / Original Message banners.
+const FORWARDED_BANNER = /^-{2,}\s*Forwarded message\s*-{2,}\s*$/im;
+const ORIGINAL_BANNER  = /^-{2,}\s*Original Message\s*-{2,}\s*$/im;
+
+// 4. Gmail's invisible reply-anchor separator (U+1427) — single char line.
+const GMAIL_SEPARATOR = /^\s*ᐧ\s*$/m;
+
+// 5. Quoted-line block (≥3 contiguous lines starting with "> ") — conservative
+//    so a single inline "> quote" or a two-line legitimate blockquote in fresh
+//    content isn't treated as the chain. Real reply chains are always many
+//    lines (the entire prior message gets quoted). Codex review P2 2026-05-21.
+const QUOTED_LINE = /^>+ ?/;
+const QUOTED_BLOCK_MIN = 3;
+
+type AllowedVerb = (typeof ALLOWED_VERBS)[number];
+
+type GmailPayloadPart = {
+  mimeType?: string | null;
+  filename?: string | null;
+  body?: { data?: string | null; attachmentId?: string | null; size?: number | null } | null;
+  parts?: GmailPayloadPart[] | null;
+};
+
+type BodyExtraction = {
+  text: string;
+  hasAttachments: boolean;
+  internalDate: Date;
+};
+
+export function assertAllowedGmailVerb(verb: string): asserts verb is AllowedVerb {
+  if (!ALLOWED_VERBS.includes(verb as AllowedVerb)) {
+    throw new GmailVerbForbidden(verb);
+  }
+}
+
+export function stripReplyChain(text: string): string {
+  if (!text) return text;
+  const lines = text.split('\n');
+  let cut = lines.length;
+
+  // Single-line tail markers (per-line scan). OUTLOOK_HEADER_BLOCK is multi-
+  // line and lives in the joined-text pass below — keeping it out of this
+  // array (Claude review nit 2026-05-21).
+  const lineMarkers = [
+    APPLE_MAIL_INTRO,
+    FORWARDED_BANNER,
+    ORIGINAL_BANNER,
+    GMAIL_SEPARATOR,
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    for (const re of lineMarkers) {
+      if (re.test(lines[i])) {
+        cut = Math.min(cut, i);
+        break;
+      }
+    }
+    if (cut <= i) break;
+  }
+
+  // Multi-line wrapping intros + Outlook header block — match against the
+  // JOINED text (with offsets mapped back to line index) so wrapped
+  // attributions and contiguous header blocks are caught.
+  for (const re of [REPLY_INTRO, FR_INTRO, ES_INTRO, DE_INTRO, OUTLOOK_HEADER_BLOCK]) {
+    const m = re.exec(text);
+    if (m && typeof m.index === 'number') {
+      const lineIdx = text.slice(0, m.index).split('\n').length - 1;
+      cut = Math.min(cut, lineIdx);
+    }
+  }
+
+  // Quoted-block — ≥QUOTED_BLOCK_MIN contiguous "> " lines. Real reply
+  // chains are always long; raising the threshold avoids trimming
+  // legitimate two-line blockquotes inside fresh content.
+  for (let i = 0; i <= lines.length - QUOTED_BLOCK_MIN; i++) {
+    let run = 0;
+    while (i + run < lines.length && QUOTED_LINE.test(lines[i + run])) run++;
+    if (run >= QUOTED_BLOCK_MIN) {
+      cut = Math.min(cut, i);
+      break;
+    }
+  }
+
+  return lines.slice(0, cut).join('\n').trimEnd();
+}
+
+export async function getThreadContent(threadId: string): Promise<GmailThreadContent> {
+  const userId = readRequiredEnv('GMAIL_USER_EMAIL');
+  const oauth2Client = new google.auth.OAuth2(
+    readRequiredEnv('GMAIL_OAUTH_CLIENT_ID'),
+    readRequiredEnv('GMAIL_OAUTH_CLIENT_SECRET'),
+  );
+  oauth2Client.setCredentials({
+    refresh_token: readRequiredEnv('GMAIL_REFRESH_TOKEN', 'GMAIL_OAUTH_REFRESH_TOKEN'),
+  });
+
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client }) as gmail_v1.Gmail;
+
+  assertAllowedGmailVerb('threads.get');
+  const threadResponse = await gmail.users.threads.get({
+    userId,
+    id: threadId,
+    format: 'full',
+  });
+
+  const messages = (threadResponse.data.messages ?? []) as gmail_v1.Schema$Message[];
+  const recentStart = Math.max(messages.length - 20, 0);
+  const recentMessages = messages.slice(recentStart); // large escalation threads can be 100+ messages; Gemini doesn't usefully consume more than ~20
+  const bodies: string[] = [];
+  const images: GmailImageAttachment[] = [];
+  const structuredMessages: GmailThreadMessage[] = [];
+
+  for (const [index, message] of messages.entries()) {
+    if (!message.payload) {
+      continue;
+    }
+    if (!message.id) {
+      continue;
+    }
+    const messageId = message.id;
+
+    const body = extractBodyText(message.payload, message);
+    structuredMessages.push({
+      messageId,
+      from: parseFromHeader(readHeader(message.payload, 'From')),
+      date: body.internalDate,
+      snippet: message.snippet ?? '',
+      bodyText: stripReplyChain(body.text),
+      hasAttachments: body.hasAttachments,
+      isForward: isForwardMessage(message.payload, readHeader(message.payload, 'Subject')),
+    });
+
+    if (index < recentStart) {
+      continue;
+    }
+
+    if (body.text) {
+      bodies.push(body.text);
+    }
+
+    if (images.length < MAX_IMAGES_PER_THREAD) {
+      const imageRefs = collectImageRefs(message.payload).slice(0, MAX_IMAGES_PER_THREAD - images.length);
+      const fetched = await Promise.all(
+        imageRefs.map((ref) => fetchAttachment(gmail, userId, messageId, ref)),
+      );
+      for (const img of fetched) {
+        if (img) images.push(img);
+      }
+    }
+  }
+
+  const text = bodies.join('\n\n').trim();
+  if (!text && images.length === 0) {
+    console.warn('[crm-debug] empty body extracted', {
+      threadId,
+      messageCount: recentMessages.length,
+      imageCount: images.length,
+    });
+  }
+
+  structuredMessages.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return { text, images, messages: structuredMessages };
+}
+
+// Back-compat shim — older callers expect text-only.
+export async function getThreadBody(threadId: string): Promise<string> {
+  return (await getThreadContent(threadId)).text;
+}
+
+type ImageRef = { attachmentId: string; mimeType: string; size: number };
+
+function collectImageRefs(payload: GmailPayloadPart | null | undefined): ImageRef[] {
+  if (!payload) return [];
+  const refs: ImageRef[] = [];
+  const own = payload.mimeType ?? '';
+  const attId = payload.body?.attachmentId ?? null;
+  const size = payload.body?.size ?? 0;
+  if (
+    attId &&
+    ALLOWED_IMAGE_MIMES.has(own) &&
+    typeof size === 'number' &&
+    size > 0 &&
+    size <= MAX_IMAGE_BYTES
+  ) {
+    refs.push({ attachmentId: attId, mimeType: own, size });
+  }
+  for (const part of payload.parts ?? []) {
+    refs.push(...collectImageRefs(part));
+  }
+  return refs;
+}
+
+async function fetchAttachment(
+  gmail: gmail_v1.Gmail,
+  userId: string,
+  messageId: string,
+  ref: ImageRef,
+): Promise<GmailImageAttachment | null> {
+  assertAllowedGmailVerb('messages.attachments.get');
+  try {
+    const response = await gmail.users.messages.attachments.get({
+      userId,
+      messageId,
+      id: ref.attachmentId,
+    });
+    const urlSafe = response.data.data ?? '';
+    if (!urlSafe) return null;
+    // Gmail returns URL-safe base64; convert to standard base64 for Gemini.
+    const standard = urlSafe.replace(/-/g, '+').replace(/_/g, '/');
+    return { mimeType: ref.mimeType, data: standard };
+  } catch (error) {
+    console.error('[crm-debug] attachment fetch failed', ref.attachmentId, error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
+function extractBodyText(
+  payload: GmailPayloadPart | null | undefined,
+  message?: gmail_v1.Schema$Message,
+): BodyExtraction {
+  const plain = collectMimeParts(payload, 'text/plain')
+    .map(decodeBase64Url)
+    .filter(Boolean);
+  if (plain.length > 0) {
+    return {
+      text: plain.join('\n').trim(),
+      hasAttachments: hasAttachments(payload),
+      internalDate: extractInternalDate(message),
+    };
+  }
+
+  const text = collectMimeParts(payload, 'text/html')
+    .map(decodeBase64Url)
+    .map(stripHtml)
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+
+  return {
+    text,
+    hasAttachments: hasAttachments(payload),
+    internalDate: extractInternalDate(message),
+  };
+}
+
+function collectMimeParts(
+  payload: GmailPayloadPart | null | undefined,
+  mimeType: 'text/plain' | 'text/html',
+): string[] {
+  if (!payload) {
+    return [];
+  }
+
+  const ownData = payload.mimeType === mimeType && payload.body?.data ? [payload.body.data] : [];
+  const nestedData = (payload.parts ?? []).flatMap((part) => collectMimeParts(part, mimeType));
+  return [...ownData, ...nestedData];
+}
+
+export function hasAttachments(payload: GmailPayloadPart | null | undefined): boolean {
+  if (!payload) return false;
+  const mimeType = payload.mimeType ?? '';
+  if (mimeType.startsWith('image/') || mimeType.startsWith('application/')) {
+    return true;
+  }
+  if ((payload.filename ?? '').trim() !== '') {
+    return true;
+  }
+  return (payload.parts ?? []).some((part) => hasAttachments(part));
+}
+
+export function extractInternalDate(message: gmail_v1.Schema$Message | null | undefined): Date {
+  const value = message?.internalDate;
+  if (value) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return new Date(parsed);
+    }
+  }
+  // Unknown date → epoch so the message sorts as oldest (current-time fallback
+  // mis-orders historical messages as if they just arrived).
+  return new Date(0);
+}
+
+function readHeader(payload: gmail_v1.Schema$MessagePart | GmailPayloadPart | null | undefined, name: string): string {
+  const headers = 'headers' in (payload ?? {}) ? (payload as gmail_v1.Schema$MessagePart).headers : undefined;
+  const header = headers?.find((item) => item.name?.toLowerCase() === name.toLowerCase());
+  return header?.value ?? '';
+}
+
+function parseFromHeader(raw: string): { name: string; email: string } {
+  const match = raw.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  if (match) {
+    return { name: match[1].trim(), email: match[2].trim() };
+  }
+  // No brackets — treat the whole value as the email; name unknown.
+  // Display layer falls back to "Unknown sender" when name is empty.
+  return { name: '', email: raw.trim() };
+}
+
+function isForwardMessage(payload: GmailPayloadPart | null | undefined, subject: string): boolean {
+  return /^(fwd|fw):/i.test(subject.trim()) || hasMimePart(payload, 'message/rfc822');
+}
+
+function hasMimePart(payload: GmailPayloadPart | null | undefined, mimeType: string): boolean {
+  if (!payload) return false;
+  if (payload.mimeType === mimeType) return true;
+  return (payload.parts ?? []).some((part) => hasMimePart(part, mimeType));
+}
+
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(normalized, 'base64').toString('utf8').trim();
+}
+
+function stripHtml(value: string): string {
+  return value
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function readRequiredEnv(key: string, fallbackKey?: string): string {
+  const value = process.env[key] ?? (fallbackKey ? process.env[fallbackKey] : undefined);
+  if (!value) {
+    throw new Error(`Missing required env var: ${fallbackKey ? `${key} or ${fallbackKey}` : key}`);
+  }
+
+  return value;
+}

@@ -29,6 +29,15 @@ export default defineConfig({
           include: ['scripts/**/*.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'api',
+          globals: true,
+          environment: 'node',
+          include: ['api/**/*.test.ts'],
+        },
+      },
     ],
   },
 });
